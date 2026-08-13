@@ -1,0 +1,23 @@
+$foundation-font-stack: system-ui, sans-serif;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: $foundation-font-stack;
+
+  a {
+    color: inherit;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+
+  &:focus {
+    left: 0;
+  }
+}

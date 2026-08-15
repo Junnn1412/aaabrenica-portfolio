@@ -12,12 +12,15 @@ function checkBaseFields(content, problems) {
     content.paragraphs.length === 0 ||
     content.paragraphs.some((p) => typeof p !== 'string' || p.length === 0)
   ) {
-    problems.push('"paragraphs" must be a non-empty array of non-empty strings');
+    problems.push(
+      '"paragraphs" must be a non-empty array of non-empty strings',
+    );
   }
   if (
     'description' in content &&
     content.description != null &&
-    (typeof content.description !== 'string' || content.description.length === 0)
+    (typeof content.description !== 'string' ||
+      content.description.length === 0)
   ) {
     problems.push('"description", when present, must be a non-empty string');
   }
@@ -28,7 +31,9 @@ function checkLink(link, fieldName, problems) {
     problems.push(`"${fieldName}.label" must be a non-empty string`);
   }
   if (typeof link?.path !== 'string' || !isSafeInternalPath(link.path)) {
-    problems.push(`"${fieldName}.path" must be a safe internal path (start with "/", not "//")`);
+    problems.push(
+      `"${fieldName}.path" must be a safe internal path (start with "/", not "//")`,
+    );
   }
 }
 
@@ -54,7 +59,9 @@ export function validateContent(route, content) {
     if (!Array.isArray(content.links) || content.links.length === 0) {
       problems.push('"links" must be a non-empty array for a listing page');
     } else {
-      content.links.forEach((link, i) => checkLink(link, `links[${i}]`, problems));
+      content.links.forEach((link, i) =>
+        checkLink(link, `links[${i}]`, problems),
+      );
     }
   }
 

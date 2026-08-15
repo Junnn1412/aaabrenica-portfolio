@@ -1,7 +1,7 @@
 # Reusable Portfolio Architecture
 
 **Status:** Approved architectural direction  
-**Version:** 1.0  
+**Version:** 1.0
 
 ## 1. Objective
 
@@ -13,10 +13,10 @@ This is a **reusable portfolio starter**, not a general-purpose frontend framewo
 
 The architecture has two layers:
 
-| Layer | Responsibility |
-|---|---|
-| Reusable core | Build setup, page composition, tokens, components, accessibility, motion, SEO foundations, and deployment conventions |
-| Portfolio implementation | Profession, positioning, content, branding, services, projects, evidence, contact details, and enabled pages |
+| Layer                    | Responsibility                                                                                                        |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Reusable core            | Build setup, page composition, tokens, components, accessibility, motion, SEO foundations, and deployment conventions |
+| Portfolio implementation | Profession, positioning, content, branding, services, projects, evidence, contact details, and enabled pages          |
 
 AAA's developer portfolio is the first implementation. Do not extract a separate starter repository until Version 1 has proven which abstractions are genuinely reusable.
 
@@ -145,13 +145,13 @@ Content models must distinguish optional fields from required evidence. Template
 
 These use the core components but may require different layout emphasis:
 
-| Profession | Primary evidence | Likely emphasis |
-|---|---|---|
-| Developer | Systems, websites, workflows, technical decisions | Case studies and process |
-| Pastry chef | Products, collections, event work, specialties | High-quality gallery and inquiry |
-| Photographer | Sessions, galleries, packages, testimonials | Media presentation and booking |
-| Architect | Projects, constraints, drawings, outcomes | Project narratives and services |
-| Consultant | Engagements, expertise, results, publications | Authority, process, and contact |
+| Profession   | Primary evidence                                  | Likely emphasis                  |
+| ------------ | ------------------------------------------------- | -------------------------------- |
+| Developer    | Systems, websites, workflows, technical decisions | Case studies and process         |
+| Pastry chef  | Products, collections, event work, specialties    | High-quality gallery and inquiry |
+| Photographer | Sessions, galleries, packages, testimonials       | Media presentation and booking   |
+| Architect    | Projects, constraints, drawings, outcomes         | Project narratives and services  |
+| Consultant   | Engagements, expertise, results, publications     | Authority, process, and contact  |
 
 Do not force every profession to use every component or page.
 
@@ -280,4 +280,3 @@ These exclusions keep the product fast, understandable, maintainable, and realis
 ## 14. Success criteria
 
 The reusable architecture succeeds when AAA can create a distinctly branded second portfolio faster by changing configuration, content, tokens, assets, and selected compositions—without copying the first site's identity, weakening quality, or rewriting the entire foundation.
-

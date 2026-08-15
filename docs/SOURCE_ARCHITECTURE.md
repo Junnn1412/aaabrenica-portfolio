@@ -47,7 +47,11 @@ boilerplate, the `/src/scripts/main.js` script tag (kept untouched so Vite's
 own asset discovery always works), and five markers:
 
 ```html
-<!--@head--> <!--@header--> <!--@content--> <!--@footer--> data-page="__PAGE_KEY__"
+<!--@head-->
+<!--@header-->
+<!--@content-->
+<!--@footer-->
+data-page="__PAGE_KEY__"
 ```
 
 A Vite plugin (`vite.config.js`, `pageComposerPlugin`) intercepts every HTML
@@ -86,10 +90,10 @@ documented/approved — no such field exists today.
    one `/` and one `/404.html`, the manifest matches the 11 approved routes
    exactly, every entry file exists, no unexpected HTML file exists in a
    known route directory, and every skeleton has each marker exactly once.
-2. **Render-time** (`src/pages/render.js`): re-validates the *specific*
+2. **Render-time** (`src/pages/render.js`): re-validates the _specific_
    route's content on every render, using the same `content-schema.js` the
    pre-flight validator uses. This matters because content edits trigger a
-   dev-server *restart*, not a process exit — invalid data introduced
+   dev-server _restart_, not a process exit — invalid data introduced
    mid-session must not silently reach the composed output on the next
    request.
 3. **Build-output** (`scripts/verify-build-output.mjs`, runs automatically

@@ -2,7 +2,14 @@
 // vite.config.js (rollupOptions.input + the page-composer plugin),
 // scripts/validate-routes.mjs, and scripts/verify-build-output.mjs.
 export const routes = [
-  { key: 'home', path: '/', entry: 'index.html', navKey: 'home', template: 'standard', content: 'home' },
+  {
+    key: 'home',
+    path: '/',
+    entry: 'index.html',
+    navKey: 'home',
+    template: 'standard',
+    content: 'home',
+  },
   {
     key: 'solutions',
     path: '/solutions/',
@@ -19,7 +26,14 @@ export const routes = [
     template: 'standard',
     content: 'process',
   },
-  { key: 'work', path: '/work/', entry: 'work/index.html', navKey: 'work', template: 'listing', content: 'work' },
+  {
+    key: 'work',
+    path: '/work/',
+    entry: 'work/index.html',
+    navKey: 'work',
+    template: 'listing',
+    content: 'work',
+  },
   {
     key: 'work-fes-challenger',
     path: '/work/fes-challenger/',
@@ -44,7 +58,14 @@ export const routes = [
     template: 'case-study',
     content: 'work-ebarangay',
   },
-  { key: 'about', path: '/about/', entry: 'about/index.html', navKey: 'about', template: 'standard', content: 'about' },
+  {
+    key: 'about',
+    path: '/about/',
+    entry: 'about/index.html',
+    navKey: 'about',
+    template: 'standard',
+    content: 'about',
+  },
   {
     key: 'contact',
     path: '/contact/',

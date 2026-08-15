@@ -7,7 +7,9 @@ function renderLinkListItem({ label, path }) {
 }
 
 export function renderListingPage({ content, navItems, activeKey }) {
-  const paragraphs = content.paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('');
+  const paragraphs = content.paragraphs
+    .map((p) => `<p>${escapeHtml(p)}</p>`)
+    .join('');
   const links = `<ul>${content.links.map(renderLinkListItem).join('')}</ul>`;
   return {
     header: renderHeader(navItems, activeKey),

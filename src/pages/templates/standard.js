@@ -3,7 +3,9 @@ import { renderHeader } from '../../components/partials/header.js';
 import { renderFooter } from '../../components/partials/footer.js';
 
 export function renderStandardPage({ content, navItems, activeKey }) {
-  const paragraphs = content.paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('');
+  const paragraphs = content.paragraphs
+    .map((p) => `<p>${escapeHtml(p)}</p>`)
+    .join('');
   const link = content.link
     ? `<p><a href="${escapeHtml(content.link.path)}">${escapeHtml(content.link.label)}</a></p>`
     : '';

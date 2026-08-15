@@ -3,7 +3,7 @@
 **Document status:** Approved initial requirements  
 **Version:** 1.0  
 **Date:** August 11, 2026  
-**Project owner:** AAA  
+**Project owner:** AAA
 
 ## 1. Purpose of This Document
 
@@ -102,21 +102,21 @@ Budget sensitivity should be communicated through phrases such as **cost-conscio
 
 ## 5. Approved Technology Stack
 
-| Area | Approved choice |
-|---|---|
-| Website type | Multi-page static website |
-| Build tool | Vite |
-| Markup | Semantic HTML5 |
-| Styling | Custom SCSS |
-| Interactions | Vanilla JavaScript using ES modules |
-| Animation | Motion for JavaScript |
-| Interface icons | Lucide icons |
-| Brand icons | Selected local SVG files where required |
-| Card components | Custom HTML, SCSS, SVG, and CSS graphics |
-| Source control | Git and GitHub |
-| Production hosting | Cloudflare Pages free tier |
-| Domain | `aaabrenica.site` or an approved subdomain during transition |
-| Deployment | Automatic deployment from GitHub |
+| Area               | Approved choice                                              |
+| ------------------ | ------------------------------------------------------------ |
+| Website type       | Multi-page static website                                    |
+| Build tool         | Vite                                                         |
+| Markup             | Semantic HTML5                                               |
+| Styling            | Custom SCSS                                                  |
+| Interactions       | Vanilla JavaScript using ES modules                          |
+| Animation          | Motion for JavaScript                                        |
+| Interface icons    | Lucide icons                                                 |
+| Brand icons        | Selected local SVG files where required                      |
+| Card components    | Custom HTML, SCSS, SVG, and CSS graphics                     |
+| Source control     | Git and GitHub                                               |
+| Production hosting | Cloudflare Pages free tier                                   |
+| Domain             | `aaabrenica.site` or an approved subdomain during transition |
+| Deployment         | Automatic deployment from GitHub                             |
 
 Initial packages:
 
@@ -185,14 +185,14 @@ The implementation must remain original. Do not copy the reference site's code, 
 
 ### 6.3 Color direction
 
-| Role | Direction |
-|---|---|
-| Main background | Deep charcoal or blue-black |
-| Surface background | Slightly lighter slate or deep neutral |
-| Primary accent | Electric blue or clear cobalt |
-| Secondary accents | Lime, amber, coral, violet, or cyan where appropriate |
-| Primary text | Warm off-white |
-| Secondary text | Muted blue-gray |
+| Role               | Direction                                             |
+| ------------------ | ----------------------------------------------------- |
+| Main background    | Deep charcoal or blue-black                           |
+| Surface background | Slightly lighter slate or deep neutral                |
+| Primary accent     | Electric blue or clear cobalt                         |
+| Secondary accents  | Lime, amber, coral, violet, or cyan where appropriate |
+| Primary text       | Warm off-white                                        |
+| Secondary text     | Muted blue-gray                                       |
 
 Final color tokens will be established during the design-system phase and checked for accessible contrast.
 
@@ -292,15 +292,15 @@ Additional case-study routes can be added when sufficient content and proof are 
 
 ### 8.3 Content responsibility by page
 
-| Page | Primary responsibility |
-|---|---|
-| Home | Promise, concise overview, selected proof, and invitation |
-| Solutions | Client problems, solution scope, value, and engagement options |
-| Process | Delivery method, expectations, approvals, and outputs |
-| Work | Project directory and high-level evidence |
-| Case study | Detailed challenge, decisions, implementation, and outcome |
-| About | Experience, approach, credibility, skills, and working relationship |
-| Contact | Qualified but approachable project inquiry |
+| Page       | Primary responsibility                                              |
+| ---------- | ------------------------------------------------------------------- |
+| Home       | Promise, concise overview, selected proof, and invitation           |
+| Solutions  | Client problems, solution scope, value, and engagement options      |
+| Process    | Delivery method, expectations, approvals, and outputs               |
+| Work       | Project directory and high-level evidence                           |
+| Case study | Detailed challenge, decisions, implementation, and outcome          |
+| About      | Experience, approach, credibility, skills, and working relationship |
+| Contact    | Qualified but approachable project inquiry                          |
 
 The homepage and dedicated pages must not repeat identical long-form content.
 
@@ -544,13 +544,13 @@ The final form delivery solution will be selected during Contact implementation.
 
 ## 11. Initial Project Portfolio
 
-| Project | Initial presentation |
-|---|---|
-| FES Challenger | Full public case study using approved public assets |
-| Government/business workflow system | Sanitized and anonymized professional case study |
-| eBarangay | Personal full-stack case study |
-| Reusable Angular components | Technical showcase when content is ready |
-| WordPress theme/starter system | Reusable-development showcase when content is ready |
+| Project                             | Initial presentation                                |
+| ----------------------------------- | --------------------------------------------------- |
+| FES Challenger                      | Full public case study using approved public assets |
+| Government/business workflow system | Sanitized and anonymized professional case study    |
+| eBarangay                           | Personal full-stack case study                      |
+| Reusable Angular components         | Technical showcase when content is ready            |
+| WordPress theme/starter system      | Reusable-development showcase when content is ready |
 
 ### 11.1 Confidentiality rules
 
@@ -638,12 +638,12 @@ Target Lighthouse accessibility score: **95 or higher**.
 
 Target Lighthouse scores:
 
-| Category | Target |
-|---|---:|
-| Performance | 90+ |
-| Accessibility | 95+ |
-| Best Practices | 95+ |
-| SEO | 95+ |
+| Category       | Target |
+| -------------- | -----: |
+| Performance    |    90+ |
+| Accessibility  |    95+ |
+| Best Practices |    95+ |
+| SEO            |    95+ |
 
 Implementation requirements:
 
@@ -716,11 +716,11 @@ GitHub Pages remains an acceptable fallback if Cloudflare Pages cannot be used.
 
 Use one GitHub repository and the following branch model:
 
-| Branch | Purpose | Deployment behavior |
-|---|---|---|
+| Branch      | Purpose                            | Deployment behavior        |
+| ----------- | ---------------------------------- | -------------------------- |
 | `feature/*` | Individual feature or content work | Optional temporary preview |
-| `develop` | Integrated development version | Development preview |
-| `main` | Approved production source | Production deployment |
+| `develop`   | Integrated development version     | Development preview        |
+| `main`      | Approved production source         | Production deployment      |
 
 Promotion path:
 

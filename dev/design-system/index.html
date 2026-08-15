@@ -298,6 +298,51 @@
         color: var(--color-text-secondary);
         max-width: var(--width-reading);
       }
+
+      /* PF-021 — arrangement-only. Every visual property below belongs to
+         the real classes from src/styles/{elements,objects,components,utilities}/
+         loaded via main.js -> main.scss; nothing here defines component
+         styling. */
+      .demo-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+        margin-bottom: var(--space-5);
+      }
+      .demo-stack {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+      .demo-caption {
+        display: block;
+        margin-top: var(--space-2);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-label);
+        color: var(--color-text-muted);
+      }
+      .demo-media-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: var(--gap-md);
+        max-width: 40rem;
+      }
+      .demo-container-marker {
+        margin-bottom: var(--space-3);
+        padding-block: var(--space-2);
+        background: var(--color-surface-1);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        color: var(--color-text-secondary);
+        text-align: center;
+      }
+      .demo-narrow {
+        max-width: 20rem;
+        padding: var(--space-4);
+        border: var(--border-width) dashed var(--color-border);
+        border-radius: var(--radius-md);
+      }
     </style>
   </head>
   <body>
@@ -445,6 +490,213 @@
         <code>:focus-visible</code> ring on keyboard focus. Enable "reduce motion" at the OS level to confirm the transition is removed.
       </p>
       <button class="motion-demo" type="button">Hover or Tab to me</button>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Headings &amp; body copy</h2>
+      <p class="motion-note">Real elements/_headings.scss and elements/_body-copy.scss — no demo-only styling below.</p>
+      <div class="demo-stack">
+        <h1>Heading level one</h1>
+        <h2>Heading level two</h2>
+        <h3>Heading level three</h3>
+        <h4>Heading level four</h4>
+        <h2 class="text-display">.text-display on an h2 (hero scale, section-level heading)</h2>
+        <p class="text-lead">Lead paragraph using .text-lead — I help growing businesses improve their operations through websites, internal systems, and custom software.</p>
+        <p>Body paragraph with <strong>strong emphasis</strong>, <em>italic emphasis</em>, and inline <code>code</code>. <small>Small/caption text sits alongside it.</small></p>
+        <ul>
+          <li>Unmarked list item one</li>
+          <li>Unmarked list item two</li>
+        </ul>
+        <ul class="list--marked">
+          <li>Accent-marked list item one</li>
+          <li>Accent-marked list item two</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Links</h2>
+      <p>
+        Inline link inside a paragraph: <a href="/work/">view our work</a>. Standalone: <a href="/contact/">Contact us</a>.
+        Plain modifier (no underline): <a class="link--plain" href="/about/">About, no underline</a>.
+        A focusable example — Tab to it to check <code>:focus-visible</code>: <a href="/process/">Our process</a>.
+      </p>
+      <p>
+        Default external link — no <code>target</code>, no <code>rel</code>, same tab:
+        <a href="https://github.com">github.com</a>.
+      </p>
+      <p>
+        Explicit new-tab opt-in — <code>target="_blank" rel="noopener"</code> plus a visually-hidden accessible indication:
+        <a href="https://github.com" target="_blank" rel="noopener">github.com <span class="visually-hidden">(opens in a new tab)</span></a>.
+      </p>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Buttons</h2>
+      <p class="motion-note">
+        Hover lift only applies under <code>(hover: hover) and (pointer: fine)</code> and never on
+        <code>:focus-visible</code> — Tab to any button below and confirm it does not move.
+      </p>
+      <div class="demo-row">
+        <button class="btn btn--primary btn--sm" type="button">Primary sm</button>
+        <button class="btn btn--primary" type="button">Primary default</button>
+        <button class="btn btn--primary btn--lg" type="button">Primary lg</button>
+      </div>
+      <div class="demo-row">
+        <button class="btn btn--secondary btn--sm" type="button">Secondary sm</button>
+        <button class="btn btn--secondary" type="button">Secondary default</button>
+        <button class="btn btn--secondary btn--lg" type="button">Secondary lg</button>
+      </div>
+      <div class="demo-row">
+        <button class="btn btn--ghost btn--sm" type="button">Ghost sm</button>
+        <button class="btn btn--ghost" type="button">Ghost default</button>
+        <button class="btn btn--ghost btn--lg" type="button">Ghost lg</button>
+      </div>
+      <div class="demo-row">
+        <button class="btn btn--primary" type="button">
+          Continue
+          <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </button>
+        <span>
+          <button class="btn btn--secondary btn--icon" type="button" aria-label="Next">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+          <span class="demo-caption">icon-only, aria-label="Next"</span>
+        </span>
+      </div>
+      <div class="demo-row">
+        <button class="btn btn--primary" type="button" disabled>Primary disabled</button>
+        <button class="btn btn--secondary" type="button" disabled>Secondary disabled</button>
+        <button class="btn btn--ghost" type="button" disabled>Ghost disabled</button>
+      </div>
+      <div class="demo-row">
+        <button class="btn btn--primary" type="button">A deliberately long button label to check wrapping behavior</button>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Tags</h2>
+      <p class="motion-note">Static — no hover/active state, no transition, no transform (not interactive).</p>
+      <div class="demo-row">
+        <span class="tag">Node.js</span>
+        <span class="tag">A deliberately long tag label to check wrapping</span>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Media frames</h2>
+      <div class="demo-media-grid">
+        <div class="media-frame">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225'%3E%3Crect width='400' height='225' fill='%231d2540'/%3E%3C/svg%3E" alt="" width="400" height="225">
+          <span class="demo-caption">default (16:9)</span>
+        </div>
+        <div class="media-frame media-frame--square">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%231d2540'/%3E%3C/svg%3E" alt="" width="400" height="400">
+          <span class="demo-caption">--square (1:1)</span>
+        </div>
+        <div class="media-frame media-frame--wide">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='171'%3E%3Crect width='400' height='171' fill='%231d2540'/%3E%3C/svg%3E" alt="" width="400" height="171">
+          <span class="demo-caption">--wide (21:9)</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Section header object</h2>
+      <header class="section-header">
+        <span class="section-header__eyebrow">Eyebrow label</span>
+        <h2 class="section-header__heading">Section header heading</h2>
+        <p class="section-header__lede">An optional lede sentence expanding on the section heading, set at the body-lg size.</p>
+      </header>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Container widths</h2>
+      <div class="container demo-container-marker">.container — max-width: var(--container-max)</div>
+      <div class="container--wide demo-container-marker">.container--wide — max-width: var(--container-wide)</div>
+      <div class="container--reading demo-container-marker">.container--reading — max-width: var(--width-reading)</div>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Form-control foundations</h2>
+      <form novalidate>
+        <div class="field">
+          <label class="field__label" for="demo-name">Name</label>
+          <input class="field__control" type="text" id="demo-name" name="name" autocomplete="name">
+        </div>
+        <div class="field">
+          <label class="field__label" for="demo-email">Email</label>
+          <input class="field__control" type="email" id="demo-email" name="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label class="field__label" for="demo-message">Message</label>
+          <textarea class="field__control" id="demo-message" name="message"></textarea>
+        </div>
+        <div class="field">
+          <label class="field__label" for="demo-topic">Topic</label>
+          <select class="field__control" id="demo-topic" name="topic">
+            <option value="general">General inquiry</option>
+            <option value="project">New project</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field__choice">
+            <input class="field__choice-control" type="checkbox" name="terms">
+            <span class="field__choice-label">I agree to the terms</span>
+          </label>
+        </div>
+        <div class="field">
+          <label class="field__choice">
+            <input class="field__choice-control" type="radio" name="contact-method" value="email" checked>
+            <span class="field__choice-label">Contact me by email</span>
+          </label>
+          <label class="field__choice">
+            <input class="field__choice-control" type="radio" name="contact-method" value="phone">
+            <span class="field__choice-label">Contact me by phone</span>
+          </label>
+        </div>
+        <div class="field">
+          <label class="field__choice">
+            <input class="field__choice-control" type="checkbox" name="disabled-choice" disabled>
+            <span class="field__choice-label">Disabled choice, for contrast reference</span>
+          </label>
+        </div>
+        <div class="field field--error">
+          <label class="field__label" for="demo-email-error">Email (error state)</label>
+          <input
+            class="field__control"
+            type="email"
+            id="demo-email-error"
+            name="email-error"
+            autocomplete="email"
+            required
+            value="not-an-email"
+            aria-invalid="true"
+            aria-describedby="demo-email-error-message"
+          >
+          <p class="field__error" id="demo-email-error-message">
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+            Enter a valid email address.
+          </p>
+        </div>
+        <button class="btn btn--primary" type="submit">Submit</button>
+      </form>
+      <p class="motion-note">
+        The error field sets <code>aria-invalid="true"</code> and <code>aria-describedby</code> pointing at the visible,
+        persistent error text; the icon is decoration only (<code>aria-hidden</code>) and never the only signal.
+        <code>.field--error</code> itself only changes the border color — it does not set either ARIA attribute.
+      </p>
+    </section>
+
+    <section class="preview-section">
+      <h2>PF-021 — Narrow-width wrap check</h2>
+      <div class="demo-narrow demo-stack">
+        <button class="btn btn--primary" type="button">A long button label in a narrow column</button>
+        <div class="field">
+          <label class="field__label" for="demo-narrow-field">Narrow field</label>
+          <input class="field__control" type="text" id="demo-narrow-field" name="narrow-field">
+        </div>
+      </div>
     </section>
   </body>
 </html>

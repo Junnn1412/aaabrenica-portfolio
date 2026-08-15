@@ -48,6 +48,55 @@ npm run preview
 
 Serves the contents of `dist/` locally.
 
+## Linting
+
+```bash
+npm run lint        # lint:js + lint:styles
+npm run lint:js     # ESLint — JS/Node correctness
+npm run lint:styles  # Stylelint — SCSS
+```
+
+## Formatting
+
+```bash
+npm run format        # write formatting fixes
+npm run format:check  # check only, no changes
+```
+
+Prettier covers JS, JSON, Markdown, and SCSS. HTML is intentionally excluded
+(see [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md)) — `html-validate` is the
+style authority for the committed HTML skeletons instead.
+
+## Tests
+
+```bash
+npm test
+```
+
+Runs the Node.js built-in test runner against `tests/`. See
+[`docs/TESTING_AND_QA.md`](docs/TESTING_AND_QA.md) for what's covered.
+
+## HTML standards validation
+
+```bash
+npm run html:validate
+```
+
+Validates the **composed** production output (`dist/**/*.html`) against
+`html-validate:recommended`. Requires a build to exist first — run after
+`npm run build`, or use `npm run verify`.
+
+## Verify everything
+
+```bash
+npm run verify
+```
+
+Runs `check:routes`, `lint`, `format:check`, `test`, `build`, and
+`html:validate` in order, stopping at the first failure. This is the
+feature-gate command referenced in
+[`docs/DEVELOPMENT_WORKFLOW.md`](docs/DEVELOPMENT_WORKFLOW.md).
+
 ## Project documents
 
 - [`CLAUDE.md`](CLAUDE.md) — project instructions and working method
@@ -57,6 +106,7 @@ Serves the contents of `dist/` locally.
 - [`docs/REUSABLE_PORTFOLIO_ARCHITECTURE.md`](docs/REUSABLE_PORTFOLIO_ARCHITECTURE.md) — reusable-starter architecture direction
 - [`docs/SOURCE_ARCHITECTURE.md`](docs/SOURCE_ARCHITECTURE.md) — how routes are composed, validated, and organized
 - [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) — material project decisions and their rationale
+- [`docs/TESTING_AND_QA.md`](docs/TESTING_AND_QA.md) — test matrix, commands, and manual checks not yet automated
 
 ## Branch workflow
 

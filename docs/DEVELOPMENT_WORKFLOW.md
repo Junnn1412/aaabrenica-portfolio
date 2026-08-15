@@ -3,7 +3,7 @@
 **Status:** Approved working workflow  
 **Version:** 1.0  
 **Owner:** AAA  
-**Implementation assistant:** Claude Code  
+**Implementation assistant:** Claude Code
 
 ## 1. Purpose
 
@@ -11,13 +11,13 @@ This workflow turns the approved portfolio requirements into small, reviewable i
 
 ## 2. Roles and responsibilities
 
-| Responsibility | Owner |
-|---|---|
-| Business goals, personal information, assets, and final approval | AAA |
-| Requirements, architecture, task definition, reviews, and correction prompts | AAA with ChatGPT |
-| Repository inspection, implementation, automated checks, and completion reports | Claude Code |
-| Visual acceptance and confidentiality approval | AAA |
-| Branch promotion and production release approval | AAA |
+| Responsibility                                                                  | Owner            |
+| ------------------------------------------------------------------------------- | ---------------- |
+| Business goals, personal information, assets, and final approval                | AAA              |
+| Requirements, architecture, task definition, reviews, and correction prompts    | AAA with ChatGPT |
+| Repository inspection, implementation, automated checks, and completion reports | Claude Code      |
+| Visual acceptance and confidentiality approval                                  | AAA              |
+| Branch promotion and production release approval                                | AAA              |
 
 Claude may recommend changes, but it does not independently change scope, technology, branding, content claims, or release status.
 
@@ -36,11 +36,11 @@ A task may refine a requirement but must explicitly record the refinement. Mater
 
 ## 4. Branch model
 
-| Branch | Purpose | Expected deployment |
-|---|---|---|
-| `feature/*` | One bounded feature, page, or documentation change | Optional preview |
-| `develop` | Integrated and reviewable development release | Cloudflare preview |
-| `main` | Approved production source | Production |
+| Branch      | Purpose                                            | Expected deployment |
+| ----------- | -------------------------------------------------- | ------------------- |
+| `feature/*` | One bounded feature, page, or documentation change | Optional preview    |
+| `develop`   | Integrated and reviewable development release      | Cloudflare preview  |
+| `main`      | Approved production source                         | Production          |
 
 Promotion path:
 
@@ -102,14 +102,18 @@ Accessibility, responsiveness, and reduced-motion behavior are part of the imple
 
 ### 5.4 Validate
 
-Claude runs all available checks relevant to the task and reports the exact results. A typical feature gate includes:
+Claude runs all available checks relevant to the task and reports the exact results. The feature gate is:
 
 ```bash
-npm run format:check
+npm run check:routes
 npm run lint
+npm run format:check
 npm run test
 npm run build
+npm run html:validate
 ```
+
+Equivalently, `npm run verify` runs all six in this order and stops at the first failure.
 
 Visual tasks additionally require manual verification at 320, 375, 768, 1024, 1440, and 1920 px, plus keyboard, reduced-motion, console, and overflow checks.
 
@@ -151,32 +155,40 @@ Only AAA authorizes merging and promotion.
 # Task: [ID] [Name]
 
 ## Objective
+
 [One outcome-focused paragraph]
 
 ## Read first
+
 - `CLAUDE.md`
 - `DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md`
 - [Relevant documents and files]
 
 ## Scope
+
 - [Required change]
 
 ## Out of scope
+
 - [Explicit exclusion]
 
 ## Inputs
+
 - [Approved copy, assets, data, or references]
 
 ## Acceptance criteria
+
 - [Observable requirement]
 - Works at 320, 375, 768, 1024, 1440, and 1920 px where visual
 - Keyboard accessible and reduced-motion safe where interactive
 - Applicable validation commands pass
 
 ## Working instruction
+
 Inspect the existing implementation and propose a plan. Do not edit files until the plan is approved.
 
 ## Completion report
+
 Use the format required by `CLAUDE.md`.
 ```
 
@@ -249,4 +261,3 @@ Create these when their corresponding implementation phase begins; do not fill t
 ## 11. Definition of done
 
 A task is done only when its code, visual behavior, content, documentation, and checks satisfy its acceptance criteria. A release is done only after production verification—not when the merge or deployment job begins.
-

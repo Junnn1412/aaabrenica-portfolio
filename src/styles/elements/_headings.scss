@@ -1,0 +1,36 @@
+// PF-021 — applies the PF-020 type scale to real heading elements.
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-family-display);
+  font-weight: 500;
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--letter-spacing-heading);
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+}
+
+h3 {
+  font-size: var(--font-size-h3);
+}
+
+h4 {
+  font-size: var(--font-size-h4);
+}
+
+// Decouples display-scale visual size from heading level — usable on any
+// heading (e.g. a page's single h1 that should read at hero scale) without
+// implying every h1 site-wide must be that large.
+.text-display {
+  font-size: var(--font-size-display);
+  font-weight: 700;
+  line-height: var(--line-height-display);
+}

@@ -1,0 +1,49 @@
+// PF-021 — base typographic treatment for running text.
+p {
+  max-width: var(--width-reading);
+  margin: 0 0 var(--space-4);
+}
+
+strong {
+  font-weight: 600;
+}
+
+em {
+  font-style: italic;
+}
+
+small {
+  font-size: var(--font-size-small);
+}
+
+code,
+kbd {
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-1);
+  font-family:
+    ui-monospace, sfmono-regular, menlo, consolas, 'Liberation Mono', monospace;
+  font-size: 0.9em;
+}
+
+// Decouples lead-paragraph size from the <p> default without a second tag.
+.text-lead {
+  font-size: var(--font-size-body-lg);
+}
+
+ul,
+ol {
+  max-width: var(--width-reading);
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-5);
+}
+
+li {
+  margin-bottom: var(--space-2);
+}
+
+// Accent-colored markers — native list semantics/bullets are kept, only
+// ::marker's color changes, so no custom pseudo-bullet markup is needed.
+.list--marked li::marker {
+  color: var(--color-accent-text);
+}

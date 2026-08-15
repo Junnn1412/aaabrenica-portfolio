@@ -5,6 +5,10 @@ $radius-full: 999px;
 $border-width: 1px;
 $focus-ring-width: 2px;
 
+// Minimum interactive hit area (WCAG 2.5.5) — applies to buttons and
+// standalone controls, not inline links in running text (PF-021).
+$touch-target-min: 2.75rem;
+
 // Dark-UI-appropriate elevation: black shadows barely read on a near-black
 // canvas, so elevation leans more on the surface lightness step (§colors)
 // than on shadow alone.
@@ -22,6 +26,7 @@ $shape: (
   'radius-full': $radius-full,
   'border-width': $border-width,
   'focus-ring-width': $focus-ring-width,
+  'touch-target-min': $touch-target-min,
   'shadow-sm': $shadow-sm,
   'shadow-md': $shadow-md,
   'shadow-lg': $shadow-lg,

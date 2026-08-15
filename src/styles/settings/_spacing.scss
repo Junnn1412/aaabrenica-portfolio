@@ -1,0 +1,51 @@
+$space-1: 0.25rem;
+$space-2: 0.5rem;
+$space-3: 0.75rem;
+$space-4: 1rem;
+$space-5: 1.5rem;
+$space-6: 2rem;
+$space-7: 3rem;
+$space-8: 4rem;
+$space-9: 6rem;
+$space-10: 8rem;
+$space-section: clamp(4rem, 3rem + 5vw, 8rem);
+$gutter: clamp(1.25rem, 1rem + 2vw, 3rem);
+$gap-sm: $space-4;
+$gap-md: $space-5;
+$gap-lg: $space-6;
+$container-max: 80rem;
+$container-wide: 90rem;
+
+// Breakpoints — Sass-only. CSS custom properties cannot be used inside
+// @media conditions, so these can never be emitted alongside the other
+// settings maps; they're consumed directly at compile time via
+// `@media (min-width: spacing.$bp-md)`. Em-based to respect user
+// font-size/zoom. Content-driven, not device-specific — five named
+// breakpoints, not one per required test width (320/375/768/1024/1440/1920
+// are verified by manual responsive review regardless of where a named
+// breakpoint sits).
+$bp-sm: 40em; // 640px
+$bp-md: 48em; // 768px
+$bp-lg: 64em; // 1024px
+$bp-xl: 80em; // 1280px
+$bp-xxl: 120em; // 1920px
+
+$spacing: (
+  'space-1': $space-1,
+  'space-2': $space-2,
+  'space-3': $space-3,
+  'space-4': $space-4,
+  'space-5': $space-5,
+  'space-6': $space-6,
+  'space-7': $space-7,
+  'space-8': $space-8,
+  'space-9': $space-9,
+  'space-10': $space-10,
+  'space-section': $space-section,
+  'gutter': $gutter,
+  'gap-sm': $gap-sm,
+  'gap-md': $gap-md,
+  'gap-lg': $gap-lg,
+  'container-max': $container-max,
+  'container-wide': $container-wide,
+) !default;

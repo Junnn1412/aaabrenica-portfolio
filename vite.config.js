@@ -4,8 +4,19 @@ import { renderRoute } from './src/pages/render.js';
 import { composePage } from './src/pages/compose.js';
 import { normalizePath, resolveEntryPath } from './src/pages/paths.js';
 import { attachComposerWatcher } from './src/pages/dev-watcher.js';
+import { resolveHtmlRequest } from './src/pages/route-resolution.js';
 
 const projectRootUrl = new URL('.', import.meta.url);
+
+// The one exact file a hand-authored, dev-only design-system preview may
+// bypass composition for (docs/DESIGN_SYSTEM.md) — never built into dist/
+// (not listed in rollupOptions.input below), never scanned by
+// scripts/validate-routes.mjs's checkNoUnexpectedFiles (dev/ isn't one of
+// its ROUTE_PARENT_DIRS). Every other unregistered HTML file still throws.
+const previewEntryPath = resolveEntryPath(
+  projectRootUrl,
+  'dev/design-system/index.html',
+);
 
 function pageComposerPlugin() {
   const routesByFile = new Map(
@@ -25,13 +36,20 @@ function pageComposerPlugin() {
   return {
     name: 'aaa-portfolio:page-composer',
     transformIndexHtml(html, ctx) {
-      const route = routesByFile.get(normalizePath(ctx.filename));
-      if (!route) {
-        throw new Error(
-          `[page-composer] no route registered for HTML entry: ${ctx.filename}`,
-        );
+      const filename = normalizePath(ctx.filename);
+      const result = resolveHtmlRequest(filename, {
+        routesByFile,
+        previewEntryPath,
+      });
+      if (result.kind === 'route') {
+        return composePage(html, result.route, renderRoute(result.route));
       }
-      return composePage(html, route, renderRoute(route));
+      if (result.kind === 'preview') {
+        return html; // hand-authored, dev-only — intentionally uncomposed
+      }
+      throw new Error(
+        `[page-composer] no route registered for HTML entry: ${ctx.filename}`,
+      );
     },
     configureServer(server) {
       attachComposerWatcher(server, watchDirs);

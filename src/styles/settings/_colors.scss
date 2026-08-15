@@ -1,0 +1,53 @@
+@use 'sass:color';
+
+// Tier 1 — raw palette anchors. Internal only; never referenced outside
+// this file or emitted directly as a CSS custom property. Every literal
+// color value in the system is authored exactly once, here.
+$palette-ink-900: #0b0f17;
+$palette-slate-800: #161d2c;
+$palette-slate-700: #1d2540;
+$palette-slate-600: #2a3350;
+$palette-warm-white: #f2eee6;
+$palette-blue-gray-400: #a7b0c4;
+$palette-blue-gray-300: #838caa;
+$palette-cobalt-500: #2e6bff;
+$palette-cobalt-300: #6e9bff;
+$palette-cobalt-hover: color.adjust($palette-cobalt-500, $lightness: 6%);
+$palette-cobalt-active: color.adjust($palette-cobalt-500, $lightness: -8%);
+$palette-green-400: #3ddc84;
+$palette-amber-400: #f5b942;
+$palette-coral-400: #f0576b;
+$palette-cyan-400: #22c3d6;
+$palette-lime-400: #8dd941;
+$palette-violet-400: #9b6bff;
+$palette-selection-bg: color.change($palette-cobalt-500, $alpha: 0.35);
+$palette-scrim: color.change($palette-ink-900, $alpha: 0.72);
+
+// Tier 2 — semantic tokens. This is the public API: components and future
+// themes/profession variants reference only these names (emitted as CSS
+// custom properties by generic/_custom-properties.scss), never Tier 1.
+$colors: (
+  'color-canvas': $palette-ink-900,
+  'color-surface-1': $palette-slate-800,
+  'color-surface-2': $palette-slate-700,
+  'color-border': $palette-slate-600,
+  'color-text-primary': $palette-warm-white,
+  'color-text-secondary': $palette-blue-gray-400,
+  'color-text-muted': $palette-blue-gray-300,
+  'color-accent': $palette-cobalt-500,
+  'color-accent-text': $palette-cobalt-300,
+  'color-accent-hover': $palette-cobalt-hover,
+  'color-accent-active': $palette-cobalt-active,
+  'color-focus-ring': $palette-cobalt-500,
+  'color-selection-bg': $palette-selection-bg,
+  'color-scrim': $palette-scrim,
+  'status-success': $palette-green-400,
+  'status-warning': $palette-amber-400,
+  'status-danger': $palette-coral-400,
+  'status-info': $palette-cyan-400,
+  'accent-lime': $palette-lime-400,
+  'accent-amber': $palette-amber-400,
+  'accent-coral': $palette-coral-400,
+  'accent-violet': $palette-violet-400,
+  'accent-cyan': $palette-cyan-400,
+) !default;

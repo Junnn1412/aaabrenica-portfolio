@@ -1,0 +1,29 @@
+$radius-sm: 0.375rem;
+$radius-md: 0.625rem;
+$radius-lg: 1rem;
+$radius-full: 999px;
+$border-width: 1px;
+$focus-ring-width: 2px;
+
+// Dark-UI-appropriate elevation: black shadows barely read on a near-black
+// canvas, so elevation leans more on the surface lightness step (§colors)
+// than on shadow alone.
+$shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
+$shadow-md: 0 4px 12px rgb(0 0 0 / 45%);
+$shadow-lg: 0 12px 32px rgb(0 0 0 / 50%);
+
+// Reserved for future hover/active glow (PF-021+); not applied to anything
+// in PF-020.
+$shadow-glow-accent: 0 0 24px rgb(46 107 255 / 25%);
+$shape: (
+  'radius-sm': $radius-sm,
+  'radius-md': $radius-md,
+  'radius-lg': $radius-lg,
+  'radius-full': $radius-full,
+  'border-width': $border-width,
+  'focus-ring-width': $focus-ring-width,
+  'shadow-sm': $shadow-sm,
+  'shadow-md': $shadow-md,
+  'shadow-lg': $shadow-lg,
+  'shadow-glow-accent': $shadow-glow-accent,
+) !default;

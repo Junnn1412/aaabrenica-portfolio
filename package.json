@@ -20,7 +20,7 @@
     "lint": "npm run lint:js && npm run lint:styles",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "html:validate": "html-validate \"dist/**/*.html\"",
+    "html:validate": "html-validate \"dist/**/*.html\" \"dev/design-system/index.html\"",
     "test": "node --test \"tests/**/*.test.mjs\"",
     "verify": "npm run check:routes && npm run lint && npm run format:check && npm run test && npm run build && npm run html:validate"
   },

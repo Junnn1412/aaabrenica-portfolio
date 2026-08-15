@@ -87,6 +87,69 @@ the condition under which a decision should be revisited.
   `11.x`/`12.x` release. If CI is introduced, wire `npm run verify` into it
   directly rather than re-deriving the check list.
 
+## 2026-08-15 — Foundational design system: colors, typography, tokens, preview strategy
+
+- **Status:** Accepted (typography provisional — see below)
+- **Context:** PF-020 needed a dark, premium, original visual foundation
+  (color/typography/spacing/shape/motion/layering tokens plus global
+  document behavior) reviewable at real, compiled, responsive fidelity
+  before AAA's sign-off, without weakening the strict route/composer
+  architecture built in PF-011 or adding an indexed production route.
+- **Color format:** hex/rgb shipped as CSS custom properties, not OKLCH —
+  universal browser support, no fallback complexity, and no current need
+  for wide-gamut color or programmatic palette generation at scale. Hover/
+  active accent states are derived at Sass-compile time via `sass:color`
+  functions from the anchor token, not hand-invented hex, so their exact
+  values (`#4d81ff`, `#054eff`) are traceable to a formula, not guessed.
+- **`--color-text-muted` correction:** the first authored value (`#6e7794`)
+  measured 4.32:1 against `--color-canvas` — below the 4.5:1 AA floor for
+  normal-size text — and risked being treated as decorative when captions/
+  placeholders/timestamps are still meaningful text. Lightened to `#838caa`
+  (5.75:1 canvas / 5.05:1 surface-1) with real margin, not a razor-thin
+  pass; approved for canvas/surface-1 only (4.53:1 on surface-2, too close
+  to the floor).
+- **Typography — provisional:** Space Grotesk (display) + Inter (body/UI),
+  compared against Sora + IBM Plex Sans and Archivo + Public Sans (all SIL
+  OFL 1.1, Google Fonts, locally hostable). Chosen for matching all eight
+  approved brand adjectives simultaneously; the alternatives each traded
+  away one ("technical edge" for Sora, "approachable" for Archivo). Both
+  families were served by Google Fonts as a single variable-font file per
+  family for the requested weight range, not separate static instances —
+  self-hosted as-is (`public/fonts/*.woff2`) rather than forcing artificial
+  static splitting. **Final visual sign-off is pending** AAA reviewing the
+  real rendering in the preview page, not this comparison alone.
+- **Preview strategy:** compared adding a 12th route (rejected — explicitly
+  prohibited, would need an `APPROVED_PATHS` change too), a `public/`
+  static file (rejected — `publicDir` ships verbatim to `dist/`, so it
+  would reach production even if unlinked), and the chosen approach: a
+  hand-authored page at `dev/design-system/index.html`, reachable only via
+  `npm run dev`, never in `rollupOptions.input`. Required one narrow,
+  explicit composer change — `transformIndexHtml` now passes through
+  **exactly one file** (an exact-string match, not a directory or prefix
+  match) via a pure, tested function (`src/pages/route-resolution.js`)
+  instead of throwing; every other unregistered HTML file still throws
+  exactly as before PF-011. Proven safe empirically, not just by
+  configuration: `scripts/verify-build-output.mjs` now walks the real
+  `dist/` output after every build and asserts it contains exactly the 11
+  approved routes.
+- **Global document styling applied now, to all 11 live routes:** dark
+  canvas/text/focus-ring/reduced-motion apply globally as of this task —
+  the first visually-material change to the production site. Heading-tag
+  styling (applying the type scale to actual `<h1>`–`<h4>` elements) is
+  deliberately deferred to PF-021's "production base elements" scope, not
+  this task's.
+- **Consequences:** `tests/design-tokens.test.mjs` and
+  `tests/route-resolution.test.mjs` run inside the existing `npm test`
+  step; `npm run html:validate` additionally checks the preview source file
+  directly; no new npm dependency (`sass` and `html-validate` were already
+  installed).
+- **Revisit condition:** reconsider OKLCH if palette generation needs grow;
+  revisit `--color-text-muted` on `--color-surface-2` if that surface is
+  lightened; typography remains provisional until AAA's visual sign-off,
+  with the two alternatives as valid fallbacks if it doesn't hold up
+  visually; the current variable-font weight range may be narrowed later if
+  payload measurement shows benefit.
+
 ---
 
 _This log will be backfilled with the project's earlier approved decisions

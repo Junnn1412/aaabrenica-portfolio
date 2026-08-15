@@ -1,9 +1,19 @@
 // ITCSS-lite: settings -> generic -> elements -> objects -> components ->
-// utilities -> pages. elements/objects/utilities/pages layers are created
-// only when PF-021+ introduces components that need them (see
-// docs/SOURCE_ARCHITECTURE.md and docs/DESIGN_SYSTEM.md).
+// utilities -> pages. pages layer is created only when a later milestone
+// needs page-specific overrides (see docs/SOURCE_ARCHITECTURE.md and
+// docs/DESIGN_SYSTEM.md).
 @use 'generic/reset';
 @use 'generic/fonts';
 @use 'generic/custom-properties';
 @use 'generic/document';
+@use 'elements/headings';
+@use 'elements/body-copy';
+@use 'elements/links';
+@use 'objects/container';
+@use 'objects/section-header';
 @use 'components/skip-link';
+@use 'components/button';
+@use 'components/tag';
+@use 'components/media-frame';
+@use 'components/form-control';
+@use 'utilities/visually-hidden';

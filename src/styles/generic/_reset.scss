@@ -4,8 +4,12 @@
 
 body {
   margin: 0;
+}
 
-  a {
-    color: inherit;
-  }
+// Scoped to the structural chrome landmarks only (unstyled until PF-031's
+// nav/header/footer work) — NOT a blanket `body a`, so it can't silently
+// cancel elements/_links.scss's real link styling for content links.
+header a,
+footer a {
+  color: inherit;
 }

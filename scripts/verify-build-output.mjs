@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { routes } from '../src/config/routes.js';
 import { MARKERS } from '../src/pages/compose.js';
+import { normalizePath, resolveEntryPath } from '../src/pages/paths.js';
 
 const distRootUrl = new URL('../dist/', import.meta.url);
 
@@ -94,6 +97,54 @@ for (const route of routes) {
     );
   }
 }
+
+// Bounded to dist/ itself — our own regenerated build output, not the
+// source tree the route validator's "no recursive scan" rule protects.
+// Proves, rather than merely configures, that production contains exactly
+// the 11 approved routes: nothing missing, nothing extra (e.g. a leaked
+// dev/design-system/index.html preview, which is never listed in
+// rollupOptions.input and therefore should never reach here).
+function walkHtmlFiles(dir) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const found = [];
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      found.push(...walkHtmlFiles(full));
+    } else if (entry.isFile() && entry.name.endsWith('.html')) {
+      found.push(normalizePath(full));
+    }
+  }
+  return found;
+}
+
+function checkExactDistContents() {
+  const distRootPath = normalizePath(fileURLToPath(distRootUrl));
+  const actual = new Set(walkHtmlFiles(distRootPath));
+  const expected = new Set(
+    routes.map((route) => resolveEntryPath(distRootUrl, route.entry)),
+  );
+
+  for (const expectedFile of expected) {
+    if (!actual.has(expectedFile)) {
+      add(`expected build output missing from dist/: ${expectedFile}`);
+    }
+  }
+  for (const actualFile of actual) {
+    if (!expected.has(actualFile)) {
+      add(
+        `unexpected HTML file in dist/: ${actualFile} (production must contain exactly the 11 approved routes)`,
+      );
+    }
+  }
+}
+
+checkExactDistContents();
 
 if (problems.length > 0) {
   console.error(`[verify-build-output] ${problems.length} problem(s) found:\n`);

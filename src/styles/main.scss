@@ -1,23 +1,6 @@
-$foundation-font-stack: system-ui, sans-serif;
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: $foundation-font-stack;
-
-  a {
-    color: inherit;
-  }
-}
-
-.skip-link {
-  position: absolute;
-  left: -9999px;
-
-  &:focus {
-    left: 0;
-  }
-}
+// ITCSS-lite: settings -> generic -> elements -> objects -> components ->
+// utilities -> pages. Only settings/generic/components have real content in
+// PF-011; the other layers are created only when PF-020 introduces tokens
+// and components that need them (see docs/SOURCE_ARCHITECTURE.md).
+@use 'generic/reset';
+@use 'components/skip-link';

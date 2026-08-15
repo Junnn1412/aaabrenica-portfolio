@@ -1,13 +1,14 @@
 # Design System
 
-Established in PF-020 (tokens, typography, global document behavior) and
+Established in PF-020 (tokens, typography, global document behavior),
 extended in PF-021 (base elements: headings, body copy, links, buttons,
 labels, tags, lists, media frames, section headers, containers, and
-form-control foundations). Does **not** yet define finished nav/header/footer
-chrome or cards — that's PF-031/PF-032+. See
-[`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy and
-tooling decisions this builds on, and for the PF-020/PF-021 token/typography/
-preview decisions themselves.
+form-control foundations), and formalized as the component showcase in
+PF-030 (table of contents, review checklist — see "Component showcase
+(PF-030)" below). Does **not** yet define finished nav/header/footer chrome
+or cards — that's PF-031/PF-032+. See [`DECISION_LOG.md`](DECISION_LOG.md)
+for the composition-strategy and tooling decisions this builds on, and for
+the PF-020/PF-021/PF-030 decisions themselves.
 
 ## Token architecture
 
@@ -254,12 +255,17 @@ No Motion-for-JS is initialized in PF-020 — these are CSS-level tokens only.
 
 ## Preview workflow
 
-`dev/design-system/index.html` — a hand-authored, dev-only preview page
-that reuses the production `/src/scripts/main.js` → `main.scss` pipeline
-for real compiled tokens and fonts, plus minimal preview-specific `<style>`
-(one utility class per token being demonstrated — swatches, type samples,
-a spacing ruler, shape/shadow samples, a motion/focus demo). Not a
-self-contained or parallel design system.
+`dev/design-system/index.html` — a hand-authored, dev-only page that reuses
+the production `/src/scripts/main.js` → `main.scss` pipeline for real
+compiled tokens and fonts, plus minimal preview-specific `<style>` (one
+utility class per token/specimen being arranged — swatches, type samples, a
+spacing ruler, shape/shadow samples, a motion/focus demo, a table of
+contents). Not a self-contained or parallel design system.
+
+As of PF-030 this one file formally serves two roles at once — the PF-020
+design-token reference and the PF-021+ component showcase — rather than a
+second page or route (see "Component showcase (PF-030)" below for why no
+new file was created).
 
 **View it:** `npm run dev`, then visit `http://localhost:<port>/dev/design-system/`.
 
@@ -366,6 +372,46 @@ visual footprint.
 
 **No distinct `:visited` link style** — a deliberate style choice, not an
 oversight (see `docs/DECISION_LOG.md`).
+
+## Component showcase (PF-030)
+
+PF-030's task is to create "a development-only or non-indexed showcase that
+renders representative components, states, copy lengths, and responsive
+behavior" (`docs/INITIAL_IMPLEMENTATION_TASKS.md`). That environment already
+existed: PF-020 built the exact-file-scoped, `dist/`-excluded preview
+mechanism and PF-021 substantially populated it with representative,
+state-complete base-element specimens. PF-030 did not create a second page
+or file — doing so would duplicate the exact-file composer exception this
+project deliberately keeps to exactly one file (see the PF-020 entry in
+`docs/DECISION_LOG.md`). Instead it formalized the existing preview as the
+showcase:
+
+- A real `<h1 id="page-title">` and short intro paragraph state the page's
+  dual role and name the milestones (PF-031–PF-034) that will extend it.
+- A grouped in-page table of contents (`<nav aria-label="On this page">`)
+  organizes the current 17 specimen sections into "Design tokens (PF-020)"
+  and "Base elements (PF-021)" — each future milestone adds its own group
+  when it adds sections, rather than the page requiring a redesign later.
+- A short static "How to review this page" checklist points at the six
+  required widths, keyboard/focus, reduced motion, forced-colors, and 200%
+  zoom — a convenience pointer, not a duplicate of the authoritative list in
+  `docs/TESTING_AND_QA.md`.
+- The whole specimen area is wrapped in `<main>`; the TOC `<nav>` is
+  deliberately **not** nested inside a `<header>`/`<footer>` element, since
+  `generic/_reset.scss`'s `header a, footer a { color: inherit }` rule
+  (PF-021) is scoped exactly to real site chrome and must not silently apply
+  to showcase-only navigation.
+- `tests/preview-anchors.test.mjs` guards the two invariants this
+  introduces: every TOC `href="#..."` resolves to a real `id`, every `id`
+  in the file is unique, and exactly one `<h1 id="page-title">` exists (the
+  "Headings & body copy" section's own `<h1>`–`<h4>` specimen is
+  intentional demo content, not the page's title, and is excluded by that
+  scoping).
+
+No capability cards, project cards, nav/footer, or process/CTA components
+were built or stubbed — those are PF-031–PF-034's own scope. No placeholder
+"coming soon" sections were added either: an empty labeled section for a
+component that doesn't exist yet risks implying it does.
 
 ## Accessibility rationale summary
 

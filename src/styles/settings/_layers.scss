@@ -1,0 +1,16 @@
+// Gapped by 100 so future layers can be inserted without renumbering
+// everything; no arbitrary large values.
+$z-base: 0;
+$z-sticky-nav: 100;
+$z-dropdown: 200;
+$z-overlay: 300;
+$z-modal: 400;
+$z-toast: 500;
+$layers: (
+  'z-base': $z-base,
+  'z-sticky-nav': $z-sticky-nav,
+  'z-dropdown': $z-dropdown,
+  'z-overlay': $z-overlay,
+  'z-modal': $z-modal,
+  'z-toast': $z-toast,
+) !default;

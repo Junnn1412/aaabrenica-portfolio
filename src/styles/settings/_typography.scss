@@ -1,0 +1,53 @@
+// Replaces _foundation.scss. Sass variables only — no CSS output here;
+// generic/_custom-properties.scss emits the $typography map to :root.
+
+// Usable via system fallbacks before @font-face loads (generic/_fonts.scss).
+$font-family-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+$font-family-body:
+  'Inter',
+  system-ui,
+  -apple-system,
+  'Segoe UI',
+  roboto,
+  sans-serif;
+
+// Fluid scale — body stays fixed at 16px to protect reading comfort; only
+// larger/display sizes flex with the viewport.
+$font-size-display: clamp(2.5rem, 1.8rem + 3.2vw, 5rem);
+$font-size-h1: clamp(2rem, 1.6rem + 1.8vw, 3.25rem);
+$font-size-h2: clamp(1.5rem, 1.3rem + 0.9vw, 2.25rem);
+$font-size-h3: clamp(1.25rem, 1.15rem + 0.5vw, 1.75rem);
+$font-size-h4: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem);
+$font-size-body-lg: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+$font-size-body: 1rem;
+$font-size-small: 0.875rem;
+$font-size-label: 0.75rem;
+$line-height-display: 1.05;
+$line-height-heading: 1.15;
+$line-height-body: 1.6;
+$line-height-label: 1.4;
+$letter-spacing-heading: -0.02em;
+$letter-spacing-body: 0;
+$letter-spacing-label: 0.08em;
+$width-reading: 68ch;
+$typography: (
+  'font-family-display': $font-family-display,
+  'font-family-body': $font-family-body,
+  'font-size-display': $font-size-display,
+  'font-size-h1': $font-size-h1,
+  'font-size-h2': $font-size-h2,
+  'font-size-h3': $font-size-h3,
+  'font-size-h4': $font-size-h4,
+  'font-size-body-lg': $font-size-body-lg,
+  'font-size-body': $font-size-body,
+  'font-size-small': $font-size-small,
+  'font-size-label': $font-size-label,
+  'line-height-display': $line-height-display,
+  'line-height-heading': $line-height-heading,
+  'line-height-body': $line-height-body,
+  'line-height-label': $line-height-label,
+  'letter-spacing-heading': $letter-spacing-heading,
+  'letter-spacing-body': $letter-spacing-body,
+  'letter-spacing-label': $letter-spacing-label,
+  'width-reading': $width-reading,
+) !default;

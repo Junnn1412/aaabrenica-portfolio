@@ -14,6 +14,27 @@ $palette-cobalt-500: #2e6bff;
 $palette-cobalt-300: #6e9bff;
 $palette-cobalt-hover: color.adjust($palette-cobalt-500, $lightness: 6%);
 $palette-cobalt-active: color.adjust($palette-cobalt-500, $lightness: -8%);
+
+// Independently defined from $palette-cobalt-active, not aliased to it,
+// even though both currently resolve to the same value (-8% lightness) —
+// same precedent as the capability accents below: a future change to the
+// "pressed link text" role must never silently change the "button fill"
+// role, and vice versa (PF-021, base elements).
+$palette-cobalt-fill: color.adjust($palette-cobalt-500, $lightness: -8%);
+$palette-cobalt-fill-hover: color.adjust($palette-cobalt-500, $lightness: -14%);
+$palette-cobalt-fill-active: color.adjust(
+  $palette-cobalt-500,
+  $lightness: -20%
+);
+
+// Lightened sibling of $palette-slate-600 for real interactive boundaries
+// (button/form-control borders) that need to clear WCAG 1.4.11's 3:1
+// non-text floor — $palette-slate-600 itself stays reserved for purely
+// decorative dividers, which are exempt (PF-021, base elements).
+$palette-slate-border-interactive: color.adjust(
+  $palette-slate-600,
+  $lightness: 28%
+);
 $palette-green-400: #3ddc84;
 $palette-amber-400: #f5b942;
 $palette-coral-400: #f0576b;
@@ -38,6 +59,10 @@ $colors: (
   'color-accent-text': $palette-cobalt-300,
   'color-accent-hover': $palette-cobalt-hover,
   'color-accent-active': $palette-cobalt-active,
+  'color-accent-fill': $palette-cobalt-fill,
+  'color-accent-fill-hover': $palette-cobalt-fill-hover,
+  'color-accent-fill-active': $palette-cobalt-fill-active,
+  'color-border-interactive': $palette-slate-border-interactive,
   'color-focus-ring': $palette-cobalt-500,
   'color-selection-bg': $palette-selection-bg,
   'color-scrim': $palette-scrim,

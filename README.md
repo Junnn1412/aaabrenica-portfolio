@@ -21,6 +21,19 @@ npm run dev
 
 Starts the Vite development server.
 
+## Design system preview
+
+```bash
+npm run dev
+```
+
+then visit `/dev/design-system/` — a hand-authored, dev-only page
+demonstrating the real compiled color, typography, spacing, shape, and
+motion tokens (including self-hosted fonts). Never part of the production
+build or site navigation; see
+[`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) for how that's guaranteed.
+Font licensing: [`THIRD_PARTY_LICENSES/`](THIRD_PARTY_LICENSES/).
+
 ## Route validation
 
 ```bash
@@ -113,6 +126,7 @@ feature-gate command referenced in
 - [`docs/SOURCE_ARCHITECTURE.md`](docs/SOURCE_ARCHITECTURE.md) — how routes are composed, validated, and organized
 - [`docs/DECISION_LOG.md`](docs/DECISION_LOG.md) — material project decisions and their rationale
 - [`docs/TESTING_AND_QA.md`](docs/TESTING_AND_QA.md) — test matrix, commands, and manual checks not yet automated
+- [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) — design tokens, contrast matrix, typography, and the preview workflow
 
 ## Branch workflow
 

@@ -1,0 +1,14 @@
+@use '../settings/foundation';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: foundation.$foundation-font-stack;
+
+  a {
+    color: inherit;
+  }
+}

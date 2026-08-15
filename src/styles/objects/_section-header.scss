@@ -1,0 +1,25 @@
+// PF-021 — eyebrow + heading + optional lede, for section intros.
+.section-header {
+  max-width: var(--width-reading);
+  margin: 0 0 var(--space-6);
+}
+
+.section-header__eyebrow {
+  display: block;
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent-text);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-label);
+  text-transform: uppercase;
+}
+
+.section-header__heading {
+  margin: 0 0 var(--space-3);
+}
+
+.section-header__lede {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-lg);
+}

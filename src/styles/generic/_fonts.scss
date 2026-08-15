@@ -1,0 +1,19 @@
+// Self-hosted, Latin-subset variable fonts under /public/fonts — no
+// third-party runtime request (no fonts.googleapis.com/fonts.gstatic.com
+// <link> or API call). Licensed under SIL OFL 1.1; see
+// THIRD_PARTY_LICENSES/OFL-{Inter,SpaceGrotesk}.txt.
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/Inter-Variable.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url('/fonts/SpaceGrotesk-Variable.woff2') format('woff2');
+}

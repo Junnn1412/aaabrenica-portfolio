@@ -1,0 +1,37 @@
+// The one place values cross from Sass (settings/) to runtime CSS. Every
+// token is authored exactly once in its settings/ map and mechanically
+// re-emitted here — never duplicated. Breakpoints are the sole exception
+// (see settings/_spacing.scss) since CSS custom properties cannot be used
+// inside @media conditions.
+@use '../settings/colors';
+@use '../settings/typography';
+@use '../settings/spacing';
+@use '../settings/shape';
+@use '../settings/motion';
+@use '../settings/layers';
+
+:root {
+  @each $name, $value in colors.$colors {
+    --#{$name}: #{$value};
+  }
+
+  @each $name, $value in typography.$typography {
+    --#{$name}: #{$value};
+  }
+
+  @each $name, $value in spacing.$spacing {
+    --#{$name}: #{$value};
+  }
+
+  @each $name, $value in shape.$shape {
+    --#{$name}: #{$value};
+  }
+
+  @each $name, $value in motion.$motion {
+    --#{$name}: #{$value};
+  }
+
+  @each $name, $value in layers.$layers {
+    --#{$name}: #{$value};
+  }
+}

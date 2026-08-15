@@ -1,0 +1,35 @@
+// Global document behavior (PF-020 scope) — html/body-level appearance
+// only. Applying the type scale to actual heading elements is PF-021's
+// "production base elements" work, not this file's job.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  background-color: var(--color-canvas);
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+  min-height: 100vh;
+}
+
+::selection {
+  background-color: var(--color-selection-bg);
+}
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: 2px;
+}

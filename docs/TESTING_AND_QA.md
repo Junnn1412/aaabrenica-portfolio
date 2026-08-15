@@ -11,11 +11,19 @@ what's still manual per `CLAUDE.md`'s validation expectations. See
 | JS/Node correctness                    | ESLint (flat config)                         | `npm run lint:js`                        | Every `.js`/`.mjs` file under root configs, `src/`, `scripts/`, `tests/`                                                                                                                                         |
 | SCSS correctness                       | Stylelint (`stylelint-config-standard-scss`) | `npm run lint:styles`                    | `src/styles/**/*.scss`                                                                                                                                                                                           |
 | Formatting                             | Prettier                                     | `npm run format:check` (`format` to fix) | JS, JSON, Markdown, SCSS — **not** HTML (see below)                                                                                                                                                              |
-| HTML standards conformance             | `html-validate`                              | `npm run html:validate`                  | Composed `dist/**/*.html` only, after a build                                                                                                                                                                    |
+| HTML standards conformance             | `html-validate`                              | `npm run html:validate`                  | Composed `dist/**/*.html` only — validates what's on disk, does **not** build itself; requires a successful, up-to-date `npm run build` immediately beforehand                                                   |
 | Pure-logic unit tests                  | Node built-in `node:test`                    | `npm test`                               | `escapeHtml`, marker counting/composition, `validateContent`, `isSafeInternalPath`, `normalizePath`/`resolveEntryPath`, `renderRoute` integration, a `validate-routes.mjs` exit-code smoke test                  |
 | Project-specific route/content rules   | `scripts/validate-routes.mjs`                | `npm run check:routes`                   | Duplicate keys/paths, registry membership, content shape, link resolution, approved-route parity, marker presence — runs automatically before `dev`/`build`                                                      |
 | Project-specific composed-output rules | `scripts/verify-build-output.mjs`            | `npm run check:build`                    | No leftover markers, exactly-one title/description/main/nav-landmark, `aria-current` placement incl. 404 policy, no empty attributes, no canonical/contact markup while unset — runs automatically after `build` |
 | Everything                             | —                                            | `npm run verify`                         | All of the above, in order, stopping at the first failure                                                                                                                                                        |
+
+`npm run html:validate` never builds anything itself — running it standalone
+without a preceding `npm run build` validates whatever `dist/` already
+contains, which may be stale or absent. `npm run verify` already guarantees
+correct ordering: it runs `build` (which fails loudly via `prebuild`/
+`postbuild` on any problem) immediately before `html:validate`, so a
+successful, current build is always in place by the time HTML validation
+runs.
 
 ## Why HTML is excluded from Prettier
 

@@ -83,8 +83,14 @@ npm run html:validate
 ```
 
 Validates the **composed** production output (`dist/**/*.html`) against
-`html-validate:recommended`. Requires a build to exist first — run after
-`npm run build`, or use `npm run verify`.
+`html-validate:recommended`. This validates whatever is currently on disk in
+`dist/` — it does **not** trigger a build itself, so it requires a
+**successful, up-to-date** `npm run build` immediately beforehand; a stale or
+failed build will produce misleading results. Run `npm run build` first, or
+use `npm run verify`, which already guarantees this exact ordering (`build`
+runs immediately before `html:validate`, and `build` itself fails loudly via
+`prebuild`/`postbuild` before `html:validate` would ever run against broken
+output).
 
 ## Verify everything
 

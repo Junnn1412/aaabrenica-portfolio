@@ -242,6 +242,60 @@ the condition under which a decision should be revisited.
   theme — this is the second visually-material change to all 11 live
   routes.
 
+## 2026-08-16 — Component showcase: formalize the existing preview instead of duplicating it
+
+- **Status:** Accepted
+- **Context:** PF-030 asks for "a development-only or non-indexed showcase
+  that renders representative components, states, copy lengths, and
+  responsive behavior" that "must not ship as an indexed public portfolio
+  page" (`docs/INITIAL_IMPLEMENTATION_TASKS.md`) — no separate acceptance-criteria
+  list this time, unlike PF-020/PF-021. Before implementing anything, the
+  question was whether that environment already exists.
+- **Finding:** it does, almost entirely. PF-020 built the exact-file-scoped,
+  `dist/`-excluded, `html-validate`-checked preview mechanism
+  (`dev/design-system/index.html`, `resolveHtmlRequest()` in
+  `src/pages/route-resolution.js`); PF-021 populated it with 9 base-element
+  sections demonstrating default/hover/focus-visible/active/disabled/error
+  states, real keyboard/reduced-motion behavior, and some long-content/
+  narrow-width examples, all rendered from the real compiled production CSS.
+  The only PF-030-relevant gaps found: the page had grown to 17 sections
+  with no way to navigate between them, no `<h1>`/landmark structure, and no
+  structured review aid for the approval gates PF-035 will require.
+- **Decision:** do not create a new file, route, or second composer
+  exact-file exception. Extend the one existing preview file with a real
+  `<h1>`, `<main>`/`<nav>` landmarks, a grouped in-page table of contents
+  (grouped by the milestone that added each section — PF-020 tokens vs.
+  PF-021 base elements, with room for PF-031–PF-034 to each add their own
+  group), and a short static review checklist. No SCSS, JS, token, or
+  component change was needed — every addition is styled by real classes
+  the page already demonstrates (`h1`, `p`, `a`) plus the file's own
+  existing preview-only arrangement `<style>` block.
+- **Alternatives considered:** a separate `/dev/component-showcase/` page
+  (rejected — a second exact-file exception is exactly the kind of "broader
+  composer bypass" this project has deliberately avoided since PF-020, and
+  would fragment the single source of truth for compiled tokens); empty
+  "coming in PF-031" placeholder sections for nav/footer/cards/CTAs
+  (rejected — the acceptance criteria don't require them, and an empty
+  labeled section risks implying an unfinished component is implemented,
+  which CLAUDE.md's "do not generalize speculative variants" and "avoid
+  placeholder" guidance both counsel against); a JS viewport-width readout
+  widget to aid responsive review (rejected — the fluid CSS is already
+  genuinely responsive; verifying at the six required widths has always
+  been, and remains, a manual resize/DevTools step, not something the page
+  itself needs to instrument).
+- **Consequences:** `tests/preview-anchors.test.mjs` (new) guards two
+  invariants introduced by the TOC: every in-page anchor resolves to a real
+  `id`, and every `id` in the file is unique — both read the real committed
+  file, not a fixture, so they stay accurate as PF-031+ adds more sections.
+  The "exactly one `<h1>`" check is scoped to `id="page-title"` specifically,
+  because the "Headings & body copy" section's own demo content
+  intentionally contains a literal `<h1>`–`<h4>` specimen that must not be
+  mistaken for the page's title heading.
+- **Revisit condition:** if the page becomes unwieldy once PF-031–034 have
+  each added their sections (plausibly 30+ sections total), reconsider a
+  sticky TOC or splitting by milestone — but only as a CSS/organization
+  change to this same file, not a second file or route.
+
 ---
 
 _This log will be backfilled with the project's earlier approved decisions

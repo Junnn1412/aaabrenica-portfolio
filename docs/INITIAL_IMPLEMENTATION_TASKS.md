@@ -1,7 +1,7 @@
 # Initial Implementation Tasks
 
 **Status:** Ready for execution  
-**Version:** 1.0  
+**Version:** 1.0
 
 ## 1. Execution policy
 
@@ -15,17 +15,17 @@ Task statuses:
 
 ## 2. Milestone overview
 
-| Milestone | Outcome | Gate |
-|---|---|---|
-| M0 Documentation and inventory | Reliable project instructions and known content gaps | Requirements confirmed |
-| M1 Project foundation | Working multi-page Vite project | Production build approved |
-| M2 Design system | Approved visual and interaction foundation | Token and typography approval |
-| M3 Component showcase | Approved reusable UI components | Visual component approval |
-| M4 Global shell and homepage | Complete concise sales overview | Homepage approval |
-| M5 Dedicated pages | Supporting detail for solutions, process, work, about, and contact | Page-content approval |
-| M6 Case studies and assets | Credible, safe project evidence | Confidentiality approval |
-| M7 Quality, deployment, and launch | Production-ready Version 1 | Release approval |
-| M8 Starter extraction | Reusable client portfolio starter | Post-launch validation |
+| Milestone                          | Outcome                                                            | Gate                          |
+| ---------------------------------- | ------------------------------------------------------------------ | ----------------------------- |
+| M0 Documentation and inventory     | Reliable project instructions and known content gaps               | Requirements confirmed        |
+| M1 Project foundation              | Working multi-page Vite project                                    | Production build approved     |
+| M2 Design system                   | Approved visual and interaction foundation                         | Token and typography approval |
+| M3 Component showcase              | Approved reusable UI components                                    | Visual component approval     |
+| M4 Global shell and homepage       | Complete concise sales overview                                    | Homepage approval             |
+| M5 Dedicated pages                 | Supporting detail for solutions, process, work, about, and contact | Page-content approval         |
+| M6 Case studies and assets         | Credible, safe project evidence                                    | Confidentiality approval      |
+| M7 Quality, deployment, and launch | Production-ready Version 1                                         | Release approval              |
+| M8 Starter extraction              | Reusable client portfolio starter                                  | Post-launch validation        |
 
 ## 3. M0 — Documentation and content inventory
 
@@ -343,4 +343,3 @@ The first coding task should be **PF-010: Initialize Git and Vite**, but only af
 - Whether the current documentation directory will become the repository root
 
 Claude should begin in Plan mode, inspect these documents, propose the exact initialization commands and file structure, and wait for approval before editing.
-

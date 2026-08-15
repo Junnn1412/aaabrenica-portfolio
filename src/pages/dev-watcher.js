@@ -23,12 +23,18 @@ export function attachComposerWatcher(server, watchDirs) {
   let debounceTimer = null;
 
   const triggerRestart = (changedPath, eventName) => {
-    server.config.logger.info(`[page-composer] restarting — ${eventName}: ${changedPath}`, { timestamp: true });
+    server.config.logger.info(
+      `[page-composer] restarting — ${eventName}: ${changedPath}`,
+      { timestamp: true },
+    );
     restarting = true;
     server
       .restart()
       .catch((err) => {
-        server.config.logger.error(`[page-composer] restart failed: ${err.message}`, { error: err });
+        server.config.logger.error(
+          `[page-composer] restart failed: ${err.message}`,
+          { error: err },
+        );
       })
       .finally(() => {
         restarting = false;

@@ -129,21 +129,25 @@ For visual tasks, also check:
 
 ```markdown
 ## Completed
+
 - Concise implementation summary
 
 ## Files changed
+
 - `path/to/file` — reason
 
 ## Validation
+
 - `command` — result
 - Manual check — result
 
 ## Assumptions
+
 - Any assumption made, or `None`
 
 ## Remaining issues
+
 - Anything unresolved, or `None`
 ```
 
 Never conceal failed checks. Distinguish between automated checks, manual checks, and checks not yet performed.
-

@@ -56,17 +56,27 @@ function checkDuplicates() {
     const entryAbs = resolveEntryPath(projectRootUrl, route.entry);
     if (byKey.has(route.key)) add(`duplicate route key "${route.key}"`);
     else byKey.set(route.key, true);
-    if (byPath.has(route.path)) add(`duplicate route path "${route.path}" (routes "${byPath.get(route.path)}" and "${route.key}")`);
+    if (byPath.has(route.path))
+      add(
+        `duplicate route path "${route.path}" (routes "${byPath.get(route.path)}" and "${route.key}")`,
+      );
     else byPath.set(route.path, route.key);
-    if (byEntry.has(entryAbs)) add(`duplicate route entry "${route.entry}" (routes "${byEntry.get(entryAbs)}" and "${route.key}")`);
+    if (byEntry.has(entryAbs))
+      add(
+        `duplicate route entry "${route.entry}" (routes "${byEntry.get(entryAbs)}" and "${route.key}")`,
+      );
     else byEntry.set(entryAbs, route.key);
   }
 }
 
 function checkRegistries() {
   for (const route of routes) {
-    if (!(route.template in templates)) add(`route "${route.key}": unknown template "${route.template}"`);
-    if (!(route.content in contentByKey)) add(`route "${route.key}": missing content module for key "${route.content}"`);
+    if (!(route.template in templates))
+      add(`route "${route.key}": unknown template "${route.template}"`);
+    if (!(route.content in contentByKey))
+      add(
+        `route "${route.key}": missing content module for key "${route.content}"`,
+      );
   }
 }
 
@@ -81,7 +91,10 @@ function checkContentShape() {
 }
 
 function checkSiteConfig() {
-  if (typeof site.defaultDescription !== 'string' || site.defaultDescription.length === 0) {
+  if (
+    typeof site.defaultDescription !== 'string' ||
+    site.defaultDescription.length === 0
+  ) {
     add('site.defaultDescription must be a non-empty string');
   }
 }
@@ -91,7 +104,9 @@ function checkSiteConfig() {
 function checkNavigation() {
   for (const item of primaryNav) {
     if (!isSafeInternalPath(item.path)) {
-      add(`navigation item "${item.key}": path "${item.path}" is not a safe internal path`);
+      add(
+        `navigation item "${item.key}": path "${item.path}" is not a safe internal path`,
+      );
       continue;
     }
     const matchingRoutes = routes.filter((r) => r.navKey === item.key);
@@ -105,13 +120,18 @@ function checkNavigation() {
     if (!matchingRoutes.some((route) => route.path === item.path)) {
       add(
         `navigation item "${item.key}" path "${item.path}" matches no route with navKey "${item.key}" ` +
-          `(candidates: ${matchingRoutes.map((r) => r.path).join(', ')})`
+          `(candidates: ${matchingRoutes.map((r) => r.path).join(', ')})`,
       );
     }
   }
   for (const route of routes) {
-    if (route.navKey != null && !primaryNav.some((i) => i.key === route.navKey)) {
-      add(`route "${route.key}": navKey "${route.navKey}" has no matching navigation item`);
+    if (
+      route.navKey != null &&
+      !primaryNav.some((i) => i.key === route.navKey)
+    ) {
+      add(
+        `route "${route.key}": navKey "${route.navKey}" has no matching navigation item`,
+      );
     }
   }
 }
@@ -119,33 +139,46 @@ function checkNavigation() {
 function checkWorkListingLinks() {
   const workContent = contentByKey.work;
   if (!workContent?.links) return; // already reported by checkContentShape
-  const caseStudyPaths = new Set(routes.filter((r) => r.template === 'case-study').map((r) => r.path));
+  const caseStudyPaths = new Set(
+    routes.filter((r) => r.template === 'case-study').map((r) => r.path),
+  );
   for (const link of workContent.links) {
     if (!caseStudyPaths.has(link.path)) {
-      add(`work listing link "${link.label}" (${link.path}) does not match a registered case-study route`);
+      add(
+        `work listing link "${link.label}" (${link.path}) does not match a registered case-study route`,
+      );
     }
   }
 }
 
 function checkSingletons() {
   const roots = routes.filter((r) => r.path === '/');
-  if (roots.length !== 1) add(`expected exactly one route with path "/", found ${roots.length}`);
+  if (roots.length !== 1)
+    add(`expected exactly one route with path "/", found ${roots.length}`);
   const notFounds = routes.filter((r) => r.path === '/404.html');
-  if (notFounds.length !== 1) add(`expected exactly one route with path "/404.html", found ${notFounds.length}`);
+  if (notFounds.length !== 1)
+    add(
+      `expected exactly one route with path "/404.html", found ${notFounds.length}`,
+    );
 }
 
 function checkFormats() {
   const DIR_PATH_RE = /^\/([a-z0-9-]+\/)*$/;
   for (const route of routes) {
     if (route.path === '/404.html') {
-      if (route.entry !== '404.html') add(`route "${route.key}": path "/404.html" must use entry "404.html"`);
+      if (route.entry !== '404.html')
+        add(`route "${route.key}": path "/404.html" must use entry "404.html"`);
       continue;
     }
     if (!DIR_PATH_RE.test(route.path)) {
-      add(`route "${route.key}": path "${route.path}" does not match the expected directory-route format`);
+      add(
+        `route "${route.key}": path "${route.path}" does not match the expected directory-route format`,
+      );
     }
     if (!route.entry.endsWith('index.html')) {
-      add(`route "${route.key}": entry "${route.entry}" must end in "index.html"`);
+      add(
+        `route "${route.key}": entry "${route.entry}" must end in "index.html"`,
+      );
     }
   }
 }
@@ -153,24 +186,32 @@ function checkFormats() {
 function checkApprovedRoutes() {
   const actual = routes.map((r) => r.path);
   for (const p of APPROVED_PATHS) {
-    if (!actual.includes(p)) add(`approved route "${p}" is missing from routes.js`);
+    if (!actual.includes(p))
+      add(`approved route "${p}" is missing from routes.js`);
   }
   for (const p of actual) {
-    if (!APPROVED_PATHS.includes(p)) add(`route path "${p}" is not one of the 11 approved Version 1 routes`);
+    if (!APPROVED_PATHS.includes(p))
+      add(`route path "${p}" is not one of the 11 approved Version 1 routes`);
   }
 }
 
 function checkPhysicalFilesExist() {
   for (const route of routes) {
     const abs = resolveEntryPath(projectRootUrl, route.entry);
-    if (!fs.existsSync(abs)) add(`route "${route.key}": entry file does not exist on disk: ${route.entry}`);
+    if (!fs.existsSync(abs))
+      add(
+        `route "${route.key}": entry file does not exist on disk: ${route.entry}`,
+      );
   }
 }
 
 function discoverPhysicalHtmlFiles() {
   const found = [];
   for (const relDir of ROUTE_PARENT_DIRS) {
-    const absDir = resolveEntryPath(projectRootUrl, relDir === '.' ? '.' : `${relDir}/`);
+    const absDir = resolveEntryPath(
+      projectRootUrl,
+      relDir === '.' ? '.' : `${relDir}/`,
+    );
     let entries;
     try {
       entries = fs.readdirSync(absDir, { withFileTypes: true });
@@ -187,10 +228,14 @@ function discoverPhysicalHtmlFiles() {
 }
 
 function checkNoUnexpectedFiles() {
-  const manifestEntries = new Set(routes.map((r) => resolveEntryPath(projectRootUrl, r.entry)));
+  const manifestEntries = new Set(
+    routes.map((r) => resolveEntryPath(projectRootUrl, r.entry)),
+  );
   for (const found of discoverPhysicalHtmlFiles()) {
     if (!manifestEntries.has(found)) {
-      add(`unexpected HTML file not represented in the route manifest: ${found}`);
+      add(
+        `unexpected HTML file not represented in the route manifest: ${found}`,
+      );
     }
   }
 }

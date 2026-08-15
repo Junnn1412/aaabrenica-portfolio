@@ -20,7 +20,7 @@ export function getMarkerProblems(html, route) {
     if (count !== 1) {
       problems.push(
         `route "${route.key}" (${route.entry}): marker "${marker}" (${name}) ` +
-          `expected exactly 1 occurrence, found ${count}`
+          `expected exactly 1 occurrence, found ${count}`,
       );
     }
   }
@@ -30,7 +30,10 @@ export function getMarkerProblems(html, route) {
 export function composePage(html, route, parts) {
   const problems = getMarkerProblems(html, route);
   if (problems.length > 0) {
-    throw new Error(`[page-composer] invalid skeleton markers:\n` + problems.map((p) => `  - ${p}`).join('\n'));
+    throw new Error(
+      `[page-composer] invalid skeleton markers:\n` +
+        problems.map((p) => `  - ${p}`).join('\n'),
+    );
   }
 
   const composed = html
@@ -43,7 +46,7 @@ export function composePage(html, route, parts) {
   const leftover = Object.values(MARKERS).filter((m) => composed.includes(m));
   if (leftover.length > 0) {
     throw new Error(
-      `[page-composer] route "${route.key}": unresolved markers after composition: ${leftover.join(', ')}`
+      `[page-composer] route "${route.key}": unresolved markers after composition: ${leftover.join(', ')}`,
     );
   }
 

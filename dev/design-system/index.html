@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design System Preview (dev only)</title>
+    <script type="module" src="/src/scripts/main.js"></script>
+    <style>
+      /* Preview-specific demo layout only — not a component system.
+         Real tokens come from the compiled main.scss loaded above; this
+         block only arranges swatches/samples on the page. One utility
+         class per token being demonstrated (no inline styles, so this
+         file passes html-validate:recommended's no-inline-style rule
+         unmodified). */
+      .preview-notice {
+        background: var(--status-warning);
+        color: var(--color-canvas);
+        font-weight: 600;
+        padding: var(--space-3) var(--space-4);
+        text-align: center;
+      }
+      .preview-section {
+        max-width: var(--container-max);
+        margin: 0 auto;
+        padding: var(--space-8) var(--gutter);
+      }
+      .preview-section h2 {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h2);
+        margin: 0 0 var(--space-5);
+      }
+      .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+        gap: var(--gap-md);
+      }
+      .swatch {
+        border-radius: var(--radius-md);
+        border: var(--border-width) solid var(--color-border);
+        overflow: hidden;
+      }
+      .swatch__fill {
+        height: 4.5rem;
+      }
+      .swatch__label {
+        display: block;
+        padding: var(--space-2) var(--space-3);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        background: var(--color-surface-1);
+      }
+      .swatch__ratio {
+        display: block;
+        padding: 0 var(--space-3) var(--space-2);
+        font-size: var(--font-size-label);
+        color: var(--color-text-secondary);
+        background: var(--color-surface-1);
+      }
+
+      /* Color fills */
+      .bg-canvas {
+        background: var(--color-canvas);
+      }
+      .bg-surface-1 {
+        background: var(--color-surface-1);
+      }
+      .bg-surface-2 {
+        background: var(--color-surface-2);
+      }
+      .bg-border {
+        background: var(--color-border);
+      }
+      .bg-status-success {
+        background: var(--status-success);
+      }
+      .bg-status-warning {
+        background: var(--status-warning);
+      }
+      .bg-status-danger {
+        background: var(--status-danger);
+      }
+      .bg-status-info {
+        background: var(--status-info);
+      }
+      .bg-accent-lime {
+        background: var(--accent-lime);
+      }
+      .bg-accent-amber {
+        background: var(--accent-amber);
+      }
+      .bg-accent-coral {
+        background: var(--accent-coral);
+      }
+      .bg-accent-violet {
+        background: var(--accent-violet);
+      }
+      .bg-accent-cyan {
+        background: var(--accent-cyan);
+      }
+
+      /* Text-on-canvas contrast samples */
+      .text-demo {
+        background: var(--color-canvas);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-family-body);
+      }
+      .text-demo--primary {
+        color: var(--color-text-primary);
+      }
+      .text-demo--secondary {
+        color: var(--color-text-secondary);
+      }
+      .text-demo--muted {
+        color: var(--color-text-muted);
+      }
+      .text-demo--accent-text {
+        color: var(--color-accent-text);
+      }
+      .text-demo--accent {
+        color: var(--color-accent);
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h4);
+      }
+
+      .status-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .status-list li {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-family: var(--font-family-body);
+      }
+      .status-list__dot {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: var(--radius-full);
+        display: inline-block;
+      }
+
+      /* Typography samples */
+      .type-sample {
+        margin: 0 0 var(--space-6);
+      }
+      .type-sample__meta {
+        display: block;
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-label);
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-1);
+      }
+      .type-sample p {
+        margin: 0;
+        font-family: var(--font-family-body);
+      }
+      .type-display {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-display);
+        font-weight: 700;
+        line-height: var(--line-height-display);
+        letter-spacing: var(--letter-spacing-heading);
+      }
+      .type-h1 {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h1);
+        font-weight: 500;
+        line-height: var(--line-height-heading);
+        letter-spacing: var(--letter-spacing-heading);
+      }
+      .type-h2 {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h2);
+        font-weight: 500;
+        line-height: var(--line-height-heading);
+        letter-spacing: var(--letter-spacing-heading);
+      }
+      .type-body-lg {
+        font-size: var(--font-size-body-lg);
+        line-height: var(--line-height-body);
+        max-width: var(--width-reading);
+      }
+      .type-body {
+        font-size: var(--font-size-body);
+        line-height: var(--line-height-body);
+        max-width: var(--width-reading);
+      }
+      .type-small {
+        font-size: var(--font-size-small);
+        font-weight: 500;
+      }
+      .type-label {
+        font-size: var(--font-size-label);
+        letter-spacing: var(--letter-spacing-label);
+        text-transform: uppercase;
+      }
+
+      /* Spacing ruler */
+      .spacing-ruler {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+      .spacing-ruler__row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-family: var(--font-family-body);
+      }
+      .spacing-ruler__bar {
+        background: var(--color-accent);
+        height: 0.75rem;
+        border-radius: var(--radius-sm);
+      }
+      .w-space-1 {
+        width: var(--space-1);
+      }
+      .w-space-2 {
+        width: var(--space-2);
+      }
+      .w-space-3 {
+        width: var(--space-3);
+      }
+      .w-space-4 {
+        width: var(--space-4);
+      }
+      .w-space-5 {
+        width: var(--space-5);
+      }
+      .w-space-6 {
+        width: var(--space-6);
+      }
+      .w-space-7 {
+        width: var(--space-7);
+      }
+      .w-space-8 {
+        width: var(--space-8);
+      }
+
+      /* Shape & depth */
+      .shape-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+        gap: var(--gap-md);
+      }
+      .shape-sample {
+        background: var(--color-surface-1);
+        height: 6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        color: var(--color-text-secondary);
+        border-radius: var(--radius-md);
+      }
+      .radius-sm {
+        border-radius: var(--radius-sm);
+      }
+      .radius-lg {
+        border-radius: var(--radius-lg);
+      }
+      .shadow-sm {
+        box-shadow: var(--shadow-sm);
+      }
+      .shadow-md {
+        box-shadow: var(--shadow-md);
+      }
+      .shadow-lg {
+        box-shadow: var(--shadow-lg);
+      }
+
+      /* Motion & focus */
+      .motion-demo {
+        display: inline-block;
+        background: var(--color-accent);
+        color: var(--color-canvas);
+        font-family: var(--font-family-body);
+        font-weight: 600;
+        padding: var(--space-3) var(--space-5);
+        border-radius: var(--radius-md);
+        border: none;
+        cursor: pointer;
+        transition: transform var(--motion-duration-fast) var(--motion-easing-standard);
+      }
+      .motion-demo:hover,
+      .motion-demo:focus-visible {
+        transform: translateY(calc(-1 * var(--motion-distance-sm)));
+      }
+      .motion-note {
+        font-family: var(--font-family-body);
+        color: var(--color-text-secondary);
+        max-width: var(--width-reading);
+      }
+    </style>
+  </head>
+  <body>
+    <p class="preview-notice">
+      Design-system preview — development only, not part of the production build or site navigation.
+    </p>
+
+    <section class="preview-section">
+      <h2>Color — canvas &amp; surfaces</h2>
+      <div class="swatch-grid">
+        <div class="swatch">
+          <div class="swatch__fill bg-canvas"></div>
+          <span class="swatch__label">--color-canvas</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch__fill bg-surface-1"></div>
+          <span class="swatch__label">--color-surface-1</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch__fill bg-surface-2"></div>
+          <span class="swatch__label">--color-surface-2</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch__fill bg-border"></div>
+          <span class="swatch__label">--color-border</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>Color — text on canvas (contrast verified in tests/design-tokens.test.mjs)</h2>
+      <div class="swatch-grid">
+        <div class="swatch">
+          <div class="swatch__fill text-demo text-demo--primary">Aa</div>
+          <span class="swatch__label">--color-text-primary</span>
+          <span class="swatch__ratio">16.58:1</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch__fill text-demo text-demo--secondary">Aa</div>
+          <span class="swatch__label">--color-text-secondary</span>
+          <span class="swatch__ratio">8.82:1</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch__fill text-demo text-demo--muted">Aa</div>
+          <span class="swatch__label">--color-text-muted</span>
+          <span class="swatch__ratio">5.75:1</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch__fill text-demo text-demo--accent-text">Aa</div>
+          <span class="swatch__label">--color-accent-text</span>
+          <span class="swatch__ratio">7.13:1</span>
+        </div>
+        <div class="swatch">
+          <div class="swatch__fill text-demo text-demo--accent">Aa</div>
+          <span class="swatch__label">--color-accent (large text/UI only)</span>
+          <span class="swatch__ratio">4.26:1</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>Status colors</h2>
+      <ul class="status-list">
+        <li><span class="status-list__dot bg-status-success"></span>--status-success</li>
+        <li><span class="status-list__dot bg-status-warning"></span>--status-warning</li>
+        <li><span class="status-list__dot bg-status-danger"></span>--status-danger</li>
+        <li><span class="status-list__dot bg-status-info"></span>--status-info</li>
+      </ul>
+    </section>
+
+    <section class="preview-section">
+      <h2>Capability accents (reserved for PF-032 cards)</h2>
+      <ul class="status-list">
+        <li><span class="status-list__dot bg-accent-lime"></span>--accent-lime</li>
+        <li><span class="status-list__dot bg-accent-amber"></span>--accent-amber</li>
+        <li><span class="status-list__dot bg-accent-coral"></span>--accent-coral</li>
+        <li><span class="status-list__dot bg-accent-violet"></span>--accent-violet</li>
+        <li><span class="status-list__dot bg-accent-cyan"></span>--accent-cyan</li>
+      </ul>
+    </section>
+
+    <section class="preview-section">
+      <h2>Typography</h2>
+      <div class="type-sample">
+        <span class="type-sample__meta">--font-size-display / Space Grotesk 700</span>
+        <p class="type-display">Practical software</p>
+      </div>
+      <div class="type-sample">
+        <span class="type-sample__meta">--font-size-h1 / Space Grotesk 500</span>
+        <p class="type-h1">From problem to working software</p>
+      </div>
+      <div class="type-sample">
+        <span class="type-sample__meta">--font-size-h2 / Space Grotesk 500</span>
+        <p class="type-h2">Solutions built around your workflow</p>
+      </div>
+      <div class="type-sample">
+        <span class="type-sample__meta">--font-size-body-lg / Inter 400</span>
+        <p class="type-body-lg">I help growing businesses improve their operations through websites, internal systems, and custom software.</p>
+      </div>
+      <div class="type-sample">
+        <span class="type-sample__meta">--font-size-body / Inter 400 — max-width: --width-reading (68ch)</span>
+        <p class="type-body">This paragraph is set at the base body size and constrained to the documented reading width so long-form copy stays comfortable to read regardless of the viewport.</p>
+      </div>
+      <div class="type-sample">
+        <span class="type-sample__meta">--font-size-small / Inter 500</span>
+        <p class="type-small">Small / caption text</p>
+      </div>
+      <div class="type-sample">
+        <span class="type-sample__meta">--font-size-label / letter-spacing-label, uppercase</span>
+        <p class="type-label">Eyebrow label</p>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>Spacing scale</h2>
+      <div class="spacing-ruler">
+        <div class="spacing-ruler__row"><code>--space-1</code><div class="spacing-ruler__bar w-space-1"></div></div>
+        <div class="spacing-ruler__row"><code>--space-2</code><div class="spacing-ruler__bar w-space-2"></div></div>
+        <div class="spacing-ruler__row"><code>--space-3</code><div class="spacing-ruler__bar w-space-3"></div></div>
+        <div class="spacing-ruler__row"><code>--space-4</code><div class="spacing-ruler__bar w-space-4"></div></div>
+        <div class="spacing-ruler__row"><code>--space-5</code><div class="spacing-ruler__bar w-space-5"></div></div>
+        <div class="spacing-ruler__row"><code>--space-6</code><div class="spacing-ruler__bar w-space-6"></div></div>
+        <div class="spacing-ruler__row"><code>--space-7</code><div class="spacing-ruler__bar w-space-7"></div></div>
+        <div class="spacing-ruler__row"><code>--space-8</code><div class="spacing-ruler__bar w-space-8"></div></div>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>Shape &amp; depth</h2>
+      <div class="shape-grid">
+        <div class="shape-sample radius-sm">--radius-sm</div>
+        <div class="shape-sample">--radius-md</div>
+        <div class="shape-sample radius-lg">--radius-lg</div>
+        <div class="shape-sample shadow-sm">--shadow-sm</div>
+        <div class="shape-sample shadow-md">--shadow-md</div>
+        <div class="shape-sample shadow-lg">--shadow-lg</div>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <h2>Motion &amp; focus</h2>
+      <p class="motion-note">
+        Hover or tab to the button below — it lifts by <code>--motion-distance-sm</code> using
+        <code>--motion-duration-fast</code>/<code>--motion-easing-standard</code>, and shows the
+        <code>:focus-visible</code> ring on keyboard focus. Enable "reduce motion" at the OS level to confirm the transition is removed.
+      </p>
+      <button class="motion-demo" type="button">Hover or Tab to me</button>
+    </section>
+  </body>
+</html>

@@ -150,6 +150,98 @@ the condition under which a decision should be revisited.
   visually; the current variable-font weight range may be narrowed later if
   payload measurement shows benefit.
 
+## 2026-08-16 — Base elements: button boundary, deferred icon renderer, and link/tag scope
+
+- **Status:** Accepted
+- **Context:** PF-021 needed to apply PF-020's tokens to real headings,
+  body copy, links, buttons, labels, tags, lists, media frames, section
+  headers, containers, and form-control foundations, with every
+  default/hover/focus-visible/active/disabled/error state demonstrated and
+  keyboard/touch/reduced-motion-safe, without weakening the composer's
+  exact-file preview boundary or introducing a JS component framework.
+- **Primary-button boundary — fill fails, border used instead:** the
+  initial design assumed `.btn--primary`'s solid fill was self-evidently
+  distinct enough from the page background to serve as its own WCAG 1.4.11
+  component boundary. Real `sass.compileString()` verification during
+  planning disproved this: `--color-accent-fill`/`-hover`/`-active` against
+  `--color-canvas`/`--color-surface-1` measure 3.24:1 down to 1.95:1,
+  failing the 3:1 non-text floor in 5 of 6 state/background combinations.
+  **Decision:** give `.btn--primary` (and `.btn--secondary`) a persistent
+  `--color-border-interactive` border, present in every fill state, as the
+  actual boundary — verified 4.01:1/3.53:1 regardless of fill state, so one
+  pair of automated checks covers every button state at once. `.btn--ghost`
+  gets no border; it relies on text contrast alone, like a plain link.
+  **Consequence:** the primary button's visual weight changed from a pure
+  solid fill to a solid-fill-with-border. **Revisit condition:** if
+  `.btn--ghost` later needs to read as a bounded shape, give it the same
+  border treatment.
+- **Icon renderer deferred, not built:** the dev preview
+  (`dev/design-system/index.html`) is one exact-file passthrough in the
+  composer — no Node build step ever touches it (`vite.config.js` →
+  `resolveHtmlRequest`). A build-time icon-rendering helper would therefore
+  be unreachable by the preview and uncalled by any real partial/template in
+  this milestone's scope — dead code either way. **Decision:** the one
+  supplemental icon actually needed (`.field__error`'s decoration,
+  alongside the required persistent visible text) is a single hand-authored
+  static inline SVG sourced from Lucide's `circle-alert` path data
+  (`lucide@1.31.0`, already installed, still uncalled as a package import).
+  External links get no icon at all, for the same reason. **Revisit
+  condition:** build the real renderer when a composed partial first needs
+  to generate icon markup from content data (PF-031 nav icons, PF-053
+  social links).
+- **No auto-injected `rel="noreferrer"`; `rel="noopener"` only on explicit
+  `target="_blank"`:** the first draft over-specified external-link
+  handling. **Decision:** a default external link gets no `target`/`rel` at
+  all — same tab, normal referrer behavior. Only a caller that explicitly
+  chooses `target="_blank"` gets an automatically-added `rel="noopener"`
+  (XSS/reverse-tabnabbing protection) plus a `.visually-hidden` "(opens in a
+  new tab)" indication; `noreferrer` is not added by default since
+  suppressing referrer data has no demonstrated requirement here.
+- **Tags have no interactive state:** the first draft gave `.tag` the same
+  hover lift as `.btn`. **Decision:** removed entirely — a `<span class="tag">`
+  is not interactive and must not imply an affordance it doesn't have. Only
+  `.btn` gets the hover lift, and only under
+  `@media (hover: hover) and (pointer: fine)`, never on `:focus-visible` (a
+  keyboard user must never see a control move when it receives focus).
+- **No distinct `:visited` link style:** deliberate, not an oversight —
+  common in modern dark UIs, no strong functional need identified. A style
+  preference, reversible without token changes if AAA prefers otherwise.
+- **BEM class names required a stylelint config fix:** `stylelint-config-standard-scss`'s
+  default `selector-class-pattern` rejects BEM's `__`/`--` delimiters as
+  "not kebab-case" — a latent conflict with CLAUDE.md's BEM requirement that
+  never surfaced before PF-021 because the only class that existed until
+  now (`.skip-link`) happens to also be valid plain kebab-case.
+  **Decision:** added an explicit BEM-compatible `selector-class-pattern`
+  regex to `.stylelintrc.json` rather than abandoning BEM naming.
+- **`header a, footer a { color: inherit }` replaces blanket `body a`:**
+  `generic/_reset.scss` previously set `color: inherit` on every link in
+  `body`, which would have silently overridden `elements/_links.scss`'s new
+  default link color for every content link (higher-specificity `body a`
+  beats a bare `a` regardless of source order). **Decision:** scope the
+  inherit rule to the two structural chrome landmarks (`header`, `footer`)
+  that are still unstyled pending PF-031, so nav/footer appearance is
+  unchanged while real content links (in `<main>`, e.g. `standard.js`'s
+  optional link, `listing.js`'s link list, `case-study.js`'s back-link) pick
+  up the new styling.
+- **A latent test-infrastructure gap, found and fixed:** `tests/design-tokens.test.mjs`'s
+  `parseColor()` claimed to support comma-form `rgb(r, g, b)` but only
+  handled plain 0–255 component values — Dart Sass actually emits
+  percentage-form `rgb(r%, g%, b%)` for every `color.adjust()`-derived
+  color, which no PF-020 pair ever exercised (all of PF-020's tested pairs
+  were literal hex tokens). PF-021's new pairs are the first to test
+  `color.adjust()`-derived tokens, which surfaced the gap immediately as
+  every new pair failing with "unrecognized color format". Fixed by adding
+  percentage-component parsing (×2.55 scale) to `parseColor()`.
+- **Consequences:** `tests/design-tokens.test.mjs` grows from 15 to 25
+  pairs, with threshold constants split into `BODY_TEXT_MIN`,
+  `LARGE_TEXT_MIN`, `NON_TEXT_MIN`, and `FOCUS_INDICATOR_MIN` (all but the
+  first are numerically 3.0, named separately so failure messages stay
+  accurate to what's actually being checked). `elements/_headings.scss`,
+  `elements/_body-copy.scss`, and `elements/_links.scss` are the first
+  bare-tag-selector styling applied site-wide since PF-020's global document
+  theme — this is the second visually-material change to all 11 live
+  routes.
+
 ---
 
 _This log will be backfilled with the project's earlier approved decisions

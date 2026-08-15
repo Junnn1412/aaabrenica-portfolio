@@ -1,13 +1,13 @@
 # Design System
 
-Established in PF-020. Defines the foundational visual system — color,
-typography, spacing, shape, motion, layering — and the global document
-behavior every route now uses. Does **not** define finished components
-(buttons, cards, nav, forms) — that's PF-021 ("production base elements")
-and later component milestones. See
+Established in PF-020 (tokens, typography, global document behavior) and
+extended in PF-021 (base elements: headings, body copy, links, buttons,
+labels, tags, lists, media frames, section headers, containers, and
+form-control foundations). Does **not** yet define finished nav/header/footer
+chrome or cards — that's PF-031/PF-032+. See
 [`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy and
-tooling decisions this builds on, and for the PF-020 token/typography/preview
-decisions themselves.
+tooling decisions this builds on, and for the PF-020/PF-021 token/typography/
+preview decisions themselves.
 
 ## Token architecture
 
@@ -31,16 +31,29 @@ src/styles/
 │   ├── _colors.scss           — Tier 1 + Tier 2 color map
 │   ├── _typography.scss       — font stacks, fluid scale, line-height/letter-spacing
 │   ├── _spacing.scss          — spacing scale, containers, $bp-* breakpoints (Sass-only)
-│   ├── _shape.scss            — radii, shadows, border/focus-ring width
+│   ├── _shape.scss            — radii, shadows, border/focus-ring width, touch-target-min
 │   ├── _motion.scss           — durations, easings, distances
 │   └── _layers.scss           — z-index scale
 ├── generic/
-│   ├── _reset.scss            — box-sizing/margin reset only, no visual opinion
+│   ├── _reset.scss            — box-sizing/margin reset; header/footer link color:inherit
 │   ├── _fonts.scss            — @font-face (real CSS output, not a "setting")
 │   ├── _custom-properties.scss — emits every settings/ value to :root
 │   └── _document.scss         — global body/html appearance, focus-visible, reduced-motion
+├── elements/                  — PF-021: bare-tag styling (applies site-wide, no opt-in class)
+│   ├── _headings.scss         — h1-h4, .text-display
+│   ├── _body-copy.scss        — p, strong, em, small, code/kbd, lists, .text-lead, .list--marked
+│   └── _links.scss            — a, .link--plain
+├── objects/                   — PF-021: structural, non-cosmetic
+│   ├── _container.scss        — .container / --wide / --reading
+│   └── _section-header.scss   — .section-header
 ├── components/
-│   └── _skip-link.scss
+│   ├── _skip-link.scss
+│   ├── _button.scss           — PF-021: .btn
+│   ├── _tag.scss               — PF-021: .tag
+│   ├── _media-frame.scss       — PF-021: .media-frame
+│   └── _form-control.scss      — PF-021: .field
+├── utilities/
+│   └── _visually-hidden.scss  — PF-021: .visually-hidden
 └── main.scss
 ```
 
@@ -62,24 +75,28 @@ since every token is a real `:root` custom property, future JS reads via
 
 ## Color tokens
 
-| Token                                                                                       | Value                                                            | Role                                                                                                                                                                                                                                                 |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--color-canvas`                                                                            | `#0b0f17`                                                        | Page background                                                                                                                                                                                                                                      |
-| `--color-surface-1`                                                                         | `#161d2c`                                                        | Card/panel background                                                                                                                                                                                                                                |
-| `--color-surface-2`                                                                         | `#1d2540`                                                        | Dropdown/modal background                                                                                                                                                                                                                            |
-| `--color-border`                                                                            | `#2a3350`                                                        | Subtle content dividers (decorative)                                                                                                                                                                                                                 |
-| `--color-text-primary`                                                                      | `#f2eee6`                                                        | Warm off-white primary text                                                                                                                                                                                                                          |
-| `--color-text-secondary`                                                                    | `#a7b0c4`                                                        | Muted blue-gray secondary text                                                                                                                                                                                                                       |
-| `--color-text-muted`                                                                        | `#838caa`                                                        | Tertiary but still **meaningful** text — captions, placeholders, timestamps. Approved on `--color-canvas`/`--color-surface-1` only; measured 4.53:1 on `--color-surface-2`, too close to the 4.5:1 floor to approve there without a lighter override |
-| `--color-accent`                                                                            | `#2e6bff`                                                        | Large text, icons, borders, focus ring — **not** small/body text (4.26:1, below the 4.5:1 body-text floor)                                                                                                                                           |
-| `--color-accent-text`                                                                       | `#6e9bff`                                                        | Small/body-size accent text and links (7.13:1)                                                                                                                                                                                                       |
-| `--color-accent-hover`                                                                      | `color.adjust($palette-cobalt-500, $lightness: 6%)` → `#4d81ff`  | Hover (derived, not hand-picked)                                                                                                                                                                                                                     |
-| `--color-accent-active`                                                                     | `color.adjust($palette-cobalt-500, $lightness: -8%)` → `#054eff` | Pressed (derived)                                                                                                                                                                                                                                    |
-| `--status-success` / `--status-warning` / `--status-danger` / `--status-info`               | `#3ddc84` / `#f5b942` / `#f0576b` / `#22c3d6`                    | Status text/icon — always paired with an icon or text label, never color alone                                                                                                                                                                       |
-| `--accent-lime` / `--accent-amber` / `--accent-coral` / `--accent-violet` / `--accent-cyan` | `#8dd941` / `#f5b942` / `#f0576b` / `#9b6bff` / `#22c3d6`        | Reserved for capability cards (PF-032). Independently defined, not aliased to status colors — a future change to one role never silently changes the other                                                                                           |
-| `--color-focus-ring`                                                                        | `var(--color-accent)`                                            | Focus outline                                                                                                                                                                                                                                        |
-| `--color-selection-bg`                                                                      | `rgba(46, 107, 255, 0.35)`                                       | `::selection`                                                                                                                                                                                                                                        |
-| `--color-scrim`                                                                             | `rgba(11, 15, 23, 0.72)`                                         | Modal backdrop (future)                                                                                                                                                                                                                              |
+| Token                                                                                       | Value                                                             | Role                                                                                                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--color-canvas`                                                                            | `#0b0f17`                                                         | Page background                                                                                                                                                                                                                                      |
+| `--color-surface-1`                                                                         | `#161d2c`                                                         | Card/panel background                                                                                                                                                                                                                                |
+| `--color-surface-2`                                                                         | `#1d2540`                                                         | Dropdown/modal background                                                                                                                                                                                                                            |
+| `--color-border`                                                                            | `#2a3350`                                                         | Subtle content dividers (decorative)                                                                                                                                                                                                                 |
+| `--color-text-primary`                                                                      | `#f2eee6`                                                         | Warm off-white primary text                                                                                                                                                                                                                          |
+| `--color-text-secondary`                                                                    | `#a7b0c4`                                                         | Muted blue-gray secondary text                                                                                                                                                                                                                       |
+| `--color-text-muted`                                                                        | `#838caa`                                                         | Tertiary but still **meaningful** text — captions, placeholders, timestamps. Approved on `--color-canvas`/`--color-surface-1` only; measured 4.53:1 on `--color-surface-2`, too close to the 4.5:1 floor to approve there without a lighter override |
+| `--color-accent`                                                                            | `#2e6bff`                                                         | Large text, icons, borders, focus ring — **not** small/body text (4.26:1, below the 4.5:1 body-text floor)                                                                                                                                           |
+| `--color-accent-text`                                                                       | `#6e9bff`                                                         | Small/body-size accent text and links (7.13:1)                                                                                                                                                                                                       |
+| `--color-accent-hover`                                                                      | `color.adjust($palette-cobalt-500, $lightness: 6%)` → `#4d81ff`   | Hover (derived, not hand-picked) — also the link-hover text color (PF-021)                                                                                                                                                                           |
+| `--color-accent-active`                                                                     | `color.adjust($palette-cobalt-500, $lightness: -8%)` → `#054eff`  | Pressed link text (derived)                                                                                                                                                                                                                          |
+| `--color-accent-fill`                                                                       | `color.adjust($palette-cobalt-500, $lightness: -8%)` → `#054eff`  | PF-021: `.btn--primary` fill, default. Independently defined from `--color-accent-active` despite an identical current value — same precedent as the capability accents below                                                                        |
+| `--color-accent-fill-hover`                                                                 | `color.adjust($palette-cobalt-500, $lightness: -14%)` → `#0043e6` | PF-021: `.btn--primary` fill, hover                                                                                                                                                                                                                  |
+| `--color-accent-fill-active`                                                                | `color.adjust($palette-cobalt-500, $lightness: -20%)` → `#003ac7` | PF-021: `.btn--primary` fill, active                                                                                                                                                                                                                 |
+| `--color-border-interactive`                                                                | `color.adjust($palette-slate-600, $lightness: 28%)` → `#5e70ab`   | PF-021: the interactive-boundary color for bordered/filled buttons and form controls — `--color-border` stays reserved for purely decorative dividers                                                                                                |
+| `--status-success` / `--status-warning` / `--status-danger` / `--status-info`               | `#3ddc84` / `#f5b942` / `#f0576b` / `#22c3d6`                     | Status text/icon — always paired with an icon or text label, never color alone                                                                                                                                                                       |
+| `--accent-lime` / `--accent-amber` / `--accent-coral` / `--accent-violet` / `--accent-cyan` | `#8dd941` / `#f5b942` / `#f0576b` / `#9b6bff` / `#22c3d6`         | Reserved for capability cards (PF-032). Independently defined, not aliased to status colors — a future change to one role never silently changes the other                                                                                           |
+| `--color-focus-ring`                                                                        | `var(--color-accent)`                                             | Focus outline                                                                                                                                                                                                                                        |
+| `--color-selection-bg`                                                                      | `rgba(46, 107, 255, 0.35)`                                        | `::selection`                                                                                                                                                                                                                                        |
+| `--color-scrim`                                                                             | `rgba(11, 15, 23, 0.72)`                                          | Modal backdrop (future)                                                                                                                                                                                                                              |
 
 **Format:** plain hex/rgb shipped as CSS custom properties — universal
 browser support, no fallback complexity. OKLCH was considered (better
@@ -92,34 +109,58 @@ runtime palette math — noted as a revisit condition below, not implemented.
 WCAG relative-luminance method, re-verified programmatically against the
 real compiled tokens by `tests/design-tokens.test.mjs` (not just documented
 by hand) — the test compiles the real `_custom-properties.scss`, parses
-whatever color format Dart Sass emits (`#hex`, comma-form `rgb()`/`rgba()`,
-or modern space-form `rgb(r g b / a%)`), and asserts each ratio meets its
-threshold.
+whatever color format Dart Sass emits (`#hex`, comma-form `rgb()`/`rgba()`
+with either 0–255 or percentage component values — Dart Sass emits
+percentage form for `color.adjust()`-derived tokens, which PF-020's
+`--color-accent-hover`/`-active` and PF-021's new tokens all are, and this
+format was a real gap in the parser until PF-021 exercised it — or modern
+space-form `rgb(r g b / a%)`), and asserts each ratio meets its threshold.
 
-| Foreground               | Background          | Ratio   | Target                     | Result                 |
-| ------------------------ | ------------------- | ------- | -------------------------- | ---------------------- |
-| `--color-text-primary`   | `--color-canvas`    | 16.58:1 | 4.5:1                      | Pass (AAA)             |
-| `--color-text-primary`   | `--color-surface-1` | 14.56:1 | 4.5:1                      | Pass (AAA)             |
-| `--color-text-secondary` | `--color-canvas`    | 8.82:1  | 4.5:1                      | Pass (AAA)             |
-| `--color-text-secondary` | `--color-surface-1` | 7.75:1  | 4.5:1                      | Pass (AAA)             |
-| `--color-text-muted`     | `--color-canvas`    | 5.75:1  | 4.5:1                      | Pass                   |
-| `--color-text-muted`     | `--color-surface-1` | 5.05:1  | 4.5:1                      | Pass                   |
-| `--color-accent`         | `--color-canvas`    | 4.26:1  | 3.0:1 (large-text/UI only) | Pass — restricted role |
-| `--color-accent`         | `--color-surface-1` | 3.74:1  | 3.0:1                      | Pass — restricted role |
-| `--color-accent-text`    | `--color-canvas`    | 7.13:1  | 4.5:1                      | Pass (AAA)             |
-| `--color-accent-text`    | `--color-surface-1` | 6.26:1  | 4.5:1                      | Pass                   |
-| `--status-success`       | `--color-canvas`    | 10.75:1 | 4.5:1                      | Pass                   |
-| `--status-warning`       | `--color-canvas`    | 10.88:1 | 4.5:1                      | Pass                   |
-| `--status-danger`        | `--color-canvas`    | 5.74:1  | 4.5:1                      | Pass                   |
-| `--status-danger`        | `--color-surface-1` | 5.04:1  | 4.5:1                      | Pass                   |
-| `--status-info`          | `--color-canvas`    | 8.99:1  | 4.5:1                      | Pass                   |
+| Foreground                   | Background             | Type            | Ratio   | Target                     | Result                                                                                       |
+| ---------------------------- | ---------------------- | --------------- | ------- | -------------------------- | -------------------------------------------------------------------------------------------- |
+| `--color-text-primary`       | `--color-canvas`       | TEXT            | 16.58:1 | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-primary`       | `--color-surface-1`    | TEXT            | 14.56:1 | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-secondary`     | `--color-canvas`       | TEXT            | 8.82:1  | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-secondary`     | `--color-surface-1`    | TEXT            | 7.75:1  | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-muted`         | `--color-canvas`       | TEXT            | 5.75:1  | 4.5:1                      | Pass                                                                                         |
+| `--color-text-muted`         | `--color-surface-1`    | TEXT            | 5.05:1  | 4.5:1                      | Pass                                                                                         |
+| `--color-accent`             | `--color-canvas`       | LARGE-TEXT/UI   | 4.26:1  | 3.0:1 (large-text/UI only) | Pass — restricted role                                                                       |
+| `--color-accent`             | `--color-surface-1`    | LARGE-TEXT/UI   | 3.74:1  | 3.0:1                      | Pass — restricted role                                                                       |
+| `--color-accent-text`        | `--color-canvas`       | TEXT            | 7.13:1  | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-accent-text`        | `--color-surface-1`    | TEXT            | 6.26:1  | 4.5:1                      | Pass                                                                                         |
+| `--status-success`           | `--color-canvas`       | TEXT            | 10.75:1 | 4.5:1                      | Pass                                                                                         |
+| `--status-warning`           | `--color-canvas`       | TEXT            | 10.88:1 | 4.5:1                      | Pass                                                                                         |
+| `--status-danger`            | `--color-canvas`       | TEXT            | 5.74:1  | 4.5:1                      | Pass                                                                                         |
+| `--status-danger`            | `--color-surface-1`    | TEXT            | 5.04:1  | 4.5:1                      | Pass                                                                                         |
+| `--status-info`              | `--color-canvas`       | TEXT            | 8.99:1  | 4.5:1                      | Pass                                                                                         |
+| `--color-accent-hover`       | `--color-canvas`       | TEXT            | 5.37:1  | 4.5:1                      | Pass — link hover text (PF-021)                                                              |
+| `--color-accent-hover`       | `--color-surface-1`    | TEXT            | 4.72:1  | 4.5:1                      | Pass — tighter margin, still real                                                            |
+| `--color-accent-fill`        | `--color-text-primary` | TEXT            | 5.12:1  | 4.5:1                      | Pass — `.btn--primary` label, default (PF-021)                                               |
+| `--color-accent-fill-hover`  | `--color-text-primary` | TEXT            | 6.17:1  | 4.5:1                      | Pass — `.btn--primary` label, hover                                                          |
+| `--color-accent-fill-active` | `--color-text-primary` | TEXT            | 7.46:1  | 4.5:1                      | Pass — `.btn--primary` label, active                                                         |
+| `--color-border-interactive` | `--color-canvas`       | NON-TEXT        | 4.01:1  | 3.0:1                      | Pass — button/form-control boundary (PF-021)                                                 |
+| `--color-border-interactive` | `--color-surface-1`    | NON-TEXT        | 3.53:1  | 3.0:1                      | Pass                                                                                         |
+| `--color-focus-ring`         | `--color-canvas`       | FOCUS-INDICATOR | 4.26:1  | 3.0:1                      | Pass — same value as `--color-accent`, asserted under its own name for traceability (PF-021) |
+| `--color-focus-ring`         | `--color-surface-1`    | FOCUS-INDICATOR | 3.74:1  | 3.0:1                      | Pass                                                                                         |
+| `--color-text-secondary`     | `--color-surface-2`    | TEXT            | 6.94:1  | 4.5:1                      | Pass — `.tag` label (PF-021)                                                                 |
 
 `--color-border` is outside this matrix — WCAG 1.4.11 exempts purely
-decorative dividers, and no interactive component exists yet to require a
-scored boundary (PF-021). State is never communicated by color alone: status
-colors must always be paired with an icon or text label when actually used
-in a component (PF-021+ responsibility to uphold, not verifiable until
-components exist).
+decorative dividers; real interactive boundaries use
+`--color-border-interactive` instead (PF-021), which is in the matrix. State
+is never communicated by color alone: status colors and `.field--error` must
+always be paired with an icon or text label when actually used, never color
+alone.
+
+**`.btn--primary`'s fill is not its own component boundary.** Verified
+during PF-021 planning: `--color-accent-fill`/`-hover`/`-active` against
+`--color-canvas`/`--color-surface-1` range from 3.24:1 down to 1.95:1,
+failing the 3:1 non-text floor in 5 of 6 state/background combinations. The
+persistent `--color-border-interactive` border — present in every fill
+state, not just added on hover — is the button's actual WCAG 1.4.11
+boundary instead. This is why `--color-accent-fill*` appears in the matrix
+only as a TEXT pair (the label on top of the fill), never as a NON-TEXT pair
+(the fill against the page behind it, which was deliberately not asserted
+since it would fail by design).
 
 ## Typography
 
@@ -171,12 +212,12 @@ Line height: display/H1 1.05–1.15; body 1.6; label 1.4. Letter spacing:
 headings -0.02em; body 0; labels +0.08em. Max reading width:
 `--width-reading: 68ch`.
 
-**PF-020/PF-021 boundary:** this scale is defined and exposed as tokens now,
-but is **not** applied to actual `<h1>`–`<h4>` elements site-wide — that's
-PF-021's "production base elements" work. `global/_document.scss` only sets
-`html`/`body`-level appearance (canvas background, primary text color, base
-body font/size/line-height, focus-visible, reduced-motion). The scale is
-demonstrated now via the preview page's own demo styles.
+**PF-020/PF-021 boundary:** PF-020 defined and exposed this scale as tokens
+without applying it to real elements; PF-021 applies it — `elements/_headings.scss`
+and `elements/_body-copy.scss` now style real `<h1>`–`<h4>`/`<p>`/list
+elements site-wide (see "Base elements" below). `generic/_document.scss`
+still only sets `html`/`body`-level appearance (canvas background, primary
+text color, base body font/size/line-height, focus-visible, reduced-motion).
 
 ## Spacing, layout, shape, motion, layering
 
@@ -187,7 +228,10 @@ breakpoints, radii, dark-appropriate shadow levels, `:focus-visible`
 treatment, motion durations/easings/distances, and the gapped z-index
 scale). `--motion-distance-sm` is `6px`, matching the requirements doc's
 approved 4–6px card-lift range exactly (the upper bound, for a clearly
-perceptible but still restrained hover lift).
+perceptible but still restrained hover lift). `--shape.scss` also carries
+`--touch-target-min: 2.75rem` (44px, PF-021) — the minimum hit area for
+`.btn`, icon-only buttons, and the checkbox/radio label row; inline links in
+running text are exempt (WCAG 2.5.5's inline-text exception).
 
 Reduced motion is enforced globally now (`generic/_document.scss`), even
 though nothing animates yet — zero risk, and every future animation
@@ -239,20 +283,106 @@ self-contained or parallel design system.
 **Retain, committed, documented** — useful for PF-021+ and for future
 second-profession validation (PF-082).
 
+## Base elements (PF-021)
+
+Headings, body copy, links, buttons, labels, tags, lists, media frames,
+section headers, containers, and form-control foundations — all demonstrated
+at real compiled fidelity in the preview above.
+
+**Applied site-wide now, by bare-tag selector** (no opt-in class needed —
+the second visually-material production change after PF-020's global dark
+theme): `<h1>`–`<h4>`, `<p>`/`<strong>`/`<em>`/`<small>`/`<code>`/`<kbd>`,
+`<ul>`/`<ol>`/`<li>`, and `<a>` (content links only — `header a`/`footer a`
+are explicitly exempted in `generic/_reset.scss` and remain unstyled until
+PF-031's nav/header/footer redesign).
+
+**Class-based, preview-only until a later milestone wires them into real
+content:** `.btn`, `.tag`, `.media-frame`, `.section-header`, `.container`,
+`.field`. No PF-021 change touches `src/pages/templates/*.js` or
+`src/components/partials/*.js` — these classes exist as proven, reusable CSS
+ready for PF-031+ to adopt.
+
+**Icon rendering is deferred, deliberately.** The dev preview is an
+exact-file composer passthrough (see "Preview workflow" above) — no
+build-time Node function can inject markup into it, so a `src/components/icon.js`
+renderer would be dead code with no real caller in this milestone. The one
+supplemental icon actually used — the `.field__error` indicator, decoration
+only alongside the required persistent visible error text — is a single
+hand-authored static inline SVG, sourced from Lucide's `circle-alert` icon
+(`lucide@1.31.0`, path data at `node_modules/lucide/dist/esm/icons/circle-alert.mjs`):
+
+```html
+<svg
+  aria-hidden="true"
+  focusable="false"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="12" cy="12" r="10"></circle>
+  <line x1="12" x2="12" y1="8" y2="12"></line>
+  <line x1="12" x2="12.01" y1="16" y2="16"></line>
+</svg>
+```
+
+External links get no icon at all in PF-021, for the same reason. A real
+build-time renderer (importing named exports from the already-installed
+`lucide` package, converting `[tag, attrs]` iconNode arrays to SVG strings)
+is deferred until a real composed partial needs to generate icon markup
+dynamically — e.g. PF-031 nav icons or PF-053 social links.
+
+**Button boundary — border, not fill.** See the contrast matrix note above:
+`.btn--primary`'s and `.btn--secondary`'s persistent `--color-border-interactive`
+border, present in every state, is each button's WCAG 1.4.11 component
+boundary. `.btn--ghost` has neither fill nor border and relies on its
+already-verified text contrast, like a plain link.
+
+**Hover lift is pointer-gated and never attached to focus.** `.btn`'s
+`translateY` lift is scoped inside `@media (hover: hover) and (pointer: fine)`
+and only fires on `:hover` — never on `:focus-visible`, so a keyboard user
+tabbing to a button never sees it move. `:active` returns the transform to
+`translateY(0)`. `.tag` has no transition or transform at all — it is not
+interactive and must not look clickable.
+
+**External links stay in the same tab by default.** No `rel` is added
+unless a caller explicitly opts into `target="_blank"`, in which case
+`rel="noopener"` (not `noreferrer` — no demonstrated need to suppress
+referrer data) is added along with a `.visually-hidden` "(opens in a new
+tab)" indication.
+
+**Form semantics.** `.field--error` is a visual hook only (border color) —
+it never sets `aria-invalid` or `aria-describedby` itself; calling markup is
+always responsible for both. Checkbox/radio keep native semantics and
+keyboard behavior; only `accent-color` is themed, no custom replacement
+markup — this is also why forced-colors mode needs no special handling,
+native controls re-skin themselves automatically. The `.field__choice`
+`<label>` wraps its control directly (no separate `for`/`id` pairing, which
+`html-validate`'s `no-redundant-for` rule flags when both are present), so
+padding on the label genuinely enlarges the clickable area, not just its
+visual footprint.
+
+**No distinct `:visited` link style** — a deliberate style choice, not an
+oversight (see `docs/DECISION_LOG.md`).
+
 ## Accessibility rationale summary
 
 - Every text/background pairing whose use is documented above is
   programmatically verified (`tests/design-tokens.test.mjs`) against its
-  WCAG floor, not just hand-computed once.
+  WCAG floor, not just hand-computed once — including, as of PF-021, the
+  NON-TEXT and FOCUS-INDICATOR pair types, not just TEXT pairs.
 - `--color-accent`'s restricted role (large text/icons/UI only) is a rule
-  PF-021+ component work must respect, not just a documentation note.
+  component work must respect, not just a documentation note.
 - `:focus-visible` (not `:focus`) keeps keyboard focus rings without
   showing them on mouse clicks; ring color verified ≥3:1 against both
-  approved backgrounds.
-- Reduced motion is enforced globally, before any motion exists to respect
-  it.
-- Full 320–1920px responsive review and forced-colors sanity checks are
-  manual (`docs/TESTING_AND_QA.md`) — no new tooling for these.
+  approved backgrounds, and never moves the element it's shown on (PF-021).
+- Reduced motion is enforced globally; PF-021's button hover lift is the
+  first real motion to actually respect it.
+- Full 320–1920px responsive review, keyboard/focus movement checks, and
+  forced-colors sanity checks are manual (`docs/TESTING_AND_QA.md`) — no new
+  tooling for these.
 
 ## Revisit conditions
 
@@ -269,3 +399,9 @@ second-profession validation (PF-082).
   files as-is (400–600 for Inter, 500–700 for Space Grotesk); revisit if a
   narrower static subset would meaningfully reduce payload once real usage
   is measured.
+- **Icon renderer** (PF-021) — deferred until a real composed partial needs
+  to generate icon markup dynamically; revisit when PF-031 (nav icons) or
+  PF-053 (social links) introduces that first real call site.
+- **`.btn--ghost`'s lack of a border** (PF-021) — currently relies on text
+  contrast alone, like a plain link; revisit if a future use case needs it
+  to read as a bounded shape rather than a text action.

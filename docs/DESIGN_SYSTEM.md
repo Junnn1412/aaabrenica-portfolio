@@ -6,11 +6,12 @@ labels, tags, lists, media frames, section headers, containers, and
 form-control foundations), formalized as the component showcase in PF-030
 (table of contents, review checklist), extended again in PF-031 (global
 navigation and footer — see "Global navigation and footer (PF-031)" below),
-and extended again in PF-032 (capability cards — see "Capability cards
-(PF-032)" below). Does **not** yet define project cards or process/trust/CTA
-components — that's PF-033/PF-034. See [`DECISION_LOG.md`](DECISION_LOG.md)
-for the composition-strategy and tooling decisions this builds on, and for
-the PF-020/PF-021/PF-030/PF-031/PF-032 decisions themselves.
+extended again in PF-032 (capability cards), and extended again in PF-033
+(project cards — see "Project cards (PF-033)" below). Does **not** yet
+define process/trust/CTA components — that's PF-034. See
+[`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy and
+tooling decisions this builds on, and for the
+PF-020/PF-021/PF-030/PF-031/PF-032/PF-033 decisions themselves.
 
 ## Token architecture
 
@@ -56,7 +57,8 @@ src/styles/
 │   ├── _media-frame.scss       — PF-021: .media-frame
 │   ├── _form-control.scss      — PF-021: .field
 │   ├── _site-header.scss / _site-nav.scss / _site-footer.scss — PF-031
-│   └── _capability-card.scss   — PF-032: .capability-card (CSS-only, no JS renderer yet — see docs/DESIGN_SYSTEM.md's "Capability cards (PF-032)" section)
+│   ├── _capability-card.scss   — PF-032: .capability-card (CSS-only, no JS renderer yet — see docs/DESIGN_SYSTEM.md's "Capability cards (PF-032)" section)
+│   └── _project-card.scss      — PF-033: .project-card (CSS-only, no JS renderer yet — see "Project cards (PF-033)" section)
 ├── utilities/
 │   └── _visually-hidden.scss  — PF-021: .visually-hidden
 └── main.scss
@@ -718,6 +720,139 @@ after the hover block (same specificity, source order wins) and sets
 background colors while pressed, outside what the contrast tests cover.
 `:active` is not nested inside the hover media query, so touch gets the
 same pressed shadow feedback without depending on hover capability at all.
+
+## Project cards (PF-033)
+
+`.project-card` (`src/styles/components/_project-card.scss`) is
+**CSS-only** — there is no `renderProjectCard()` function and no content
+data module. `work/index.js` and all three case-study content files
+(`fes-challenger`/`business-workflow-system`/`ebarangay`) are still
+placeholders, so there is no real production template to call a renderer
+from — the same precedent as `.btn`/`.tag`/`.media-frame`/
+`.capability-card`. The showcase specimens are hand-authored, literal
+markup using the real compiled component classes — not a live render call.
+
+**Deliberately NOT full-bleed bold color like `.capability-card`.**
+Requirements §7.2 frames project cards as _evidence_, not decoration
+("Project cards must provide evidence rather than decorative claims"), and
+no approved per-project brand colors exist to fill a card with even if
+that were the direction. Cards use the neutral dark system —
+`--color-surface-1` background, `--color-text-primary`/`-secondary` for
+title/summary, `--color-accent-text` for the action label — and every one
+of those pairings is already asserted, unmodified, in
+`tests/design-tokens.test.mjs`. No new contrast surface was introduced by
+this component.
+
+**Content: no invented summaries, technologies, outcomes, or images.**
+None of that content has been approved for any of the three real projects
+— `DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md` only ever names them, it
+never supplies problem/outcome/tech copy. The three real showcase cards
+carry title and link only. Category text is shown only where the
+requirements doc gives an exact phrase that reads naturally as a short
+tag — true for Business Workflow System ("Government/business workflow
+system," used verbatim) only. eBarangay's only approved phrase, "Personal
+full-stack case study," is a sentence fragment describing the case-study
+document, not a category-shaped noun phrase; turning it into something
+like "Personal Project" would be new copy, not a quotation, so it is
+omitted rather than paraphrased. FES Challenger has no category term at
+all. This makes the three real cards the genuine, non-contrived specimens
+for the missing-category/missing-summary/missing-tags states.
+
+**Missing-image treatment.** All three real cards need this today — the
+primary state this milestone ships, not a rare edge case. An empty
+`.media-frame` (its existing `background-color: var(--color-surface-1)`,
+no `<img>`) is a clean, honest, visibly-empty "viewport," not a disguised
+fake screenshot. No decorative pattern was added to stand in for a
+screenshot — that risked being mistaken for real project evidence. One
+demo-only, clearly-fictional specimen shows the populated path instead,
+with an original inline-SVG abstract composition (not a screenshot).
+
+**"Browser or device frame created with HTML and CSS"** (§7.2): an
+original `.project-card__frame-dots` chrome bar (three CSS radial-gradient
+dots, no new asset) sits above the existing `.media-frame`.
+
+**One shared list, not two.** Featured and secondary cards are `<li>`
+siblings of the same `<ul class="project-cards">` — `.project-card--featured`
+spans every column (`grid-column: 1 / -1`) instead of living in a second,
+disconnected structure. One list means one place to get the
+generic-`ul`/`li` reset right, not two.
+
+**Grid minimum: 21rem, not the originally-proposed 22rem.** Computed
+against the real compiled tokens (`--container-wide`, `--gap-lg`, the
+showcase's `clamp()` gutter): 22rem produced only 1 column at 768px (2
+columns need `2×minCol + gap ≤` content width, which only holds up to
+~21.04rem at that breakpoint) — exactly the contingency the original plan
+flagged ("if 22rem doesn't cleanly produce 2 columns at 768px... the value
+is adjusted and re-verified"). 21rem restores the intended 1/1/2/2/3/3
+column pattern with a comfortable ~227–412px text area at every required
+width. Mobile-first `1fr` default, overridden only above
+`@media (width >= 36em)` — same plain, no-nested-math-function pattern as
+`.capability-card`, for the same reason (avoids relying on a more exotic
+CSS construct than necessary).
+
+**Generic-list leak, reset from the start, not discovered after a review
+round-trip.** `.project-cards`/`.project-card` explicitly set
+`max-width: none;`/`margin: 0;` in the first draft — `elements/_body-copy.scss`'s
+generic `ul, ol { max-width: var(--width-reading); }` and
+`li { margin-bottom: var(--space-2); }` apply unopposed to any `<ul>`/`<li>`
+that doesn't explicitly override those specific properties, regardless of
+the class's own higher specificity (cascade resolves per property, not per
+rule) — the exact defect PF-032 found and fixed after shipping. Verified
+by real cascade resolution (`resolveProperty()`,
+`tests/helpers/cascade-resolver.mjs` — extracted from
+`tests/capability-card-layout.test.mjs` for this, its second real caller),
+not presence.
+
+**Every linked card carries exactly one `.project-card__action`, and
+never one without the other.** "View Case Study →" is a visible,
+`aria-hidden="true"` text affordance — decorative reinforcement of the
+heading link, not a second focusable control. Markup omits both together
+on non-interactive cards; CSS additionally gates the action's visibility
+on `.project-card:has(.project-card__link)` (`display: none` by default)
+as a second, independent safeguard.
+
+**Full-card focus ring — single tone, not `.capability-card`'s two.** The
+stretched link makes the entire card the click target, so a ring drawn
+only around the heading text would misrepresent the actual interactive
+region — applied at the card level exactly like `.capability-card`'s:
+
+```scss
+.project-card__link:focus-visible {
+  outline: none; // replaced by the card-level ring below
+}
+.project-card:has(.project-card__link:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+```
+
+Only one tone is needed here, unlike `.capability-card`'s inner/outer
+pair: this ring only ever touches `--color-surface-1` (the card's own
+fill) on one side and `--color-canvas`/`--color-surface-1` (the page
+behind it) on the other, and `--color-focus-ring` is already verified
+against both, unmodified, in `tests/design-tokens.test.mjs` under
+`FOCUS_INDICATOR_MIN`. `.capability-card` needed two tones because its
+background _is_ a bright, varying accent color the default ring fails
+against; this card's neutral surface doesn't create that problem.
+**Forced-colors gets no separate ring override** — because `outline` (not
+`box-shadow`) is used unconditionally, outline-color is already one of
+the properties forced-colors mode recolors to the system highlight
+automatically, and the full-card footprint carries over for free since
+the same `:has()` rule applies in every mode. (Contrast with
+`.capability-card`, which uses `box-shadow` normally — dropped under
+forced-colors — and needs an explicit `outline` swap just for that mode.)
+`.project-card` still gains `border: 1px solid CanvasText` under
+`forced-colors: active` for the card boundary, a separate concern.
+
+**Interactivity is link-presence-driven**, identical pattern to
+`.capability-card`: every interactive rule scoped to
+`.project-card:has(.project-card__link)`, never a modifier class.
+Stretched-link `::after`, decorative layers (`__frame-dots`, `__media`,
+`__action`) carrying `pointer-events: none` under an explicit `z-index`
+stacking order, hover-lift gated to `(hover: hover) and (pointer: fine)`,
+`:active` declared after it with an explicit `transform: translateY(0)`
+reset (never `filter`) so touch gets its own pressed feedback without
+depending on hover.
 
 ## Accessibility rationale summary
 

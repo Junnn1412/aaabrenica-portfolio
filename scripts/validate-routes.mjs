@@ -9,7 +9,11 @@ import { contentByKey } from '../src/content/pages/index.js';
 import { validateContent } from '../src/pages/content-schema.js';
 import { getMarkerProblems } from '../src/pages/compose.js';
 import { normalizePath, resolveEntryPath } from '../src/pages/paths.js';
-import { isSafeInternalPath } from '../src/pages/link-safety.js';
+import {
+  isSafeInternalPath,
+  isSafeEmail,
+  isSafeExternalUrl,
+} from '../src/pages/link-safety.js';
 
 const projectRootUrl = new URL('../', import.meta.url);
 
@@ -96,6 +100,48 @@ function checkSiteConfig() {
     site.defaultDescription.length === 0
   ) {
     add('site.defaultDescription must be a non-empty string');
+  }
+
+  // primaryCta (PF-031) is real, approved content — required, not
+  // PF-003/PF-053-gated — so its shape is enforced unconditionally, same
+  // pattern as primaryNav below.
+  if (
+    typeof site.primaryCta?.label !== 'string' ||
+    site.primaryCta.label.length === 0
+  ) {
+    add('site.primaryCta.label must be a non-empty string');
+  }
+  if (!isSafeInternalPath(site.primaryCta?.path)) {
+    add('site.primaryCta.path must be a safe internal path');
+  } else if (!routes.some((r) => r.path === site.primaryCta.path)) {
+    add(
+      `site.primaryCta.path "${site.primaryCta.path}" does not match a registered route`,
+    );
+  }
+
+  // Optional, PF-003/PF-053-gated fields — validated only when populated;
+  // staying null is valid and expected today.
+  if (site.resumePath != null && !isSafeInternalPath(site.resumePath)) {
+    add('site.resumePath, when set, must be a safe internal path');
+  }
+  if (
+    site.social?.github != null &&
+    !isSafeExternalUrl(site.social.github, 'github')
+  ) {
+    add(
+      'site.social.github, when set, must be an HTTPS github.com/www.github.com URL',
+    );
+  }
+  if (
+    site.social?.linkedin != null &&
+    !isSafeExternalUrl(site.social.linkedin, 'linkedin')
+  ) {
+    add(
+      'site.social.linkedin, when set, must be an HTTPS linkedin.com/www.linkedin.com URL',
+    );
+  }
+  if (site.contactEmail != null && !isSafeEmail(site.contactEmail)) {
+    add('site.contactEmail, when set, must be a valid email address');
   }
 }
 
@@ -249,6 +295,25 @@ function checkMarkers() {
   }
 }
 
+// The skip link (PF-031) targets #main-content; without tabindex="-1" the
+// browser scrolls it into view but does not move keyboard focus there.
+// Checked here (source skeleton, pre-build) and again in
+// verify-build-output.mjs (composed dist/ output) — same dual-layer
+// pattern already used for route content.
+function checkSkipLinkTarget() {
+  for (const route of routes) {
+    const abs = resolveEntryPath(projectRootUrl, route.entry);
+    if (!fs.existsSync(abs)) continue; // already reported
+    const html = fs.readFileSync(abs, 'utf8');
+    if (!html.includes('<main id="main-content" tabindex="-1">')) {
+      add(
+        `route "${route.key}" (${route.entry}): expected the skeleton's <main> to be ` +
+          `<main id="main-content" tabindex="-1"> so the skip link can reliably focus it`,
+      );
+    }
+  }
+}
+
 checkDuplicates();
 checkRegistries();
 checkContentShape();
@@ -261,6 +326,7 @@ checkApprovedRoutes();
 checkPhysicalFilesExist();
 checkNoUnexpectedFiles();
 checkMarkers();
+checkSkipLinkTarget();
 
 if (problems.length > 0) {
   console.error(`[validate-routes] ${problems.length} problem(s) found:\n`);

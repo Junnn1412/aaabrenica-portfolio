@@ -393,8 +393,15 @@
         <p>
           This single dev-only page serves two purposes: it demonstrates the compiled design-system tokens (PF-020)
           and the base-element components built on top of them (PF-021), and it is the environment later milestones
-          (PF-031–PF-034: navigation and footer, capability cards, project cards, and process/trust/engagement/CTA
-          components) will extend with their own specimens before AAA's component-system approval (PF-035).
+          (PF-032–PF-034: capability cards, project cards, and process/trust/engagement/CTA components) will extend
+          with their own specimens before AAA's component-system approval (PF-035).
+        </p>
+        <p>
+          Header, navigation, and footer (PF-031) are real, shared production chrome, composed at build time from
+          <code>src/components/partials/</code> — not shown here, since this page is a static file the composer
+          never touches and cannot render them. Review the real thing on any actual route
+          (<code>npm run dev</code>, e.g. <a href="/">the homepage</a>) rather than a specimen that could drift
+          from what production actually ships.
         </p>
 
         <nav aria-label="On this page" class="toc">

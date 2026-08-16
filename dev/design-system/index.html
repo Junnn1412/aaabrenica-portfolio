@@ -455,6 +455,13 @@
               <li><a href="#capability-cards">Capability cards</a></li>
             </ul>
           </div>
+
+          <div class="toc__group">
+            <p class="toc__group-label">Project cards (PF-033)</p>
+            <ul class="toc__list">
+              <li><a href="#project-cards">Project cards</a></li>
+            </ul>
+          </div>
         </nav>
       </div>
 
@@ -1013,6 +1020,134 @@
               link, no arrow, no hover lift, no active feedback, and no focus ring. A static card must never
               look clickable.
             </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="preview-section preview-section--wide" id="project-cards">
+        <h2>Project cards (PF-033)</h2>
+        <p>
+          <code>.project-card</code> is CSS-only — there is no JS render function or content-data module yet.
+          <code>work/index.js</code> and all three case-study content files are still placeholders, so there is
+          no real production template to call a renderer from; the same precedent as
+          <code>.btn</code>/<code>.tag</code>/<code>.media-frame</code>/<code>.capability-card</code>. The cards
+          below are literal, hand-authored markup using the real compiled component classes — not a live render
+          call — and only exist on this dev-only page.
+        </p>
+        <p>
+          The three real projects below carry no summary, technology tags, or images — none of that content has
+          been approved yet (<code>docs/DECISION_LOG.md</code>). This is the genuine current state, not a
+          contrived gap: the category label appears only where the requirements doc gives an exact phrase that
+          fits the tag slot (Business Workflow System only — eBarangay's own approved phrase, "Personal
+          full-stack case study," doesn't fit the slot without paraphrasing it, so it is omitted rather than
+          reworded). Business Workflow System is shown as the featured specimen arbitrarily, for demonstration
+          only — this is not a production or editorial decision.
+        </p>
+
+        <h3>The three real projects</h3>
+        <ul class="project-cards">
+          <li class="project-card project-card--featured">
+            <div class="project-card__frame">
+              <span class="project-card__frame-dots" aria-hidden="true"></span>
+              <div class="media-frame project-card__media"></div>
+            </div>
+            <div class="project-card__content">
+              <span class="project-card__category tag">Government/business workflow system</span>
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/business-workflow-system/">Business Workflow System</a>
+              </h4>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+          <li class="project-card">
+            <div class="project-card__frame">
+              <span class="project-card__frame-dots" aria-hidden="true"></span>
+              <div class="media-frame project-card__media"></div>
+            </div>
+            <div class="project-card__content">
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/fes-challenger/">FES Challenger</a>
+              </h4>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+          <li class="project-card">
+            <div class="project-card__frame">
+              <span class="project-card__frame-dots" aria-hidden="true"></span>
+              <div class="media-frame project-card__media"></div>
+            </div>
+            <div class="project-card__content">
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/ebarangay/">eBarangay</a>
+              </h4>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+        </ul>
+
+        <h3>Additional specimens</h3>
+        <p>
+          Three demo-only cards, not counted among the three real projects above — they exist purely to prove
+          markup paths the real content doesn't happen to exercise yet.
+        </p>
+        <ul class="project-cards">
+          <li class="project-card">
+            <div class="project-card__frame">
+              <span class="project-card__frame-dots" aria-hidden="true"></span>
+              <div class="media-frame project-card__media">
+                <svg viewBox="0 0 400 225" role="img" aria-label="Demo: original decorative composition standing in for a project screenshot" preserveAspectRatio="xMidYMid slice">
+                  <rect width="400" height="225" fill="var(--color-surface-2)"></rect>
+                  <circle cx="80" cy="70" r="46" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></circle>
+                  <circle cx="330" cy="170" r="70" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></circle>
+                  <path d="M0 180 L150 90 L260 140 L400 40" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></path>
+                </svg>
+              </div>
+            </div>
+            <div class="project-card__content">
+              <span class="project-card__category tag">Demo Category</span>
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/">Demo: Populated Project</a>
+              </h4>
+              <p class="project-card__summary">Demo: a short outcome-style summary line, for layout purposes only — not a real project claim.</p>
+              <div class="project-card__tags">
+                <span class="tag">Demo Tech A</span>
+                <span class="tag">Demo Tech B</span>
+                <span class="tag">Demo Tech C</span>
+              </div>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+          <li class="project-card">
+            <div class="project-card__frame">
+              <span class="project-card__frame-dots" aria-hidden="true"></span>
+              <div class="media-frame project-card__media"></div>
+            </div>
+            <div class="project-card__content">
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/">Demo: A deliberately long project title to stress-test heading wrap</a>
+              </h4>
+              <p class="project-card__summary">
+                Demo: a deliberately long summary sentence to prove the card grows to fit its content instead of
+                truncating it, stress-testing wrapping behavior at every one of the six required review widths,
+                from 320px up to 1920px, without a fixed height ever clipping the text.
+              </p>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+          <li class="project-card">
+            <div class="project-card__frame">
+              <span class="project-card__frame-dots" aria-hidden="true"></span>
+              <div class="media-frame project-card__media"></div>
+            </div>
+            <div class="project-card__content">
+              <h4 class="project-card__heading">Demo: non-interactive (no destination)</h4>
+              <p class="project-card__summary">
+                Demo: no <code>.project-card__link</code> element is present in this specimen's markup at all,
+                so — driven purely by that absence, not a modifier class — it renders with no stretched link, no
+                action label, no hover lift, no active feedback, and no focus ring. A static card must never
+                look clickable.
+              </p>
+            </div>
           </li>
         </ul>
       </section>

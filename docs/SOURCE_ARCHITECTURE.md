@@ -10,23 +10,26 @@ for the reasoning behind the approach.
 ```text
 src/
 ├── config/
-│   ├── site.js         — site name, default description, base URL, contact/social/résumé (currently null)
+│   ├── site.js         — site name, default description, base URL, primary CTA, contact/social/résumé (mostly still null)
 │   ├── navigation.js    — primary nav items [{ key, label, path }]
 │   └── routes.js        — single source of truth: every route's path, entry file, nav key, template, content key
 ├── content/
 │   └── pages/            — one plain-data module per route (title, description?, heading, paragraphs, ...)
 ├── components/
+│   ├── icon.js            — build-time SVG string renderer for the small, whitelisted set of Lucide icons in use (PF-031)
 │   └── partials/          — shared structural markup: header, nav, footer
 ├── pages/
 │   ├── templates/          — standard / listing / case-study: the *shape* a page takes
 │   ├── render.js            — route -> composed { head, header, main, footer }
 │   ├── compose.js           — marker validation + safe substitution into the HTML skeleton
 │   ├── escape.js             — escapeHtml — the only way content reaches HTML
-│   ├── link-safety.js        — isSafeInternalPath — rejects javascript:, external, protocol-relative URLs
+│   ├── link-safety.js        — isSafeInternalPath/isSafeEmail/isSafeExternalUrl — rejects javascript:, external, protocol-relative URLs, and unsafe mailto:/social-URL shapes (PF-031)
 │   ├── content-schema.js     — per-template required-field/type + link-safety checks
 │   └── dev-watcher.js         — attaches the dev-server file watcher that restarts on architecture edits
 ├── scripts/
-│   └── main.js                — global JS entry (imports the SCSS entry; no page-specific JS yet)
+│   ├── main.js                 — global JS entry (imports the SCSS entry, nav-toggle.js)
+│   ├── nav-toggle.js            — DOM wiring for the mobile menu disclosure button (PF-031)
+│   └── nav-toggle-state.js      — pure, DOM-free state/effect logic behind nav-toggle.js (PF-031)
 └── styles/                     — ITCSS-lite (see below)
 
 scripts/                         — Node-only build tooling, deliberately outside src/scripts/ (which is browser code)
@@ -53,6 +56,10 @@ own asset discovery always works), and five markers:
 <!--@footer-->
 data-page="__PAGE_KEY__"
 ```
+
+The real skeleton also carries `<main id="main-content" tabindex="-1">` —
+the `tabindex="-1"` (PF-031) is what lets the skip link reliably move
+keyboard focus there, not just scroll it into view.
 
 A Vite plugin (`vite.config.js`, `pageComposerPlugin`) intercepts every HTML
 entry via the `transformIndexHtml` hook — which runs in both `vite dev` and
@@ -99,10 +106,11 @@ documented/approved — no such field exists today.
 3. **Build-output** (`scripts/verify-build-output.mjs`, runs automatically
    as `postbuild`, also `npm run check:build`): checks the actual generated
    `dist/*.html` — no leftover markers, exactly one non-empty `<title>` and
-   meta description, exactly one `<main id="main-content">` and one
-   navigation landmark, correct `aria-current="page"` placement (including
-   the documented 404 policy below), no empty attributes, and no canonical
-   or contact/social markup while those config values are unset.
+   meta description, exactly one focusable `<main id="main-content" tabindex="-1">`
+   and one primary navigation landmark, correct `aria-current="page"`
+   placement (including the documented 404 policy below), exactly one skip
+   link and one privacy link (PF-031), no empty attributes, and no
+   canonical or contact/social markup while those config values are unset.
 
 ## Development regeneration
 
@@ -140,5 +148,10 @@ real design tokens and components.
   visuals — component-showcase milestone (PF-032+).
 - Page-specific browser JS — `data-page` on `<body>` is a ready, documented,
   currently-unused seam for this.
-- External social/contact link rendering and its safety policy (allowed
-  protocols, `rel` attributes) — once PF-003 supplies real values.
+- External social/contact link _values_ — `site.social.github`/`.linkedin`/
+  `.contactEmail`/`.resumePath` stay `null` until PF-003/PF-053 supplies
+  real values. The safety policy itself is no longer deferred:
+  `link-safety.js`'s `isSafeEmail()`/`isSafeExternalUrl()` and
+  `footer.js`'s conditional rendering (PF-031) are already built and
+  tested against fixture data, ready for the real values whenever they
+  arrive.

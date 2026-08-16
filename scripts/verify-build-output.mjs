@@ -48,11 +48,24 @@ for (const route of routes) {
     );
   }
 
-  if (countMatches(html, /<main id="main-content">/g) !== 1) {
-    add(`route "${route.key}": expected exactly one <main id="main-content">`);
+  if (countMatches(html, /<main id="main-content" tabindex="-1">/g) !== 1) {
+    add(
+      `route "${route.key}": expected exactly one focusable <main id="main-content" tabindex="-1">`,
+    );
   }
 
-  if (countMatches(html, /<nav aria-label="Primary">/g) !== 1) {
+  if (countMatches(html, /<a class="skip-link" href="#main-content">/g) !== 1) {
+    add(`route "${route.key}": expected exactly one skip link`);
+  }
+
+  if (countMatches(html, /<a href="\/privacy\/">/g) !== 1) {
+    add(`route "${route.key}": expected exactly one privacy link`);
+  }
+
+  // PF-031: nav.js's <nav> tag now also carries id/class before
+  // aria-label, so the match can't assume aria-label is the first/only
+  // attribute — still requires exactly one, just order-independent.
+  if (countMatches(html, /<nav[^>]* aria-label="Primary"[^>]*>/g) !== 1) {
     add(
       `route "${route.key}": expected exactly one primary navigation landmark`,
     );

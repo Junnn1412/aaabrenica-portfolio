@@ -16,6 +16,17 @@ $gap-lg: $space-6;
 $container-max: 80rem;
 $container-wide: 90rem;
 
+// PF-031: scroll-margin-top for #main-content so the skip link's target
+// isn't covered by the desktop-only sticky header. Additive only (no
+// length*number multiplication, which is not reliably valid cross-browser
+// CSS) — approximates the header's own height (a touch-target-sized
+// content row plus its vertical padding) plus a small visual buffer, built
+// entirely from existing tokens. Verify against the real rendered header
+// height once its CSS exists and adjust if it doesn't match.
+$header-offset: calc(
+  var(--touch-target-min) + var(--space-3) + var(--space-3) + var(--space-2)
+);
+
 // Breakpoints — Sass-only. CSS custom properties cannot be used inside
 // @media conditions, so these can never be emitted alongside the other
 // settings maps; they're consumed directly at compile time via
@@ -48,4 +59,5 @@ $spacing: (
   'gap-lg': $gap-lg,
   'container-max': $container-max,
   'container-wide': $container-wide,
+  'header-offset': $header-offset,
 ) !default;

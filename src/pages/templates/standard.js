@@ -2,7 +2,7 @@ import { escapeHtml } from '../escape.js';
 import { renderHeader } from '../../components/partials/header.js';
 import { renderFooter } from '../../components/partials/footer.js';
 
-export function renderStandardPage({ content, navItems, activeKey }) {
+export function renderStandardPage({ content, navItems, activeKey, site }) {
   const paragraphs = content.paragraphs
     .map((p) => `<p>${escapeHtml(p)}</p>`)
     .join('');
@@ -10,8 +10,8 @@ export function renderStandardPage({ content, navItems, activeKey }) {
     ? `<p><a href="${escapeHtml(content.link.path)}">${escapeHtml(content.link.label)}</a></p>`
     : '';
   return {
-    header: renderHeader(navItems, activeKey),
+    header: renderHeader(navItems, activeKey, site),
     main: `<h1>${escapeHtml(content.heading)}</h1>${paragraphs}${link}`,
-    footer: renderFooter(),
+    footer: renderFooter(navItems, site),
   };
 }

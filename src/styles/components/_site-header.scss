@@ -1,0 +1,95 @@
+@use '../settings/spacing';
+
+header {
+  display: flex;
+
+  // Mobile-default: brand + toggle fit line 1 on their own (their
+  // combined width is far under 100%); .site-nav's own flex-basis: 100%
+  // (below) can't fit alongside them, so it wraps to a full-width line 2
+  // — the brand/toggle row stays stable and compact, nav grows the
+  // header vertically instead of squeezing into a narrow leftover
+  // column. justify-content applies per line in a wrapped flex
+  // container, so line 1 still gets brand-left/toggle-right, and line
+  // 2's single 100%-wide item needs no distribution. Reverted to a
+  // single non-wrapping row at desktop, where only brand + nav are ever
+  // visible together.
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  padding-inline: var(--gutter);
+  background-color: var(--color-surface-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+
+  // Sticky only at desktop. The collapsible mobile nav holds 6 links + the
+  // CTA (7 rows) — a *pinned* header containing the fully expanded menu
+  // could equal or exceed a short viewport's height (e.g. a landscape
+  // phone), trapping the page with no way to scroll past it. At desktop
+  // the nav is always a short horizontal row, so sticky there carries
+  // none of that risk.
+  @media (min-width: spacing.$bp-md) {
+    flex-wrap: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky-nav);
+  }
+}
+
+.site-header__brand {
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  font-weight: 600;
+  transition: opacity var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.site-header__brand:hover {
+  opacity: 0.8;
+}
+
+// Visibility is owned entirely by the real `hidden` DOM property
+// (src/scripts/nav-toggle.js) — no CSS here shows or hides this element,
+// so there is exactly one authoritative state, never two that could
+// diverge (see docs/DECISION_LOG.md).
+// `display` is scoped to `:not([hidden])`, not applied unconditionally.
+// An earlier draft set `display: inline-flex` directly on
+// `.site-header__menu-toggle`, which — despite the comment above stating
+// the intent — silently defeated the browser's native `[hidden] { display:
+// none }` behavior: author-origin CSS always wins over user-agent-origin
+// CSS regardless of specificity, so the button stayed visible at every
+// width and in every state, in turn crowding the desktop nav row into
+// wrapping. Scoping the rule this way means no author `display` competes
+// with `[hidden]` for this element at all.
+.site-header__menu-toggle {
+  align-items: center;
+  gap: var(--space-2);
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  padding-inline: var(--space-3);
+  border: var(--border-width) solid var(--color-border-interactive);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+}
+
+.site-header__menu-toggle:not([hidden]) {
+  display: inline-flex;
+}
+
+.site-header__menu-icon {
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+// Keeps the skip-link/focus target clear of the desktop-only sticky
+// header (--header-offset, settings/_spacing.scss). Scoped to this one
+// selector, not a global [id] rule — the showcase loads the same
+// compiled CSS but has no sticky header of its own, so a global rule
+// would incorrectly offset its unrelated TOC-anchor jumps.
+#main-content {
+  scroll-margin-top: var(--header-offset);
+}

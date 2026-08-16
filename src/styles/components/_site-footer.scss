@@ -1,0 +1,33 @@
+footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-block: var(--space-6);
+  padding-inline: var(--gutter);
+  background-color: var(--color-surface-1);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+footer nav ul,
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// Layered on top of generic/_reset.scss's `footer a { color: inherit }`
+// rest-state (PF-021) — this only adds hover/focus feedback, it does not
+// replace the inherited base color.
+footer a:hover {
+  color: var(--color-text-primary);
+}
+
+.site-footer__meta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+}

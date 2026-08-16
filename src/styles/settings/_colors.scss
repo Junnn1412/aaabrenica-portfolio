@@ -41,6 +41,14 @@ $palette-coral-400: #f0576b;
 $palette-cyan-400: #22c3d6;
 $palette-lime-400: #8dd941;
 $palette-violet-400: #9b6bff;
+
+// Sixth capability accent — PF-032 needs six card variants, PF-020 reserved
+// only five. Independently defined, not aliased to any other token (same
+// precedent as $palette-cobalt-fill above). Contrast-verified in
+// tests/capability-card-contrast.test.mjs: dark ink on this fill clears
+// 4.5:1 with real margin, both flat and against the darkest pattern
+// composite (docs/DECISION_LOG.md).
+$palette-magenta-400: #ef4fa0;
 $palette-selection-bg: color.change($palette-cobalt-500, $alpha: 0.35);
 $palette-scrim: color.change($palette-ink-900, $alpha: 0.72);
 
@@ -75,4 +83,5 @@ $colors: (
   'accent-coral': $palette-coral-400,
   'accent-violet': $palette-violet-400,
   'accent-cyan': $palette-cyan-400,
+  'accent-magenta': $palette-magenta-400,
 ) !default;

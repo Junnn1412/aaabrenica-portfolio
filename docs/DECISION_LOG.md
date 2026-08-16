@@ -451,6 +451,136 @@ nowrap` (removing wrapping as an escape valve entirely, not just making
 
 ---
 
+## 2026-08-16 — Capability cards: deferred renderer/content module, not built ahead of a real caller
+
+- **Status:** Accepted
+- **Context:** PF-032 needed six capability cards. A first draft proposed
+  `src/content/capability-cards.js` (a data module) plus
+  `validateCapabilityCards()`, wired into `scripts/validate-routes.mjs`, plus
+  a showcase-sync test asserting the showcase's hand-typed text matched the
+  data file. On review, none of that had a real consumer: the showcase is
+  static exact-file HTML and cannot import a Node module (the composer never
+  touches it), and no production template calls a renderer either —
+  `solutions.js`/`home.js` are still placeholders. The only "uses" of the
+  data module would have been a route-validator check and a test keeping two
+  hand-maintained copies of the same content in sync — busywork, not a
+  genuine application dependency. This is the same shape of mistake an
+  earlier draft of PF-021's icon renderer made: built ahead of any real
+  caller, sitting unused until PF-031 finally gave it one (nav icons).
+- **Decision:** Ship `.capability-card` as SCSS-only, with a documented
+  markup contract, proven by literal hand-authored specimens in
+  `dev/design-system/index.html` — no JS render function, no content-data
+  module, no route-validator integration, no sync test. Exactly the same
+  precedent `.btn`/`.tag`/`.media-frame` already established in PF-021: ship
+  CSS-first, add a renderer only once a real page composes the content
+  (PF-041/050+).
+- **Consequences:** The six showcase descriptions are representative/
+  provisional component copy, not approved production content — documented
+  explicitly in `docs/DESIGN_SYSTEM.md` so they're never mistaken for final
+  Solutions-page copy. All six interactive specimens link to `/solutions/`
+  (the one existing, approved route) purely to demonstrate the stretched-
+  link pattern; no route content changed. Icons are hand-authored static
+  inline SVG (matching the existing `.field--error` circle-alert precedent),
+  not `renderIcon()` calls — the showcase has no build step to invoke it
+  from.
+- **Revisit condition:** When PF-041/050 first composes real capability-card
+  content into an actual page, add `renderCapabilityCard()` and a validated
+  content-data module then — that milestone is the real caller this
+  milestone deliberately didn't invent one for.
+
+## 2026-08-16 — Capability cards: full-bleed accent backgrounds, pattern opacity, and a two-tone focus ring
+
+- **Status:** Accepted
+- **Context:** The requirements doc calls for "bold solid... colors" on
+  capability cards, but PF-020 reserved the five (now six) capability-accent
+  tokens without ever using one as a background — every prior use was a
+  small swatch dot. Committing to a full solid accent fill meant verifying,
+  not assuming, three things that had never been tested in this role: (1)
+  text/icon contrast directly on an accent field, (2) the site's default
+  cobalt `--color-focus-ring` against an accent field, and (3) once an
+  abstract background pattern was added on top of the fill, contrast against
+  the pattern's darkened stripes, not just the flat color.
+- **Decision:**
+  1. **Dark ink (`--color-canvas`) for all text/icon content on every
+     variant.** Light/white text was checked and rejected — it fails badly
+     on all six accents (as low as 1.60:1). Dark ink clears 4.5:1 on all six
+     with real margin (weakest: `--accent-violet`, 5.43:1 flat).
+  2. **A sixth accent, `--accent-magenta` (`#ef4fa0`)**, independently
+     defined (not aliased), since six cards needed one more than PF-020
+     reserved.
+  3. **The background pattern's opacity is 5%, not the initially-assumed
+     8%.** At 8%, `--accent-violet`'s margin over the 4.5:1 text floor was
+     only 5.6% once composited against the pattern's darkest stripe — thin
+     by this project's own established standard, where every other verified
+     pair carries a double-digit margin. Reduced to 5%, restoring a real
+     11.0% margin.
+  4. **A two-tone, full-card focus ring**, not a single dark override. The
+     default `--color-focus-ring` (cobalt) fails 3:1 against every accent
+     (1.27–2.60:1); a single dark ring alone is equally illegible against
+     the surrounding dark canvas/surface page. Two concentric rings — inner
+     dark (`--color-canvas`, vs. every accent) and outer light
+     (`--color-text-primary`, vs. the surrounding page) — applied around the
+     whole card via `.capability-card:has(.capability-card__link:focus-visible)`,
+     not just the heading link, so the ring's footprint matches what's
+     actually being activated. Under `forced-colors: active`, the same
+     card-level selector switches to a real `outline: 2px solid Highlight`
+     (box-shadow is dropped under forced-colors; outline is preserved and
+     system-recolored) — never collapsing back to a small link-sized box in
+     either mode.
+  5. **Interactivity is scoped to `.capability-card:has(.capability-card__link)`**,
+     not a `--static`/`--interactive` modifier class — a card gets the
+     stretched-link hit area, arrow, hover-lift, `:active` feedback, and
+     focus ring purely because a real link element is present in its markup,
+     never because a modifier was correctly (or incorrectly) applied.
+  6. **`:active` sets `transform: translateY(0)` plus a `--shadow-md`
+     step-down, not `filter: brightness()`.** `:hover` and `:active` can be
+     simultaneously true (mouse held down while hovering); a filter-only
+     rule would leave the hover-lift's transform in effect, so the card
+     would never visibly "press." The explicit reset, declared after the
+     hover block, wins by source order. `filter: brightness()` was rejected
+     because it alters the actual rendered text/background colors while
+     pressed — outside what the contrast tests cover.
+- **Consequences:** `tests/capability-card-contrast.test.mjs` compiles the
+  real `main.scss` (tokens and the actual pattern/focus-ring rules together)
+  and asserts three named relationship categories — body text/icon contrast,
+  card boundary contrast, and focus-indicator contrast — against every
+  accent, both flat and pattern-composited, rather than asserting literal
+  hex values. It reads the pattern's real opacity and the focus ring's real
+  color tokens from the compiled CSS, so a future edit that changes either
+  without re-verifying contrast fails the test on its own.
+- **Revisit condition:** If a future card variant's accent is added or
+  changed, re-run the same flat-and-composite contrast check before shipping
+  it — the margin math in `docs/DESIGN_SYSTEM.md`'s capability-cards section
+  is specific to the current six colors, not a guarantee that holds for an
+  arbitrary future hue.
+
+## 2026-08-16 — Capability cards: desktop grid was viewport-breakpoint-gated, not container-width-aware
+
+- **Status:** Accepted — the exact `minmax(min(20rem, 100%), 1fr)` construct
+  in the Decision below was itself superseded the same day (see "full-bleed
+  accent backgrounds..." entry's sibling entries further down and
+  `docs/DESIGN_SYSTEM.md`'s "Capability cards (PF-032)" section for the
+  current implementation: an unconditional `1fr` default plus
+  `repeat(auto-fit, minmax(20rem, 1fr))` above `(width >= 36em)`, with no
+  nested CSS math function). The breakpoint-vs-container-width diagnosis
+  and the `.preview-section--wide` container fix below remain accurate and
+  current; only the specific `grid-template-columns` value quoted in this
+  entry's Decision does not match what's currently shipped.
+- **Context:** Visual review flagged the desktop/tablet capability-card grid: three uncomfortably narrow columns, "Workflow & Process Solutions" wrapping onto four lines, and visibly unused horizontal space beside the grid at wide viewports. Root cause, confirmed by computing the real numbers (not guessed): `.capability-cards` selected its column count from `@media (min-width: $bp-md/$bp-lg)` — i.e. from the raw **viewport** width — but the grid's actual available width is the `.preview-section`'s own `max-width: var(--container-max)` (80rem/1280px), inset further by `--gutter` and the card's own padding. Those are two different measurements. Right at and just above the old 1024px breakpoint (where the container isn't yet capped), three forced columns left only ~231px of real text area per card — narrow enough to produce the observed four-line wrap. Even once the container was capped at wider viewports, three columns landed at ~373px total (~309px text area) while the container itself sat well inside the available viewport, which is the "unused space" half of the report.
+- **Decision:** Replace the two fixed, breakpoint-gated `repeat(N, 1fr)` rules with a single `grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));` — column count is now derived from the grid's real available width, not assumed from viewport width, so it naturally drops to two columns wherever three wouldn't be comfortable rather than forcing a fixed count. The `min(20rem, 100%)` wrapper (not a bare `20rem`) keeps the minimum from ever exceeding the container itself, which is what prevents overflow at the narrowest required width (320px) — an unwrapped `minmax(20rem, 1fr)` is a well-known way to force exactly that kind of overflow. Additionally, the capability-cards section itself now opts into a `.preview-section--wide` modifier (`max-width: var(--container-wide)`, 90rem/1440px — an existing token, not a new one) instead of the page's narrower default, giving genuinely comfortable column widths at large viewports instead of just centering the same cramped columns with more empty margin around them.
+- **Consequences:** Real column-count math (via `clamp()`-based gutter, real `--gap-lg`/`--space-6`/`--container-wide` token values) now gives 1 column at 320/375px (unchanged), 2 columns at 768/1024px, and 3 comfortable columns (~427px, ~365px text area) at 1440/1920px — verified in `tests/capability-card-layout.test.mjs`, which simulates the real auto-fit algorithm from the real compiled tokens rather than asserting hardcoded pixel values. All previously verified colors, the background pattern, icon treatment, hover/active/focus behavior, and contrast relationships are untouched — this was purely a grid-track-sizing and container-width correction.
+- **Revisit condition:** If the minimum comfortable column width (`20rem`) or the section's container token ever change, re-run the real-number simulation in `tests/capability-card-layout.test.mjs` before assuming the new values are still comfortable at every required review width.
+
+## 2026-08-16 — Capability cards: the real desktop-width defect was an inherited `ul` prose-width cap, not the section container
+
+- **Status:** Accepted
+- **Context:** After the grid/container fix above (auto-fit/minmax, `.preview-section--wide`), visual review — using a clean, self-managed dev server, ruling out stale HMR/tab state — still showed the capability-cards grid rendering single-column, in a section only ~400-550px wide, at desktop viewports up to ~1900px. The previous fix and its test both modeled the _section's_ available width and assumed the grid used exactly that; neither ever checked whether `.capability-cards` (the `<ul>` itself) carried any independent, competing constraint from elsewhere in the stylesheet. It did: `elements/_body-copy.scss` has a project-wide `ul, ol { max-width: var(--width-reading); }` rule (68ch, a sensible reading-length cap for a list of _text_) that applies to every `<ul>`/`<ol>` in the document, `.capability-cards` included. `.capability-cards` (specificity 0,1,0) beats bare `ul` (0,0,1) for any property both rules declare — but the cascade resolves _per property_, not per rule, and `.capability-cards` never declared `max-width` at all. With no competing declaration for that property, the generic ~68ch (~500-550px, depending on the rendered font) constraint applied completely unopposed on the grid element, regardless of how wide its ancestor section was made. Widening the section was a correct, necessary fix for the section's own width — it just wasn't sufficient, because the actual bottleneck was one level further in.
+- **Decision:** Add an explicit `max-width: none;` to `.capability-cards`. The same audit (checking every generic `elements/*.scss` element-selector rule against every property `.capability-card`/`.capability-cards` might inherit) found one more instance of the identical bug class: `li { margin-bottom: var(--space-2); }` was leaking onto `.capability-card` (never overridden), stacking extra space under every card on top of the grid's own `gap` — fixed with an explicit `margin: 0;` on `.capability-card`.
+- **Consequences:** `tests/capability-card-layout.test.mjs` was rewritten around a real per-property cascade resolver (`resolveProperty()`) that parses every rule in the compiled stylesheet, computes real CSS specificity for each matching selector, and picks the cascade-winning declaration by (specificity, source order) — the same two tie-break axes a browser uses for normal-priority rules. It asserts the _resolved_ value of `max-width` on `<ul class="capability-cards">` and `margin` on `<li class="capability-card">`, not merely that some plausible-looking declaration exists in the file — this is the same gap that let the previous version of this test pass while the browser rendered a single column. Deliberate-failure passes confirmed: removing either fix makes the resolver correctly report the inherited generic value instead, and the downstream column-count simulation (now seeded from the resolver's answer, not an assumed value) correctly collapses back to 1 column. The section-width fix (`.preview-section--wide`) from the prior entry is unchanged and still necessary — this entry is additive, not a replacement.
+- **Revisit condition:** Any future card/grid component built as a `<ul>`/`<ol>`/`<li>` should check `elements/_body-copy.scss`'s generic list rules (`max-width`, `margin`, `padding-left`) against its own needs up front, rather than discovering the gap after a visual-review round trip — the resolver in `tests/capability-card-layout.test.mjs` is written generally enough to reuse for that check.
+
+---
+
 _This log will be backfilled with the project's earlier approved decisions
 (technology stack, hosting, positioning, information architecture, and
 others) under PF-002. Entries added from PF-011 onward are recorded here

@@ -296,6 +296,159 @@ the condition under which a decision should be revisited.
   sticky TOC or splitting by milestone — but only as a CSS/organization
   change to this same file, not a second file or route.
 
+## 2026-08-16 — Global navigation and footer: menu-control architecture, sticky-header risk, skip-link focus, and footer/icon safety
+
+- **Status:** Accepted
+- **Context:** PF-031 asks for "desktop and mobile navigation, active state,
+  skip link, highlighted Start a Project action, accessible menu behavior,
+  footer navigation, contact links, privacy link, and copyright"
+  (`docs/INITIAL_IMPLEMENTATION_TASKS.md`). Planning went through several
+  correction rounds before implementation; the material decisions:
+- **Menu control — real `<button>`, not `<details>`:** a `<details>` whose
+  content is forced visible only through desktop CSS creates two sources of
+  truth (the _visual_ state and the native _accessibility_ state can
+  diverge). Decision: a real `<button aria-expanded aria-controls>` whose
+  `hidden` attribute (button and nav both) is the single authoritative
+  state, mirrored into `aria-expanded`. The no-JS baseline ships the button
+  `hidden` and the nav never `hidden` — full navigation at every width with
+  zero JS; `src/scripts/nav-toggle.js` only adds Escape-to-close-with-
+  focus-return and a breakpoint-change auto-close, both additive.
+- **Focus as a one-time effect, not persisted state:** an early draft stored
+  `focusToggle: true` inside the persisted `{ isDesktop, expanded }` state.
+  Found on review: a second consecutive Escape (menu already closed) could
+  re-read a stale `true` and refocus the toggle with no new request.
+  Redesigned so `deriveNavState()` returns a fresh `{ state, effect }` pair
+  on every call — `effect` is never stored, so a no-op action deterministically
+  returns `effect: null`. Directly unit-tested
+  (`tests/nav-toggle-state.test.mjs`: "a second consecutive ESCAPE does not
+  repeat the focus effect").
+- **Atomic DOM initialization:** an early draft checked only `toggle`/`nav`
+  before proceeding, then queried the label/icons afterward — if either was
+  missing, the toggle would already be revealed before the code threw. Fixed
+  to resolve and check all five required elements (toggle, nav, label, both
+  icons) before any mutation; if any is missing, nothing is touched and the
+  safe server-rendered baseline stands.
+- **Sticky header, desktop only:** the collapsible mobile nav holds 6 links
+  - the CTA (7 rows) — a _pinned_ header containing the fully expanded menu
+    could equal or exceed a short viewport's height (e.g. a landscape phone),
+    trapping the page with no way to scroll past it. Scoping
+    `position: sticky` to `@media (min-width: $bp-md)` only removes the risk
+    by construction — desktop's nav is always a short horizontal row.
+- **Skip-link focus, a genuine pre-existing gap:** since PF-011, `#main-content`
+  had no `tabindex`, so activating the skip link scrolled it into view but
+  did not reliably move keyboard focus there. Fixed with `tabindex="-1"` on
+  all 11 skeleton files, no JS. Guarded at both the pre-flight
+  (`scripts/validate-routes.mjs`, reads the raw skeleton) and build-output
+  (`scripts/verify-build-output.mjs`, strengthened the existing
+  `<main id="main-content">` check) layers.
+- **`--header-offset` — additive CSS, correct settings file:** an early
+  draft used `calc(var(--space-3) * 2)` (length-times-number), not reliably
+  valid cross-browser CSS. Corrected to pure addition. Placed in
+  `settings/_spacing.scss`, not `_shape.scss` — it's a scroll-positioning/
+  layout concern, not an element's own geometry.
+- **Footer link safety, defined now, not deferred:** `contactEmail`/
+  `social.github`/`social.linkedin`/`resumePath` stay `null`
+  (PF-003/PF-053), but `src/pages/link-safety.js` gained `isSafeEmail()` and
+  `isSafeExternalUrl(url, hostGroup)` now, so a future populated value can't
+  silently become an unsafe attribute. `isSafeEmail()`'s local-part
+  character class deliberately excludes `%` — an early draft allowed it,
+  but combined with raw `mailto:` embedding, a value like
+  `local%0d%0abcc%3aevil@evil.com` passes every individual character's
+  whitelist yet a mail client percent-decoding the URI could read
+  `%0d%0a`/`%3a` as literal CRLF/`:`, enabling mailto header injection.
+  `isSafeExternalUrl` requires HTTPS and an explicit per-field host
+  allowlist (`github.com`/`www.github.com`, `linkedin.com`/`www.linkedin.com`)
+  — not "any HTTPS URL."
+- **`renderFooter(navItems, site, { year })` — corrected signature:** an
+  early draft was `renderFooter(site, { year })`, which had no way to
+  receive `navItems` for the footer's own nav short of importing the
+  `primaryNav` config singleton directly — contradicting the stated
+  pure/injectable architecture. `navItems` is now threaded through exactly
+  like `site` (`render.js` → templates → `renderHeader`/`renderFooter`).
+  `footer.js` imports neither config module.
+- **Icon renderer — whitelist attribute names, not just escape values:**
+  `src/components/icon.js` (finally built — PF-021 deferred it for lack of
+  a real call site; the menu icons are that call site) whitelists both tag
+  names and attribute names. An early draft escaped attribute _values_ but
+  emitted any attribute _name_ — `escapeHtml('onload')` is still the
+  literal string `onload`, so escaping alone doesn't stop a dangerous name
+  from being emitted as a live attribute. Fixed with a closed
+  `ALLOWED_ATTRS` set (the real geometry attributes the whitelisted tags
+  use); unexpected names throw, like unexpected tags. `className` is the
+  only way to attach an outer class — the renderer itself emits the fixed
+  `class` name, so callers can never inject an arbitrary outer-attribute
+  object.
+- **Manual Git grouping:** the skeleton `tabindex` fix and the validator
+  changes (`scripts/validate-routes.mjs`/`verify-build-output.mjs`) are
+  separate commits — an early draft bundled both under a message
+  mentioning only the skip link, silently absorbing the unrelated
+  primary-CTA/contact-safety validation changes.
+- **Consequences:** `tests/nav-toggle-state.test.mjs`, `tests/nav.test.mjs`,
+  `tests/header.test.mjs`, `tests/footer.test.mjs`, `tests/icon.test.mjs`
+  (new); `tests/link-safety.test.mjs` extended. `scripts/verify-build-output.mjs`'s
+  existing `<nav aria-label="Primary">` check needed its regex loosened to
+  be attribute-order-independent once `nav.js` started emitting `id`/`class`
+  before `aria-label` — found and fixed during implementation, not
+  anticipated in planning.
+- **Revisit condition:** none identified beyond the existing `--header-offset`
+  visual-recheck note (component-showcase entry, `docs/DESIGN_SYSTEM.md`).
+
+## 2026-08-16 — Global navigation visual-review corrections: `[hidden]` cascade defect and desktop nav wrapping
+
+- **Status:** Accepted
+- **Context:** PF-031 failed visual review after implementation. Two real
+  CSS defects were found — neither caught by `npm run verify`, since CSS
+  _rendering_ isn't something `node:test` can evaluate, only the compiled
+  stylesheet's _content_.
+- **Defect 1 — `[hidden]` silently overridden:** `.site-header__menu-toggle`
+  set `display: inline-flex` unconditionally. CSS cascade _origin_ ordering
+  means a normal-priority author rule always beats a normal-priority
+  user-agent rule, regardless of specificity — this one declaration
+  permanently defeated the browser's native `[hidden] { display: none }`
+  behavior, so the mobile-menu toggle stayed visible in every state, at
+  every width (desktop included), which in turn crowded the desktop nav
+  row into wrapping (defect 2).
+- **Decision — scope the rule, and add one justified `!important`:**
+  `.site-header__menu-toggle`'s `display` is now scoped to
+  `:not([hidden])`. That alone isn't durable: same-specificity author
+  rules are resolved by _source order_, not by which one "should" apply,
+  so a future component rule loaded later, at equal specificity, could
+  reintroduce the identical bug. `generic/_reset.scss` therefore also
+  gained `[hidden] { display: none !important; }` — **an intentional,
+  deliberately narrow exception to this project's normal avoidance of
+  `!important`**, added only after proving the failure mode above, not
+  adopted as a default habit. It is defense in depth: components should
+  still scope their own `display` rules correctly (as the toggle now
+  does); the `!important` rule exists so the _result_ — `[hidden]`
+  elements are never visible — holds project-wide even if a future
+  component gets that wrong.
+- **Defect 2 — desktop nav wrapped despite available room:** `.site-nav`
+  (the `<nav>` element, a flex item of `header`) had no `flex-shrink` of
+  its own, defaulting to `flex-shrink: 1` — compressible below its
+  content's natural width whenever `header`'s space was even slightly
+  tight. Combined with `flex-flow: row wrap` on the desktop `.site-nav ul`
+  rule, that compression is what let the "Start a Project" CTA break onto
+  a second row; the row was never genuinely out of viewport width, it was
+  being squeezed by its own flex item shrinking first. Considered and
+  rejected: reducing the gap alone (would have masked the structural
+  cause without fixing it) and raising the breakpoint (explicitly
+  prohibited — hides the defect rather than fixing it).
+- **Decision:** `.site-nav { flex-shrink: 0; }` and
+  `.site-nav li { flex-shrink: 0; }` at desktop, plus `flex-flow: row
+nowrap` (removing wrapping as an escape valve entirely, not just making
+  it less likely). The desktop nav gap was also tightened from
+  `--space-5` to `--space-4` — an existing token, applied as a modest
+  secondary safety margin alongside the structural fix, not instead of it.
+- **Consequences:** `tests/hidden-visibility.test.mjs` and
+  `tests/site-nav-layout.test.mjs` (both new) compile the real `main.scss`
+  and assert the corrected declarations are present — proving the
+  compiled stylesheet is correct, not that any given browser renders it
+  correctly. Manual browser review at 1024/1440/1920px remains required.
+- **Revisit condition:** if a future component again needs to set
+  `display` on a selector that can also carry `hidden`, scope it with
+  `:not([hidden])` from the start — the global safety net will catch a
+  mistake, but shouldn't be relied on as the primary mechanism.
+
 ---
 
 _This log will be backfilled with the project's earlier approved decisions

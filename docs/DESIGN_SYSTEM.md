@@ -3,12 +3,13 @@
 Established in PF-020 (tokens, typography, global document behavior),
 extended in PF-021 (base elements: headings, body copy, links, buttons,
 labels, tags, lists, media frames, section headers, containers, and
-form-control foundations), and formalized as the component showcase in
-PF-030 (table of contents, review checklist — see "Component showcase
-(PF-030)" below). Does **not** yet define finished nav/header/footer chrome
-or cards — that's PF-031/PF-032+. See [`DECISION_LOG.md`](DECISION_LOG.md)
-for the composition-strategy and tooling decisions this builds on, and for
-the PF-020/PF-021/PF-030 decisions themselves.
+form-control foundations), formalized as the component showcase in PF-030
+(table of contents, review checklist), and extended again in PF-031 (global
+navigation and footer — see "Global navigation and footer (PF-031)" below).
+Does **not** yet define capability/project cards or process/trust/CTA
+components — that's PF-032+. See [`DECISION_LOG.md`](DECISION_LOG.md) for
+the composition-strategy and tooling decisions this builds on, and for the
+PF-020/PF-021/PF-030/PF-031 decisions themselves.
 
 ## Token architecture
 
@@ -409,9 +410,147 @@ showcase:
   scoping).
 
 No capability cards, project cards, nav/footer, or process/CTA components
-were built or stubbed — those are PF-031–PF-034's own scope. No placeholder
-"coming soon" sections were added either: an empty labeled section for a
-component that doesn't exist yet risks implying it does.
+were built or stubbed — those are PF-031–PF-034's own scope (PF-031 is now
+done — see below). No placeholder "coming soon" sections were added either:
+an empty labeled section for a component that doesn't exist yet risks
+implying it does.
+
+## Global navigation and footer (PF-031)
+
+`src/components/partials/{header,nav,footer}.js` now render real,
+production chrome: a brand link, a highlighted "Start a Project" CTA
+(`site.primaryCta`), an accessible mobile menu, and a footer with
+navigation, a privacy link, validated optional contact links, and a
+copyright line.
+
+**Menu control — a real `<button>`, not `<details>`.** An earlier draft of
+this milestone used `<details>`/`<summary>` with desktop CSS forcing the
+content open. Rejected: a closed `<details>` whose content is only _visually_
+forced open creates a mismatch between the visible state and the native
+accessibility state — two sources of truth that can diverge. Corrected to a
+real `<button aria-expanded aria-controls="primary-navigation">` whose
+`hidden` attribute (on both the button and `#primary-navigation`) is the
+single authoritative visibility state, always mirrored into `aria-expanded`.
+Server-rendered baseline: the button ships `hidden`; the nav never does — the
+site is fully navigable at every width with zero JS. `src/scripts/nav-toggle.js`
+only adds Escape-to-close-and-return-focus and a breakpoint-change
+auto-close, both additive, neither required for baseline usability.
+`src/scripts/nav-toggle-state.js` holds the pure `{ isDesktop, expanded } ->
+{ state, effect }` decision logic — focus requests are a one-time returned
+effect, never stored inside persisted state, so a second consecutive Escape
+(menu already closed) can't re-trigger a stale focus move. `initNavToggle()`
+resolves all five required elements (toggle, nav, label, both icons) before
+touching the DOM at all — if any is missing, it bails out having mutated
+nothing, leaving the safe server-rendered baseline intact.
+
+**Sticky header, desktop only.** `header { position: sticky; }` is scoped to
+`@media (min-width: $bp-md)` only. The collapsible mobile nav holds 6 links
+
+- the CTA (7 rows) — a _pinned_ header containing the fully expanded menu
+  could equal or exceed a short viewport's height (e.g. a landscape phone),
+  trapping the page with no way to scroll past it. At desktop the nav is
+  always a short horizontal row, so sticky there carries none of that risk.
+
+**Skip-link focus, actually fixed.** All 11 skeleton files now use
+`<main id="main-content" tabindex="-1">` — previously the skip link scrolled
+`#main-content` into view but did not reliably move keyboard focus there
+(a plain `<main>` isn't natively focusable). No JS added solely for this;
+native fragment-navigation focus handling is sufficient once the target is
+explicitly focusable. Paired with `--header-offset`
+(`settings/_spacing.scss`, additive `calc()` built from `--touch-target-min`
+and existing spacing tokens — no length-times-number multiplication, which
+isn't reliably valid cross-browser CSS) via `scroll-margin-top` on
+`#main-content`, so the desktop sticky header can't cover the target.
+Scoped to that one selector, not a global `[id]` rule, so it never affects
+the showcase's own unrelated TOC-anchor jumps.
+
+**Active-route indication beyond color.** `[aria-current="page"]` existed
+since PF-011 but was never visually styled. Now: `--color-accent-text` +
+`font-weight: 600` + a persistent underline — never color alone.
+
+**Footer link safety.** `contactEmail`/`social.github`/`social.linkedin`/
+`resumePath` are still `null` (PF-003/PF-053), but the validation rules are
+defined and tested now, in `src/pages/link-safety.js`, so a future populated
+value can't silently become an unsafe attribute: `isSafeEmail()` rejects any
+`%`, whitespace, or CR/LF (a `%`-bearing local part combined with raw
+`mailto:` embedding could otherwise carry an encoded-CRLF header-injection
+payload like `local%0d%0abcc%3aevil@evil.com` — every individual character
+in that string passes a looser whitelist); `isSafeExternalUrl(url, hostGroup)`
+requires HTTPS and a host from an explicit per-field allowlist
+(`github.com`/`www.github.com`, `linkedin.com`/`www.linkedin.com` — never
+"any HTTPS URL"). `footer.js` imports neither `site.js` nor `navigation.js`
+directly — `navItems` and `site` are always caller-injected
+(`renderFooter(navItems, site, { year })`), which is what keeps it pure and
+testable with fixture data instead of the real singleton.
+
+**Copyright.** `© {year} {siteName}. All rights reserved.`, `year` defaulting
+to `new Date().getFullYear()` but overridable
+(`renderFooter(navItems, site, { year: 2026 })`) for deterministic tests. A
+production build run in a later calendar year intentionally produces a
+different static copyright year with no source edit — expected, not a
+regression.
+
+**Icon renderer, finally built.** PF-021 deferred a build-time icon renderer
+for lack of a real call site; the menu button's Menu/Close icons are that
+call site. `src/components/icon.js` whitelists both tag names (`path`,
+`circle`, `line`, `rect`, `polyline`, `polygon`, `ellipse`) and attribute
+names (`d`, `cx`/`cy`/`r`, `x`/`y`/`x1`/`y1`/`x2`/`y2`,
+`width`/`height`/`rx`/`ry`, `points`) — escaping alone would not stop a
+dangerous attribute _name_ like `onload`/`onclick`/`style` from being
+emitted as a live attribute, so unexpected names throw, exactly like
+unexpected tags. `className` is the only way to attach an outer class — the
+function itself emits the fixed `class` attribute name; callers can never
+inject an arbitrary outer-attribute object. Lucide's `key` attribute is
+confirmed absent from the raw `iconNode` data this renderer consumes (only
+Lucide's own `createElement()`/React wrappers add it) — no special-casing
+needed, since an unexpected attribute is rejected regardless of which one it
+is.
+
+**Visual review found two real CSS cascade defects, both fixed.** Neither
+was caught by `npm run verify` — CSS _rendering_ isn't something `node:test`
+can evaluate, only the _compiled stylesheet's content_, which is what the
+new regression tests below check.
+
+1. **`[hidden]` was silently overridden by a component rule.**
+   `.site-header__menu-toggle` set `display: inline-flex` unconditionally.
+   CSS cascade _origin_ ordering means a normal-priority author rule always
+   beats a normal-priority user-agent rule, regardless of specificity — so
+   this one declaration permanently defeated the browser's native
+   `[hidden] { display: none }` behavior for the toggle button. It stayed
+   visible in every state, at every width, which in turn crowded the
+   desktop nav row into wrapping (defect 2 below). Fixed two ways:
+   - `.site-header__menu-toggle`'s `display` is now scoped to
+     `:not([hidden])`, so no author rule competes with `[hidden]` for this
+     element at all.
+   - `generic/_reset.scss` gained a project-wide safety net:
+     `[hidden] { display: none !important; }` — **the one intentional
+     exception to this project's normal avoidance of `!important`**,
+     added only after proving it necessary, not by default. Scoping the
+     specific rule (above) isn't sufficient on its own: same-specificity
+     author rules are resolved by _source order_, not by which one
+     "should" apply, so a _future_ component rule loaded later, at equal
+     specificity, could reintroduce the exact same bug without a hard
+     override. This rule guarantees `[hidden]` always wins project-wide,
+     even if that happens — defense in depth, not a substitute for
+     components scoping their own `display` rules correctly.
+   - Guarded by `tests/hidden-visibility.test.mjs`, which compiles the
+     real `main.scss` and asserts both the safety net's presence and that
+     the specific rule stays well-behaved.
+2. **The desktop nav row wrapped even though there was room.** `.site-nav`
+   (the `<nav>` element, a flex item of `header`) had no `flex-shrink` of
+   its own, defaulting to `flex-shrink: 1` — allowed to be compressed
+   below its content's natural width whenever `header`'s available space
+   was even slightly tight. Combined with `flex-flow: row wrap` on the
+   desktop `.site-nav ul` rule, that compression is what let the "Start a
+   Project" CTA break onto a second line — the row was never genuinely
+   out of viewport width, it was being squeezed by its own flex item
+   shrinking first. Fixed with `.site-nav { flex-shrink: 0; }` and
+   `.site-nav li { flex-shrink: 0; }` at desktop, plus `flex-flow: row
+nowrap` (removing wrapping as an escape valve entirely, rather than
+   just making it less likely). The desktop nav gap was also tightened
+   from `--space-5` to `--space-4` (an existing token, not a new one) as
+   a modest additional safety margin — secondary to the structural fix,
+   not a substitute for it. Guarded by `tests/site-nav-layout.test.mjs`.
 
 ## Accessibility rationale summary
 

@@ -43,13 +43,14 @@ src/styles/
 │   ├── _reset.scss            — box-sizing/margin reset; header/footer link color:inherit
 │   ├── _fonts.scss            — @font-face (real CSS output, not a "setting")
 │   ├── _custom-properties.scss — emits every settings/ value to :root
-│   └── _document.scss         — global body/html appearance, focus-visible, reduced-motion
+│   └── _document.scss         — global body/html appearance, focus-visible, reduced-motion; PF-040: body is a flex column (minimum-viewport shell)
 ├── elements/                  — PF-021: bare-tag styling (applies site-wide, no opt-in class)
 │   ├── _headings.scss         — h1-h4, .text-display
 │   ├── _body-copy.scss        — p, strong, em, small, code/kbd, lists, .text-lead, .list--marked
 │   └── _links.scss            — a, .link--plain
 ├── objects/                   — PF-021: structural, non-cosmetic
 │   ├── _container.scss        — .container / --wide / --reading
+│   ├── _page-shell.scss       — PF-040: #main-content's flex: 1 + padding-block: var(--space-section)
 │   └── _section-header.scss   — .section-header
 ├── components/
 │   ├── _skip-link.scss
@@ -310,10 +311,11 @@ are explicitly exempted in `generic/_reset.scss` and remain unstyled until
 PF-031's nav/header/footer redesign).
 
 **Class-based, preview-only until a later milestone wires them into real
-content:** `.btn`, `.tag`, `.media-frame`, `.section-header`, `.container`,
-`.field`. No PF-021 change touches `src/pages/templates/*.js` or
+content:** `.btn`, `.tag`, `.media-frame`, `.section-header`, `.field`. No
+PF-021 change touches `src/pages/templates/*.js` or
 `src/components/partials/*.js` — these classes exist as proven, reusable CSS
-ready for PF-031+ to adopt.
+ready for PF-031+ to adopt. (`.container` was in this list until PF-040
+wired it into every template — see "Page shell (PF-040)" below.)
 
 **Icon rendering is deferred, deliberately.** The dev preview is an
 exact-file composer passthrough (see "Preview workflow" above) — no
@@ -963,6 +965,45 @@ boundary depends on in normal mode:**
 - No static container (`.process-steps__step`, `.trust-list__item`,
   `.engagement-options__item`) gains a `:focus-visible`/`outline` rule in
   any mode — only real interactive elements keep that treatment.
+
+## Page shell (PF-040)
+
+Assembles the already-approved header/main-landmark/footer chrome (PF-011,
+PF-031, Gate C) into the reusable production shell that every route uses.
+
+**`.container` is now wired, at the template layer.** Each of
+`src/pages/templates/{standard,listing,case-study}.js` wraps its own `main`
+output in `<div class="container">...</div>`, rather than the skeleton (the
+11 physical route HTML files, e.g. `index.html`) wrapping `<!--@content-->`
+directly. The composed output is identical either way — `compose.js`
+substitutes a template's `main` string exactly where the marker sat, inside
+`<main id="main-content" tabindex="-1">` — but template-level ownership
+keeps container choice a per-template/per-section decision. This matters
+because PF-041's homepage brief (hero, capability-card band, CTA) is
+exactly the shape that commonly wants full-bleed section backgrounds with
+only the text centered inside; a single global wrapping container would
+force every later full-bleed section to fight it with negative-margin
+break-out hacks. `.container--wide`/`--reading` variant selection per
+template is deferred the same way — no real content demonstrates the need
+yet.
+
+**Minimum-viewport shell.** `body` (`generic/_document.scss`) is a flex
+column with `min-height: 100dvh` (upgraded from `100vh` via `@supports`,
+not a second bare declaration, which would trip
+`declaration-block-no-duplicate-properties`), and `#main-content`
+(`objects/_page-shell.scss`) carries `flex: 1`. This pins the footer to the
+viewport bottom on short routes (there was previously no mechanism for
+this — footer sat wherever content ended, leaving empty canvas below it)
+without constraining long ones: `min-height`, never `height`, means there's
+never a forced-shrink scenario, so a page whose content genuinely exceeds
+the viewport just grows past it, footer landing naturally after content.
+
+**Vertical rhythm.** `#main-content` also carries `padding-block:
+var(--space-section)` — a token defined since PF-020 (`clamp(4rem, 3rem +
+5vw, 8rem)`) but unused until now. Gives every route consistent breathing
+room between chrome and content. If a future section needs to sit flush
+against the header (a full-bleed hero with no gap), that page's template
+will need a local override — not solved speculatively here.
 
 ## Accessibility rationale summary
 

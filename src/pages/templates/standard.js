@@ -11,7 +11,7 @@ export function renderStandardPage({ content, navItems, activeKey, site }) {
     : '';
   return {
     header: renderHeader(navItems, activeKey, site),
-    main: `<h1>${escapeHtml(content.heading)}</h1>${paragraphs}${link}`,
+    main: `<div class="container"><h1>${escapeHtml(content.heading)}</h1>${paragraphs}${link}</div>`,
     footer: renderFooter(navItems, site),
   };
 }

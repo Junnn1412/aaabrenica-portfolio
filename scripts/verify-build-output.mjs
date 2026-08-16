@@ -54,6 +54,20 @@ for (const route of routes) {
     );
   }
 
+  // PF-040: the page container is wired at the template layer, but the
+  // composed output must still show it immediately inside <main> — proves
+  // the invariant end-to-end regardless of which layer produced it.
+  if (
+    countMatches(
+      html,
+      /<main id="main-content" tabindex="-1">\s*<div class="container">/g,
+    ) !== 1
+  ) {
+    add(
+      `route "${route.key}": expected <main id="main-content" tabindex="-1"> to open with <div class="container">`,
+    );
+  }
+
   if (countMatches(html, /<a class="skip-link" href="#main-content">/g) !== 1) {
     add(`route "${route.key}": expected exactly one skip link`);
   }

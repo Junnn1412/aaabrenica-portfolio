@@ -16,13 +16,24 @@ html {
   background-color: var(--color-canvas);
 }
 
+// PF-040: flex column + min-height (never height, so long pages are never
+// shrink-constrained) pins the footer to the viewport bottom on short
+// routes without affecting normal flow on long ones. dvh is layered in via
+// @supports rather than a second bare min-height declaration, which would
+// trip stylelint's declaration-block-no-duplicate-properties rule.
 body {
+  display: flex;
+  flex-direction: column;
   background-color: var(--color-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-family-body);
   font-size: var(--font-size-body);
   line-height: var(--line-height-body);
   min-height: 100vh;
+
+  @supports (min-height: 100dvh) {
+    min-height: 100dvh;
+  }
 }
 
 ::selection {

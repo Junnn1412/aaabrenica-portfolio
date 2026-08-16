@@ -9,7 +9,7 @@ export function renderCaseStudyPage({ content, navItems, activeKey, site }) {
   const backLink = `<p><a href="${escapeHtml(content.backLink.path)}">${escapeHtml(content.backLink.label)}</a></p>`;
   return {
     header: renderHeader(navItems, activeKey, site),
-    main: `<h1>${escapeHtml(content.heading)}</h1>${paragraphs}${backLink}`,
+    main: `<div class="container"><h1>${escapeHtml(content.heading)}</h1>${paragraphs}${backLink}</div>`,
     footer: renderFooter(navItems, site),
   };
 }

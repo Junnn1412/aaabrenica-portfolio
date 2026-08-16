@@ -144,8 +144,12 @@ real design tokens and components.
 ## Deferred
 
 - `src/assets/`, `public/` — no images/static assets yet.
-- Reusable content components (capability/project cards), decorative
-  visuals — component-showcase milestone (PF-032+).
+- Capability cards (PF-032) shipped as a CSS-only component
+  (`src/styles/components/_capability-card.scss`) with no JS renderer or
+  content-data module — deferred until a real page composes them
+  (PF-041/050+); see `docs/DESIGN_SYSTEM.md`'s "Capability cards (PF-032)"
+  section. Reusable project-card content components, decorative visuals —
+  still PF-033+.
 - Page-specific browser JS — `data-page` on `<body>` is a ready, documented,
   currently-unused seam for this.
 - External social/contact link _values_ — `site.social.github`/`.linkedin`/

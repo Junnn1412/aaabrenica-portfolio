@@ -1,0 +1,115 @@
+// PF-034 — homepage process preview (§9.7: Discover and Define / Design and
+// Plan / Develop and Test / Deploy and Support). CSS-only, no JS renderer or
+// content module — same precedent as .capability-card/.project-card: no real
+// production caller exists yet (home.js/process.js are still placeholders),
+// proven only in dev/design-system/index.html with hand-authored markup. See
+// docs/DECISION_LOG.md.
+
+// Static content, not a card: the four <li> steps carry no cursor/hover/
+// active/focus treatment of their own — only the single section-level link
+// to the future Process page is interactive, via the existing <a> pattern.
+// A per-step link would fragment the "one keyboard stop per action"
+// requirement and imply four separate destinations that don't exist.
+
+// max-width: none / margin: 0 / list-style: none reset elements/_body-copy.scss's
+// generic `ol, ul { max-width: var(--width-reading); }` and
+// `li { margin-bottom: var(--space-2); }`, which apply unopposed to any
+// property this class doesn't itself declare (the exact defect class fixed
+// in .capability-card/.project-card — cascade resolves per property, not
+// per rule). Verified via the shared cascade resolver in
+// tests/process-steps-layout.test.mjs.
+.process-steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: none;
+  gap: var(--gap-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (width >= 40em) {
+  .process-steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (width >= 64em) {
+  .process-steps {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.process-steps__step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+
+// Decorative numbered badge, hand-authored per specimen — not a CSS counter.
+// Ordinal semantics come from the real <ol>/<li> structure, not from this
+// badge's visible digit, so hiding/restyling it never affects what a screen
+// reader announces about step order. No connecting line between steps yet
+// (deferred — see docs/DECISION_LOG.md).
+.process-steps__number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-2);
+  color: var(--color-accent-text);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  font-weight: 600;
+}
+
+.process-steps__heading {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  line-height: var(--line-height-heading);
+}
+
+// Browser review found the plain <p><a> reading as though it belonged to
+// the first grid item (no visual break between the grid and the link that
+// follows it). A top border + generous top margin (larger than
+// .process-steps' own row gap) makes this unmistakably a group-level
+// action, not a per-step one, at every required width — a single-column
+// mobile layout needs the same separation as the four-column desktop one,
+// since the false-association risk (reading as attached to step 1) exists
+// at both.
+
+// max-width: none is load-bearing, not decorative — elements/_body-copy.scss's
+// generic `p { max-width: var(--width-reading); }` (68ch, correct for
+// running prose) otherwise applies unopposed here too, the same per-property
+// cascade gap already fixed on the list itself: this class never declared
+// max-width, so the generic rule wins regardless of this class's higher
+// specificity. Left unfixed, the divider (and the <p>'s own hit area) was
+// visually clipped to ~68ch instead of spanning the full grid width,
+// re-creating the "anchored under the first column" problem the action
+// wrapper exists to solve. The <a> itself stays naturally sized —
+// only the <p> is stretched full-width, so the link is not a stretched
+// click target.
+.process-steps__action {
+  max-width: none;
+  margin: var(--space-7) 0 0;
+  padding-top: var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+@media (forced-colors: active) {
+  // The badge's only boundary today is its background-color fill, which
+  // forced-colors drops — an explicit border keeps the badge shape visible.
+  // The heading text needs no equivalent rule; body text color is already
+  // system-recolored automatically.
+  .process-steps__number {
+    border: 1px solid CanvasText;
+    background-color: transparent;
+  }
+}

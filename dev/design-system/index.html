@@ -462,6 +462,16 @@
               <li><a href="#project-cards">Project cards</a></li>
             </ul>
           </div>
+
+          <div class="toc__group">
+            <p class="toc__group-label">Process, trust, engagement, CTA (PF-034)</p>
+            <ul class="toc__list">
+              <li><a href="#process-steps">Process steps</a></li>
+              <li><a href="#trust-indicators">Trust indicators</a></li>
+              <li><a href="#engagement-options">Engagement options</a></li>
+              <li><a href="#cta-section">CTA section</a></li>
+            </ul>
+          </div>
         </nav>
       </div>
 
@@ -477,6 +487,11 @@
           <li>Toggle your OS's reduced-motion setting and confirm every transition/transform stops.</li>
           <li>Toggle forced-colors/high-contrast mode and confirm every control, especially native checkboxes and radios, stays usable.</li>
           <li>Zoom to 200% and confirm no horizontal scrolling appears.</li>
+          <li>
+            For process steps, trust indicators, and engagement options (PF-034): confirm the list items themselves
+            show no cursor change, hover, active, or focus outline — only the process link, trust link, and CTA
+            button should ever respond to hover/focus/press.
+          </li>
         </ul>
       </section>
 
@@ -1150,6 +1165,180 @@
             </div>
           </li>
         </ul>
+      </section>
+
+      <section class="preview-section" id="process-steps">
+        <h2>Process steps (PF-034)</h2>
+        <p>
+          <code>.process-steps</code> is CSS-only — there is no JS render function or content-data module yet.
+          <code>process.js</code>/<code>home.js</code> are still placeholders, so there is no real production
+          template to call a renderer from; the same precedent as
+          <code>.capability-card</code>/<code>.project-card</code>. The specimen below is literal, hand-authored
+          markup using the real compiled component classes — not a live render call — and only exists on this
+          dev-only page.
+        </p>
+        <p>
+          Stage names are quoted verbatim from the requirements doc's four-stage process preview (§9.7). No
+          per-step supporting sentence is shown — none is approved at this length, and the fuller explanation
+          belongs to the dedicated Process page (PF-051); reusing it here would duplicate page copy, which
+          PF-034 must avoid. The "See the Full Process" link label is <strong>approved as provisional showcase
+          copy</strong> — approved for use in this development showcase, but still subject to final
+          production-content review when a real page composes this section (PF-041).
+        </p>
+        <p class="motion-note">
+          Static — the four steps carry no cursor change, hover, active state, or focus/keyboard stop. Only the
+          link below the list is interactive, via the existing link pattern.
+        </p>
+
+        <ol class="process-steps">
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">1</span>
+            <h3 class="process-steps__heading">Discover and Define</h3>
+          </li>
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">2</span>
+            <h3 class="process-steps__heading">Design and Plan</h3>
+          </li>
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">3</span>
+            <h3 class="process-steps__heading">Develop and Test</h3>
+          </li>
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">4</span>
+            <h3 class="process-steps__heading">Deploy and Support</h3>
+          </li>
+        </ol>
+        <p class="process-steps__action"><a href="/process/">See the Full Process</a></p>
+      </section>
+
+      <section class="preview-section" id="trust-indicators">
+        <h2>Trust indicators (PF-034)</h2>
+        <p>
+          <code>.trust-list</code> is CSS-only — same no-renderer precedent as the other PF-034 components. The
+          specimen below is literal, hand-authored markup, and only exists on this dev-only page.
+        </p>
+        <p>
+          The three assurances are quoted verbatim from the requirements doc's trust summary (§9.3) — no
+          fabricated statistics or counters, and no per-item description beyond the approved phrase itself, since
+          none is approved. Icons are decorative, hand-authored static SVG copied directly from the installed
+          Lucide package's source data — this showcase is static HTML with no access to the build-time icon
+          renderer (<code>src/components/icon.js</code>), which is not modified or invoked here. The
+          "Learn About My Approach" link label and its target (<code>/about/</code>) are <strong>approved as
+          provisional showcase copy</strong> — §9.3 only specifies "a link to About or Process," not which page
+          or exact wording, so this pairing is approved for use in this development showcase, but still subject
+          to final production-content review when a real page composes this section (PF-041).
+        </p>
+        <p class="motion-note">
+          Static — the three items carry no cursor change, hover, active state, or focus/keyboard stop. Only the
+          link below the list is interactive, via the existing link pattern.
+        </p>
+
+        <ul class="trust-list">
+          <li class="trust-list__item">
+            <span class="trust-list__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M12 22V12"></path>
+                <path d="m16 17 2 2 4-4"></path>
+                <path d="M21 11.127V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.32-.753"></path>
+                <path d="M3.29 7 12 12l8.71-5"></path>
+                <path d="m7.5 4.27 8.997 5.148"></path>
+              </svg>
+            </span>
+            <h3 class="trust-list__heading">End-to-end delivery</h3>
+          </li>
+          <li class="trust-list__item">
+            <span class="trust-list__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="m11 17 2 2a1 1 0 1 0 3-3"></path>
+                <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"></path>
+                <path d="m21 3 1 11h-2"></path>
+                <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"></path>
+                <path d="M3 4h8"></path>
+              </svg>
+            </span>
+            <h3 class="trust-list__heading">Direct collaboration</h3>
+          </li>
+          <li class="trust-list__item">
+            <span class="trust-list__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect width="8" height="8" x="3" y="3" rx="2"></rect>
+                <path d="M7 11v4a2 2 0 0 0 2 2h4"></path>
+                <rect width="8" height="8" x="13" y="13" rx="2"></rect>
+              </svg>
+            </span>
+            <h3 class="trust-list__heading">Solutions built around real workflows</h3>
+          </li>
+        </ul>
+        <p class="trust-list__action"><a href="/about/">Learn About My Approach</a></p>
+      </section>
+
+      <section class="preview-section" id="engagement-options">
+        <h2>Engagement options (PF-034)</h2>
+        <p>
+          <code>.engagement-options</code> is CSS-only — same no-renderer precedent as the other PF-034
+          components. Deliberately not composed from <code>.tag</code>: these four labels are meaningful ways of
+          working, not filterable category/technology metadata, so pill-shaped tags would misrepresent them. The
+          specimen below is literal, hand-authored markup, and only exists on this dev-only page.
+        </p>
+        <p>
+          The intro sentence "Start with what creates the most value." is quoted verbatim from the requirements
+          doc's flexible-engagement section (§9.8). The sentence beneath it is <strong>approved as provisional
+          showcase copy</strong> — a paraphrase of that section's own explanation instruction ("explain briefly
+          that the first release can focus on essential features and expand as priorities and budget grow"),
+          approved for use in this development showcase, but still subject to final production-content review
+          when a real page composes this section (PF-041). The four engagement labels are quoted verbatim; no
+          per-label description is added.
+        </p>
+        <p class="motion-note">
+          Static — the four items carry no cursor change, hover, active state, or focus/keyboard stop, and no
+          arrow/chevron implying more detail is available.
+        </p>
+
+        <p class="text-lead">Start with what creates the most value.</p>
+        <p>The first release can focus on essential features, then expand as priorities and budget grow.</p>
+
+        <ul class="engagement-options">
+          <li class="engagement-options__item">Fixed scope</li>
+          <li class="engagement-options__item">Minimum viable solution</li>
+          <li class="engagement-options__item">Phased development</li>
+          <li class="engagement-options__item">Existing-system improvement</li>
+        </ul>
+      </section>
+
+      <section class="preview-section" id="cta-section">
+        <h2>CTA section (PF-034)</h2>
+        <p>
+          <code>.cta</code> is CSS-only — same no-renderer precedent as the other PF-034 components. It is a
+          reusable panel pattern, not hardcoded to the homepage, so later tasks (PF-050/PF-060-062) can reuse it
+          for their own inquiry-CTA copy. The two specimens below are literal, hand-authored markup, and only
+          exist on this dev-only page.
+        </p>
+        <p>
+          The Final CTA copy is quoted verbatim from the requirements doc (§9.10) — already fully approved, no
+          invented text. The second specimen omits the supporting paragraph entirely (not an empty element) to
+          prove the optional-copy case renders cleanly, with no competing focus system: the button below reuses
+          the existing <code>.btn</code> focus-visible ring exactly as declared elsewhere on this page.
+        </p>
+
+        <div class="demo-row">
+          <div>
+            <div class="cta">
+              <h3 class="cta__heading">Have a process that feels too manual, slow, or difficult to manage?</h3>
+              <p class="cta__body">Tell me what you want to improve. We will identify a practical place to start.</p>
+              <a class="btn btn--primary" href="/contact/">Let's Discuss Your Project</a>
+            </div>
+            <span class="demo-caption">With supporting copy</span>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div>
+            <div class="cta">
+              <h3 class="cta__heading">Have a process that feels too manual, slow, or difficult to manage?</h3>
+              <a class="btn btn--primary" href="/contact/">Let's Discuss Your Project</a>
+            </div>
+            <span class="demo-caption">Without supporting copy</span>
+          </div>
+        </div>
       </section>
     </main>
   </body>

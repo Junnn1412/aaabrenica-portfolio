@@ -1,0 +1,51 @@
+// PF-034 — reusable CTA panel (§9.10 Final CTA is the primary showcase
+// specimen; also intended for reuse by PF-050/PF-060-062's own inquiry CTAs
+// once they exist). CSS-only, no JS renderer or content module — same
+// precedent as the other PF-034 components. See docs/DECISION_LOG.md.
+
+// A restrained contained panel using neutral surface/border tokens, not a
+// full-bleed bright accent band — deliberately lower-key than
+// .capability-card's solid accent fills, since a CTA reads as an invitation,
+// not a decorated showcase item.
+
+// The panel itself is not interactive; only the .btn link inside it is. No
+// competing focus system is defined here — the button keeps the global
+// :focus-visible ring exactly as .btn already declares it elsewhere, and
+// that ring's contrast against --color-surface-1 is already verified in
+// tests/design-tokens.test.mjs (the same pair .project-card's ring relies
+// on), so no new contrast check is needed for this panel.
+.cta {
+  padding: var(--space-7) var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-1);
+  text-align: center;
+}
+
+.cta__heading {
+  max-width: var(--width-reading);
+  margin: 0 auto var(--space-3);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h2);
+  line-height: var(--line-height-heading);
+}
+
+// Optional — a specimen may omit this entirely (no empty wrapper); the
+// heading's own bottom margin already provides correct spacing before the
+// action button either way.
+.cta__body {
+  max-width: var(--width-reading);
+  margin: 0 auto var(--space-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body-lg);
+}
+
+@media (forced-colors: active) {
+  // Belt-and-suspenders alongside the real border already declared above:
+  // keeps the panel boundary explicit and independent of border-color
+  // recoloring, matching the same rule already established for
+  // .capability-card/.project-card.
+  .cta {
+    border: 1px solid CanvasText;
+  }
+}

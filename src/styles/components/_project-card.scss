@@ -1,0 +1,223 @@
+// PF-033 — reusable project-card component. SCSS + a documented markup
+// contract only, no JS render function and no content data module: no real
+// production caller exists yet (work/index.js and all three case-study
+// content files are still placeholders — see docs/DECISION_LOG.md), the
+// same precedent as .btn/.tag/.media-frame/.capability-card.
+// Deliberately NOT full-bleed bold color like .capability-card — project
+// cards are evidence, not decoration (requirements doc §7.2), and no
+// approved per-project brand colors exist to fill with. Neutral
+// --color-surface-1 background; every text/link/focus pairing below reuses
+// an already-verified token pair from tests/design-tokens.test.mjs, not a
+// new one.
+// `.project-cards`/`.project-card` reset `max-width`/`margin` from the
+// first draft — elements/_body-copy.scss's generic `ul, ol { max-width:
+// var(--width-reading); }` and `li { margin-bottom: var(--space-2); }`
+// apply unopposed to any <ul>/<li> that doesn't explicitly override those
+// specific properties, regardless of the class's own higher specificity
+// (cascade resolves per property, not per rule) — the exact defect found
+// and fixed in .capability-card after a review round-trip
+// (docs/DECISION_LOG.md). tests/project-card-layout.test.mjs proves this
+// resolves correctly via the shared cascade resolver, not by assuming the
+// declaration's presence is enough.
+.project-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: none;
+  gap: var(--gap-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// 21rem, not the originally-proposed 22rem: computed against the real
+// compiled tokens (--container-wide, --gap-lg, the showcase's clamp()
+// gutter), 22rem produced only 1 column at 768px (2 columns need
+// 2*minCol + gap <= content width, which only holds up to ~21.04rem at
+// that breakpoint) — the plan's own contingency for this exact case.
+// 21rem restores the intended 1/1/2/2/3/3 pattern with a comfortable
+// ~227-412px text area at every required width.
+@media (width >= 36em) {
+  .project-cards {
+    grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+  }
+}
+
+.project-card {
+  position: relative; // stretched-link containment
+  overflow: hidden; // clips frame/content to the card's own rounded corners
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-1);
+  box-shadow: var(--shadow-md);
+}
+
+.project-card--featured {
+  grid-column: 1 / -1; // spans every column — lives in the same list as secondary cards, not a second one
+}
+
+@media (width >= 48em) {
+  .project-card--featured {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .project-card--featured .project-card__frame {
+    flex: 0 0 55%;
+  }
+
+  .project-card--featured .project-card__content {
+    flex: 1 1 45%;
+  }
+
+  .project-card--featured .project-card__heading {
+    font-size: var(--font-size-h3);
+  }
+}
+
+// "Browser or device frame created with HTML and CSS" (requirements doc
+// §7.2) — an original, small chrome bar above the existing .media-frame,
+// not a new asset.
+.project-card__frame {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none; // decorative; the stretched link is the only real click target
+}
+
+.project-card__frame-dots {
+  display: block;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  background-color: var(--color-surface-2);
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(circle 3px, var(--color-border) 3px, transparent 3.5px),
+    radial-gradient(circle 3px, var(--color-border) 3px, transparent 3.5px),
+    radial-gradient(circle 3px, var(--color-border) 3px, transparent 3.5px);
+  background-position:
+    var(--space-3) center,
+    calc(var(--space-3) + 14px) center,
+    calc(var(--space-3) + 28px) center;
+}
+
+.project-card__media {
+  flex: 1 1 auto;
+}
+
+.project-card__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+}
+
+.project-card__category {
+  align-self: flex-start;
+}
+
+.project-card__heading {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  line-height: var(--line-height-heading);
+}
+
+.project-card__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.project-card__summary {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+.project-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+// Hidden by default; shown only when a real link exists (belt-and-
+// suspenders alongside omitting it from non-interactive markup entirely).
+// Fixed pairing with .project-card__link — never one without the other.
+.project-card__action {
+  display: none;
+  margin-top: auto;
+  padding-top: var(--space-2);
+  color: var(--color-accent-text);
+  font-weight: 600;
+  font-size: var(--font-size-small);
+  pointer-events: none; // decorative — the stretched link is the only real click target
+}
+
+// Interactivity is driven entirely by the real presence of
+// .project-card__link in the markup — never by a modifier class. A card
+// with no link gets none of the rules in this block, by construction.
+.project-card:has(.project-card__link) {
+  cursor: pointer; // whole-card affordance; the actual click target is the ::after below
+
+  .project-card__action {
+    display: block;
+  }
+
+  .project-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2; // explicit — always the topmost layer, always the real click target
+    pointer-events: auto;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(calc(-1 * var(--motion-distance-sm)));
+      box-shadow: var(--shadow-lg);
+    }
+  }
+
+  // Declared after the hover block so it wins by source order whenever
+  // both apply at once (mouse held down while hovering) — the card is
+  // explicitly pulled back to rest rather than staying lifted while
+  // pressed. Not nested in the hover media query, so touch gets its own
+  // pressed feedback (the shadow step-down) without depending on hover at
+  // all. No filter/color-changing property — same reasoning as
+  // .capability-card.
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+// Full-card focus ring, not title-only: the stretched link makes the
+// entire card the click target, so a ring drawn only around the heading
+// text would misrepresent the actual interactive region. A single tone is
+// enough here (unlike .capability-card's two-tone ring) — this ring only
+// ever sits against --color-surface-1 (the card's own fill) on one side
+// and --color-canvas/--color-surface-1 (the page behind it) on the other,
+// and --color-focus-ring is already verified against both in
+// tests/design-tokens.test.mjs under FOCUS_INDICATOR_MIN. Capability-card
+// needed two tones because its background is a bright, varying accent
+// color the default ring fails against; this card's neutral surface
+// doesn't create that problem.
+.project-card__link:focus-visible {
+  outline: none; // replaced by the card-level ring below
+}
+
+.project-card:has(.project-card__link:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .project-card {
+    border: 1px solid CanvasText; // explicit boundary — nothing else supplies one once the fill is gone
+  }
+}

@@ -13,7 +13,7 @@ export function renderListingPage({ content, navItems, activeKey, site }) {
   const links = `<ul>${content.links.map(renderLinkListItem).join('')}</ul>`;
   return {
     header: renderHeader(navItems, activeKey, site),
-    main: `<h1>${escapeHtml(content.heading)}</h1>${paragraphs}${links}`,
+    main: `<div class="container"><h1>${escapeHtml(content.heading)}</h1>${paragraphs}${links}</div>`,
     footer: renderFooter(navItems, site),
   };
 }

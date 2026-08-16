@@ -1,0 +1,77 @@
+@use '../settings/spacing';
+
+// Forces .site-nav onto its own full-width line within `header`'s wrapped
+// flex row at mobile (see components/_site-header.scss) — a header flex
+// item with flex-basis: 100% can never share a line with anything after
+// it, so it drops to a fresh row spanning the whole header width, rather
+// than being squeezed into whatever space brand + toggle left over.
+.site-nav {
+  flex-basis: 100%;
+}
+
+.site-nav ul {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav li {
+  width: 100%;
+}
+
+// .btn (the CTA item) supplies its own sizing/padding — excluded here so
+// this rule only applies to plain text nav links.
+.site-nav a:not(.btn) {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  padding-block: var(--space-3);
+}
+
+// Active-route indication beyond color alone: weight + underline, not
+// just the accent color change.
+.site-nav a[aria-current='page'] {
+  color: var(--color-accent-text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+@media (min-width: spacing.$bp-md) {
+  // `.site-nav` (the <nav> element itself) is a flex item of `header`
+  // (justify-content: space-between). With no flex-shrink of its own, it
+  // defaults to flex-shrink: 1 — allowed to be compressed below its
+  // content's natural width whenever `header`'s available space is even
+  // slightly tight. Combined with `flex-flow: row wrap` below, that
+  // compression is what let the CTA break onto a second line: the row
+  // wasn't genuinely out of viewport width, it was being squeezed by its
+  // own flex item shrinking first. flex-shrink: 0 makes `.site-nav` claim
+  // its real content width from `header`, so wrapping is never reached in
+  // normal operation.
+  .site-nav {
+    // Reverts the mobile full-width-line basis — at desktop .site-nav
+    // sits inline with the brand on one row, sized by its own content.
+    flex-basis: auto;
+    flex-shrink: 0;
+  }
+
+  .site-nav ul {
+    flex-flow: row nowrap;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .site-nav li {
+    // Prevents individual items (esp. the CTA) from being shrunk instead
+    // of wrapped — "no wrapping" must not just become invisible squeezing.
+    flex-shrink: 0;
+    width: auto;
+  }
+
+  .site-nav a:not(.btn) {
+    min-height: auto;
+    padding-block: 0;
+  }
+}

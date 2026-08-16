@@ -151,6 +151,13 @@ real design tokens and components.
   see `docs/DESIGN_SYSTEM.md`'s "Capability cards (PF-032)"/"Project cards
   (PF-033)" sections. Real project content (technologies, summaries,
   images) — still PF-003, then PF-060–062.
+- Process steps, trust indicators, engagement options, and a reusable CTA
+  panel (PF-034) shipped the same way: four CSS-only components
+  (`src/styles/components/_process-steps.scss`, `_trust-list.scss`,
+  `_engagement-options.scss`, `_cta.scss`), no JS renderer or content-data
+  module for any — deferred until PF-041 composes real homepage content
+  into these sections; see `docs/DESIGN_SYSTEM.md`'s "Process, trust,
+  engagement, and CTA components (PF-034)" section.
 - Page-specific browser JS — `data-page` on `<body>` is a ready, documented,
   currently-unused seam for this.
 - External social/contact link _values_ — `site.social.github`/`.linkedin`/

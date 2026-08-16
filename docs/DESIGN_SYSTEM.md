@@ -6,12 +6,13 @@ labels, tags, lists, media frames, section headers, containers, and
 form-control foundations), formalized as the component showcase in PF-030
 (table of contents, review checklist), extended again in PF-031 (global
 navigation and footer — see "Global navigation and footer (PF-031)" below),
-extended again in PF-032 (capability cards), and extended again in PF-033
-(project cards — see "Project cards (PF-033)" below). Does **not** yet
-define process/trust/CTA components — that's PF-034. See
-[`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy and
-tooling decisions this builds on, and for the
-PF-020/PF-021/PF-030/PF-031/PF-032/PF-033 decisions themselves.
+extended again in PF-032 (capability cards), extended again in PF-033
+(project cards — see "Project cards (PF-033)" below), and extended again in
+PF-034 (process steps, trust indicators, engagement options, and a reusable
+CTA panel — see "Process, trust, engagement, and CTA components (PF-034)"
+below). See [`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy
+and tooling decisions this builds on, and for the
+PF-020/PF-021/PF-030/PF-031/PF-032/PF-033/PF-034 decisions themselves.
 
 ## Token architecture
 
@@ -854,6 +855,115 @@ stacking order, hover-lift gated to `(hover: hover) and (pointer: fine)`,
 reset (never `filter`) so touch gets its own pressed feedback without
 depending on hover.
 
+## Process, trust, engagement, and CTA components (PF-034)
+
+Four components — `.process-steps`, `.trust-list`, `.engagement-options`
+(`src/styles/components/_process-steps.scss`, `_trust-list.scss`,
+`_engagement-options.scss`) and `.cta` (`_cta.scss`) — are all **CSS-only**,
+same precedent as `.capability-card`/`.project-card`: no `renderX()`
+function, no content data module, no schema fields. `home.js`, `process.js`,
+and `contact.js` are all still placeholders, so there is no real production
+template to call a renderer from. Specimens live only as hand-authored,
+literal markup in `dev/design-system/index.html` — not a live render call.
+
+**Interactivity is asymmetric, unlike the two card components.**
+`.capability-card`/`.project-card` are whole-card interactive via
+`:has(...__link)`. Here, only `.cta`'s `.btn` action link and the single
+section-level links following `.process-steps`/`.trust-list` are
+interactive — the `<li>` items themselves (`.process-steps__step`,
+`.trust-list__item`, `.engagement-options__item`) carry no cursor change,
+hover, active state, or focus/keyboard stop of their own, and are not
+focusable. A per-item link on process steps or trust indicators would
+fragment "one keyboard stop per action" and imply destinations that don't
+exist; engagement options have no link at all.
+
+**No invented per-item copy.** Every string in the four showcase specimens
+is either quoted verbatim from `DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md`
+or explicitly marked `provisional` in the showcase's own prose. AAA has
+approved all three provisional strings for use as **provisional showcase
+copy** — approved for this development showcase, but still subject to
+final production-content review when a real page composes these sections
+(PF-041), not yet approved as final production copy:
+
+| Component          | Verbatim source                                                | Provisional (approved for showcase use)                            |
+| ------------------ | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Process steps      | Four stage names (§9.7)                                        | "See the Full Process" link label                                  |
+| Trust indicators   | Three assurances (§9.3)                                        | "Learn About My Approach" link label + target (About, not Process) |
+| Engagement options | "Start with what creates the most value." + four labels (§9.8) | The one-sentence paraphrase of §9.8's explanation instruction      |
+| CTA                | Full Final CTA copy (§9.10)                                    | — (fully approved already, as final production copy)               |
+
+No per-step/per-item supporting sentence is shown for process steps or trust
+indicators — none is approved at that length, and for process steps the
+fuller wording belongs to the dedicated Process page (PF-051); reusing it
+here would duplicate page copy, which PF-034's own scope explicitly rules
+out ("expand into dedicated-page presentations without duplicating page
+copy").
+
+**Engagement options are deliberately not composed from `.tag`.** The four
+labels (Fixed scope, Minimum viable solution, Phased development,
+Existing-system improvement) are meaningful ways of working, not
+filterable category/technology metadata — rendering them as pills would
+misread the section as a tag cloud. `.engagement-options__item` is a
+static row block (full border + left accent edge, `border-radius-sm`, no
+pill shape), with no arrow/chevron implying more detail sits behind it.
+
+**Trust icons are hand-authored static SVG, not a renderer call.** The
+showcase is static HTML with no access to the build-time icon renderer
+(`src/components/icon.js`), so each icon's path data was copied directly
+from the installed `lucide` package's source (`package-check`, `handshake`,
+`workflow`), rendered with the same `fill="none" stroke="currentColor"`
+attribute set every other inline SVG in this project already uses, and
+marked `aria-hidden="true" focusable="false"` — decorative, adding no
+information beyond the heading text beside it. `icon.js` itself is
+untouched; there is still no real production caller for it beyond nav.
+
+**`max-width: none`/`margin: 0`/`list-style: none` reset from the first
+draft** on all three list-based components (`.process-steps`, `.trust-list`,
+`.engagement-options`) — the same `elements/_body-copy.scss` generic
+`ul, ol { max-width: var(--width-reading); }` / `li { margin-bottom:
+var(--space-2); }` leak already documented for `.capability-card`/
+`.project-card` above. Verified via the shared `tests/helpers/cascade-resolver.mjs`
+in each component's own test file. `.process-steps` is this project's first
+`<ol>`-based grid component; its reset was the one PF-034 invariant put
+through a deliberate-failure pass (temporarily reverting `max-width: none`
+correctly failed the resolved-cascade assertion, then was restored) — the
+other two components repeat an already-proven `ul`/`li` pattern, so no
+second deliberate-failure pass was run for them (`docs/DECISION_LOG.md`).
+
+**`.cta` is a restrained contained panel, not a full-bleed accent band.**
+`--color-surface-1` fill plus a `--color-border` boundary — deliberately
+lower-key than `.capability-card`'s solid accent fills, since an invitation
+reads differently from a decorated showcase item. Not hardcoded to the
+homepage: PF-050/PF-060-062 can reuse it once they have their own approved
+inquiry-CTA copy. The action button defines no focus system of its own —
+it keeps the global `:focus-visible` ring exactly as `.btn` already
+declares it, and that ring's contrast against `--color-surface-1` is
+already verified in `tests/design-tokens.test.mjs` (the same pair
+`.project-card`'s ring relies on), so no new contrast check was needed.
+`.cta__body` is genuinely optional: the second showcase specimen omits the
+element entirely rather than rendering it empty.
+
+**Forced-colors boundaries, handled per component depending on what the
+boundary depends on in normal mode:**
+
+- `.cta` already has a real border in normal mode; an explicit
+  `border: 1px solid CanvasText` override is added anyway, belt-and-
+  suspenders, matching the same rule already established for
+  `.capability-card`/`.project-card`.
+- `.engagement-options__item` also already has a real border in normal
+  mode — border-color is one of the properties forced-colors mode recolors
+  automatically, so it needs **no** explicit override, unlike the two
+  components above (which relied on `background-color`-only boundaries
+  before their overrides were added).
+- `.process-steps__number`'s only boundary is its `background-color` fill;
+  an explicit `border: 1px solid CanvasText` keeps the badge shape visible
+  once that fill is dropped.
+- `.trust-list__item` has no background/border boundary in either mode —
+  nothing to preserve.
+- No static container (`.process-steps__step`, `.trust-list__item`,
+  `.engagement-options__item`) gains a `:focus-visible`/`outline` rule in
+  any mode — only real interactive elements keep that treatment.
+
 ## Accessibility rationale summary
 
 - Every text/background pairing whose use is documented above is
@@ -902,3 +1012,14 @@ depending on hover.
   `renderCapabilityCard()` and a validated content-data module, following
   the same pattern PF-031 used to finally give the icon renderer its first
   real caller.
+- **Process-steps/trust-list/engagement-options/CTA renderers, data
+  modules, and schema fields** (PF-034) — deferred for the same reason.
+  Revisit when PF-041 first composes real homepage content into these
+  sections; add the corresponding `render*()` functions and validated
+  content-data modules then, not before. The three provisional strings
+  flagged in "Process, trust, engagement, and CTA components (PF-034)"
+  above (the process/trust link labels, the trust link's target, and the
+  engagement-intro paraphrase) are approved for provisional showcase use —
+  they still need a separate final production-content review at that point,
+  since approval to date only covers this development showcase, not final
+  production copy.

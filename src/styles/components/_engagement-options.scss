@@ -1,0 +1,50 @@
+// PF-034 — homepage flexible-engagement preview (§9.8: "Start with what
+// creates the most value," four labels — Fixed scope / Minimum viable
+// solution / Phased development / Existing-system improvement). CSS-only, no
+// JS renderer or content module, same precedent as the other PF-034
+// components. See docs/DECISION_LOG.md.
+
+// Deliberately NOT a composed .tag. These four labels are meaningful ways of
+// working, not filterable category/technology metadata — rendering them as
+// pills would misread as a tag cloud. Each item is a static row block with
+// its own visual weight (border + accent edge), non-interactive, with no
+// arrow/chevron affordance implying more detail is available behind it.
+
+// max-width: none / margin: 0 / list-style: none reset elements/_body-copy.scss's
+// generic ul/li rules — same defect class documented in .capability-card/
+// .project-card, verified here via the shared cascade resolver in
+// tests/engagement-options-layout.test.mjs.
+.engagement-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: none;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (width >= 40em) {
+  .engagement-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// A real border on every side (not a background-color-only boundary) is the
+// deliberate choice here: forced-colors mode automatically recolors
+// border-color to a system color, so this boundary needs no explicit
+// @media (forced-colors: active) override the way a background-only
+// boundary (e.g. .cta's panel) does.
+.engagement-options__item {
+  margin: 0;
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-1);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-weight: 600;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}

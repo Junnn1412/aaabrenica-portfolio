@@ -198,7 +198,7 @@ Provide the homepage preview variants and ensure they can expand into dedicated-
 
 ### PF-035 Approve the component system
 
-**Status:** Blocked until PF-031 through PF-034 are reviewable
+**Status:** Complete — Gate C approved by AAA on 2026-08-16, no exceptions (see `docs/COMPONENT_APPROVAL.md`)
 
 AAA reviews all components at the six required widths, keyboard states, touch behavior, reduced motion, realistic long content, and original graphics. Record approved corrections before full-page assembly.
 
@@ -206,7 +206,7 @@ AAA reviews all components at the six required widths, keyboard states, touch be
 
 ### PF-040 Build the global page shell
 
-**Status:** Ready after PF-035  
+**Status:** Ready  
 **Branch:** `feature/global-shell`
 
 Implement shared metadata structure, header, main landmark, footer, page container, navigation state, base scripts, and page-specific hooks.

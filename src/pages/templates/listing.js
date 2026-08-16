@@ -6,14 +6,14 @@ function renderLinkListItem({ label, path }) {
   return `<li><a href="${escapeHtml(path)}">${escapeHtml(label)}</a></li>`;
 }
 
-export function renderListingPage({ content, navItems, activeKey }) {
+export function renderListingPage({ content, navItems, activeKey, site }) {
   const paragraphs = content.paragraphs
     .map((p) => `<p>${escapeHtml(p)}</p>`)
     .join('');
   const links = `<ul>${content.links.map(renderLinkListItem).join('')}</ul>`;
   return {
-    header: renderHeader(navItems, activeKey),
+    header: renderHeader(navItems, activeKey, site),
     main: `<h1>${escapeHtml(content.heading)}</h1>${paragraphs}${links}`,
-    footer: renderFooter(),
+    footer: renderFooter(navItems, site),
   };
 }

@@ -51,6 +51,7 @@ export function renderRoute(route) {
     content,
     navItems: primaryNav,
     activeKey: route.navKey,
+    site,
   });
   return { head: buildHead(route, content), header, main, footer };
 }

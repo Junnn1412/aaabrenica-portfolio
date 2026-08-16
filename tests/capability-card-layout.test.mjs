@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import * as sass from 'sass';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
+import {
+  remToPx,
+  parseRules,
+  resolveProperty,
+} from './helpers/cascade-resolver.mjs';
 
 // Compiles the real source of truth, same method as the other
 // capability-card tests.
@@ -30,12 +35,12 @@ import fs from 'node:fs';
 // available width and assumed the grid used exactly that — it never
 // checked whether `.capability-cards` itself carried any competing
 // constraint from an unrelated, lower-specificity rule elsewhere in the
-// stylesheet. The resolver below fixes that gap generally: it computes
-// the actual cascade-winning value for a given property on a given
-// element (matching every applicable rule in the real compiled
-// stylesheet by specificity and source order, exactly as a browser
-// would for normal-priority declarations), not just whether some
-// plausible-looking declaration exists somewhere in the text.
+// stylesheet. `resolveProperty()` (./helpers/cascade-resolver.mjs) fixes
+// that gap generally: it computes the actual cascade-winning value for a
+// given property on a given element (matching every applicable rule in
+// the real compiled stylesheet by specificity and source order, exactly
+// as a browser would for normal-priority declarations), not just whether
+// some plausible-looking declaration exists somewhere in the text.
 const mainScssPath = fileURLToPath(
   new URL('../src/styles/main.scss', import.meta.url),
 );
@@ -50,124 +55,6 @@ const previewPath = fileURLToPath(
   new URL('../dev/design-system/index.html', import.meta.url),
 );
 const previewHtml = fs.readFileSync(previewPath, 'utf8');
-
-function remToPx(rem) {
-  return rem * 16; // this project's root font-size is the browser default, never overridden
-}
-
-// ---- Minimal real cascade resolver -----------------------------------
-// Scoped to what this stylesheet actually uses: flat top-level rules
-// (parsed with their real source position) plus rules nested one level
-// inside a single @media block (min-width / width >= forms only — the
-// only kind this project's components use). Each selector in a
-// comma-separated list is either a bare tag name (`ul`), a single class
-// (`.capability-cards`), or a tag+class/class+class compound with no
-// combinator — the only forms this codebase's real element/component
-// selectors use for the rules relevant here. Good enough to prove real
-// cascade outcomes for this file without building a general CSS engine.
-
-function specificity(simpleSelector) {
-  // (classes/pseudo-classes/attrs, type-selectors) — no IDs in this
-  // project's selectors, so that axis is omitted.
-  const classLike = (simpleSelector.match(/[.:[]/g) || []).length;
-  const withoutClassLike = simpleSelector.replace(
-    /(\.[a-zA-Z0-9_-]+|:[a-zA-Z-]+(\([^)]*\))?|\[[^\]]*\])/g,
-    '',
-  );
-  const typeLike = withoutClassLike.trim() === '' ? 0 : 1;
-  return [classLike, typeLike];
-}
-
-function compareSpecificity(a, b) {
-  if (a[0] !== b[0]) return a[0] - b[0];
-  return a[1] - b[1];
-}
-
-function elementMatchesSimpleSelector(element, simpleSelector) {
-  const trimmed = simpleSelector.trim();
-  // Strip pseudo-classes for matching purposes (:hover etc. never apply to
-  // a statically-rendered element the way base/default styling does) —
-  // deliberately excluded from this resolver, which only answers "what
-  // applies in the element's normal, non-interactive state."
-  if (/:(hover|active|focus|focus-visible|focus-within|has)\(?/.test(trimmed)) {
-    return false;
-  }
-  const tagMatch = trimmed.match(/^[a-zA-Z][a-zA-Z0-9-]*/);
-  const tag = tagMatch ? tagMatch[0] : null;
-  const classes = [...trimmed.matchAll(/\.([a-zA-Z0-9_-]+)/g)].map((m) => m[1]);
-  if (tag && tag !== element.tag) return false;
-  for (const c of classes) {
-    if (!element.classes.includes(c)) return false;
-  }
-  return true;
-}
-
-function extractDeclarations(body) {
-  const decls = {};
-  for (const raw of body.split(';')) {
-    const trimmed = raw.trim();
-    if (!trimmed) continue;
-    const colonIndex = trimmed.indexOf(':');
-    if (colonIndex === -1) continue;
-    const prop = trimmed.slice(0, colonIndex).trim();
-    const value = trimmed.slice(colonIndex + 1).trim();
-    decls[prop] = value;
-  }
-  return decls;
-}
-
-function parseRules(cssText) {
-  const rules = [];
-  // Rules directly inside one @media block are included with the same
-  // source-position ordering as everything else — this project's real
-  // media-gated rules are simple overrides of the same properties as
-  // their unconditional counterparts, so ordinary source-order/specificity
-  // resolution still gives the right answer for "what applies by default."
-  const ruleRe = /(?:@media[^{]*\{\s*)?([^{}]+)\{([^{}]*)\}(?:\s*\})?/g;
-  let match;
-  while ((match = ruleRe.exec(cssText))) {
-    const selectorList = match[1].trim();
-    if (selectorList.startsWith('@') || selectorList === '') continue;
-    const selectors = selectorList.split(',').map((s) => s.trim());
-    rules.push({
-      selectors,
-      declarations: extractDeclarations(match[2]),
-      index: match.index,
-    });
-  }
-  return rules;
-}
-
-// Resolves the real cascade-winning value for `property` on `element`
-// ({ tag, classes }), using every matching rule in `cssText`, ordered by
-// specificity then source position — exactly the two tie-break axes that
-// matter for normal-priority declarations with no !important involved
-// (true of every rule in this stylesheet).
-function resolveProperty(cssText, element, property) {
-  const rules = parseRules(cssText);
-  const candidates = [];
-  for (const rule of rules) {
-    if (!(property in rule.declarations)) continue;
-    for (const selector of rule.selectors) {
-      if (elementMatchesSimpleSelector(element, selector)) {
-        candidates.push({
-          value: rule.declarations[property],
-          specificity: specificity(selector),
-          index: rule.index,
-        });
-        break; // one matching selector in the list is enough to make the rule apply
-      }
-    }
-  }
-  candidates.sort((a, b) => {
-    const specDiff = compareSpecificity(a.specificity, b.specificity);
-    if (specDiff !== 0) return specDiff;
-    return a.index - b.index;
-  });
-  return candidates.length > 0
-    ? candidates[candidates.length - 1].value
-    : undefined;
-}
 
 test('resolved cascade: .capability-cards (a <ul>) has max-width: none, not the inherited ~68ch prose-reading-width from the generic ul,ol rule', () => {
   const resolved = resolveProperty(

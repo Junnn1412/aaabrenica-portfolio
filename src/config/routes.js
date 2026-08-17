@@ -15,7 +15,7 @@ export const routes = [
     path: '/solutions/',
     entry: 'solutions/index.html',
     navKey: 'solutions',
-    template: 'standard',
+    template: 'solutions',
     content: 'solutions',
   },
   {

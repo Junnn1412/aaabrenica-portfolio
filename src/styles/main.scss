@@ -12,6 +12,7 @@
 @use 'objects/container';
 @use 'objects/page-shell';
 @use 'objects/section-header';
+@use 'objects/page-section';
 @use 'components/skip-link';
 @use 'components/button';
 @use 'components/tag';
@@ -28,3 +29,4 @@
 @use 'components/site-nav';
 @use 'components/site-footer';
 @use 'utilities/visually-hidden';
+@use 'pages/solutions';

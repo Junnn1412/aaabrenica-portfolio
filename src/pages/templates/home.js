@@ -13,6 +13,7 @@ import { renderProcessSteps } from '../../components/process-steps.js';
 import { renderTrustList } from '../../components/trust-list.js';
 import { renderEngagementOptions } from '../../components/engagement-options.js';
 import { renderCta } from '../../components/cta.js';
+import { renderSectionHeader } from '../../components/section-header.js';
 
 // Original, decorative, aria-hidden abstract technical composition — no
 // fabricated screenshot, no textual claim. Same inline-SVG technique
@@ -52,27 +53,9 @@ function renderHero(content) {
   );
 }
 
-// Reused for every non-hero, non-CTA section — eyebrow and lede are both
-// optional (omitted entirely when absent, never rendered empty).
-function renderSectionHeader({ eyebrow, heading, lede }) {
-  const eyebrowMarkup = eyebrow
-    ? `<span class="section-header__eyebrow">${escapeHtml(eyebrow)}</span>`
-    : '';
-  const ledeMarkup = lede
-    ? `<p class="section-header__lede">${escapeHtml(lede)}</p>`
-    : '';
-  return (
-    `<div class="section-header">` +
-    eyebrowMarkup +
-    `<h2 class="section-header__heading">${escapeHtml(heading)}</h2>` +
-    ledeMarkup +
-    `</div>`
-  );
-}
-
 function renderTrustSection(trust) {
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderSectionHeader(trust) +
     renderTrustList(trust.items, trust.link) +
     `</div></section>`
@@ -84,7 +67,7 @@ function renderTrustSection(trust) {
 function renderProblemsSection(problems) {
   const items = problems.items.map((p) => `<li>${escapeHtml(p)}</li>`).join('');
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderSectionHeader(problems) +
     `<ul class="list--marked">${items}</ul>` +
     `<p class="text-lead">${escapeHtml(problems.reassurance)}</p>` +
@@ -95,7 +78,7 @@ function renderProblemsSection(problems) {
 
 function renderCapabilitiesSection(capabilities) {
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderSectionHeader(capabilities) +
     renderCapabilityCards(capabilities.items) +
     `</div></section>`
@@ -104,7 +87,7 @@ function renderCapabilitiesSection(capabilities) {
 
 function renderProjectsSection(projects) {
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderSectionHeader(projects) +
     renderProjectCards(projects.items) +
     `<p><a href="${escapeHtml(projects.link.path)}">${escapeHtml(projects.link.label)}</a></p>` +
@@ -114,7 +97,7 @@ function renderProjectsSection(projects) {
 
 function renderProcessSection(process) {
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderSectionHeader(process) +
     renderProcessSteps(process.steps, process.link) +
     `</div></section>`
@@ -126,7 +109,7 @@ function renderProcessSection(process) {
 // around it.
 function renderEngagementSection(engagement) {
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderSectionHeader({
       heading: engagement.heading,
       lede: engagement.lede,
@@ -143,7 +126,7 @@ function renderAboutSection(about) {
     .map((p) => `<p>${escapeHtml(p)}</p>`)
     .join('');
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderSectionHeader(about) +
     paragraphs +
     `<p><a href="${escapeHtml(about.link.path)}">${escapeHtml(about.link.label)}</a></p>` +
@@ -153,7 +136,7 @@ function renderAboutSection(about) {
 
 function renderCtaSection(cta) {
   return (
-    `<section class="home-section"><div class="container">` +
+    `<section class="page-section"><div class="container">` +
     renderCta(cta) +
     `</div></section>`
   );

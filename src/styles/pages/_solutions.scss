@@ -1,0 +1,195 @@
+// PF-050 — Solutions-page-only structural hooks. Page-specific (ITCSS
+// `pages/` layer, reserved but unused until now — see main.scss), not a
+// reusable design-system component: no showcase specimen, no second
+// caller expected. Reuses existing tokens only.
+
+.solutions-jump-nav {
+  margin: var(--space-7) 0 0;
+}
+
+// max-width: none is load-bearing, not decorative — elements/_body-copy.scss's
+// generic `ul, ol { max-width: var(--width-reading); }` (68ch, correct for
+// running prose, wrong for a wrapping row of link chips) otherwise applies
+// unopposed here too: this class's higher selector specificity doesn't
+// automatically "win" a property it never declares — the cascade resolves
+// per property, not per rule (same defect class already fixed in
+// .capability-cards/.trust-list/.process-steps/.engagement-options; see
+// each file's own comment). Confirmed against the real generic rule in
+// elements/_body-copy.scss, not assumed.
+.solutions-jump-nav__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Resets the generic `li { margin-bottom: var(--space-2); }` prose rule
+// (elements/_body-copy.scss) — same fix, same reasoning as
+// .trust-list__item/.engagement-options__item/.process-steps__step/
+// .capability-card, each of which sets `margin: 0` for exactly this reason.
+// max-width: 100% keeps a single long label (e.g. "Existing-System
+// Improvements") from forcing the chip wider than a 320px viewport allows;
+// the link's own text wraps normally inside it rather than overflowing.
+.solutions-jump-nav__item {
+  margin: 0;
+  max-width: 100%;
+}
+
+// min-height (not a fixed height) meets --touch-target-min (2.75rem) as a
+// floor while the link's width and vertical padding stay content-driven —
+// same idiom as .btn/.site-header__menu-toggle/.site-nav's own touch-target
+// rules (_button.scss/_site-header.scss/_site-nav.scss). align-items:
+// center is required alongside it: inline-flex's default cross-axis
+// alignment is stretch, which would only matter if a fixed height were set,
+// but is declared explicitly anyway so label text is vertically centered
+// once min-height, not the (variable) content height, decides the box's
+// actual height. white-space is left at its default (normal), so a long
+// label wraps inside the chip rather than overflowing at 320px/200% zoom,
+// growing past min-height rather than being clipped.
+.solutions-jump-nav__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--color-border-interactive);
+  border-radius: var(--radius-full);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-small);
+  text-decoration: none;
+}
+
+.solutions-jump-nav__link:hover {
+  border-color: var(--color-accent);
+}
+
+// No :focus-visible rule here, deliberately — elements/_links.scss's own
+// comment already states the reason for every plain <a>: generic/_document.scss
+// applies one global ring to every focusable element, so a second,
+// component-local focus treatment would compete with it rather than
+// reinforcing it. .solutions-jump-nav__link is a real <a href="#...">,
+// so it already gets that ring for free; nothing to add.
+// Forced-colors: the link's boundary is a real `border` (not a
+// background-color-only fill), so it needs no @media (forced-colors:
+// active) override — forced-colors mode automatically recolors a real
+// border to a system color. This is the exact same reasoning
+// _engagement-options.scss's own comment already documents for
+// .engagement-options__item's border, not a new judgment call.
+
+.solution-section__heading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-3);
+}
+
+// Diagnosed defect: .section-header (objects/_section-header.scss) carries
+// its own margin-bottom: var(--space-6), and its only child here,
+// .section-header__heading, carries its own margin-bottom: var(--space-3).
+// Neither is visible in .section-header's normal (non-flex) usage
+// elsewhere, because as a flex item of .solution-section__heading-row,
+// .section-header establishes its own block formatting context — a flex
+// item's descendant margins never collapse through it — so the heading's
+// own bottom margin stays trapped inside .section-header's auto content
+// height, on top of .section-header's own external bottom margin. That
+// invisible trailing space made this flex item's margin box taller than
+// the icon's fixed 3rem box, so align-items: center centered the
+// (inflated) box rather than the visible heading text, landing the icon
+// visually lower than the text. Resetting both margins to 0 — scoped to
+// this one wrapper only — makes the flex item's box exactly match the
+// heading's real rendered height (correct for one line or several), so
+// align-items: center centers the icon against the actual visible text.
+// .section-header/.section-header__heading elsewhere (home.js's seven
+// section headers) are untouched — this rule matches only inside
+// .solution-section__heading-row.
+.solution-section__heading-row .section-header {
+  margin: 0;
+}
+
+.solution-section__heading-row .section-header__heading {
+  margin: 0;
+}
+
+.solution-section__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  color: var(--color-canvas);
+}
+
+.solution-section__icon svg {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+// Same six accent keys as $capability-card-accents (_capability-card.scss)
+// and the same --accent-#{$accent} tokens — a separate list here (not an
+// @use/import of that file's private $variable) so this page-specific
+// icon badge never pulls in that component's card/grid/stretched-link
+// rules, but the two color sets can't drift since both read the same
+// underlying --accent-* custom properties.
+$solution-icon-accents: 'lime', 'amber', 'coral', 'violet', 'cyan', 'magenta';
+
+@each $accent in $solution-icon-accents {
+  .solution-section__icon--#{$accent} {
+    background-color: var(--accent-#{$accent});
+  }
+}
+
+.solution-section__detail {
+  margin: var(--space-6) 0 0;
+}
+
+.solution-section__label {
+  margin: var(--space-5) 0 var(--space-2);
+  color: var(--color-accent-text);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-label);
+  text-transform: uppercase;
+}
+
+.solution-section__label:first-of-type {
+  margin-top: 0;
+}
+
+.solution-section__detail dd {
+  max-width: var(--width-reading);
+  margin: 0;
+}
+
+// Same group-level-action idiom already established by
+// .trust-list__action/.process-steps__action (border-top + generous top
+// margin, so the link reads as belonging to the whole section, not the
+// last detail pair above it).
+.solution-section__evidence,
+.solution-section__action {
+  max-width: none;
+  margin: var(--space-7) 0 0;
+  padding-top: var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+// Keeps each anchored section's heading clear of the sticky desktop
+// header when landing via /solutions/#<slug> (jump-nav click, external
+// deep link, or browser back/forward) — same --header-offset token and
+// same reasoning as #main-content's own scroll-margin-top in
+// _site-header.scss. Scoped to this page's own sections via
+// body[data-page='solutions'] (mirroring _hero.scss's
+// body[data-page='home'] override) rather than a global [id] selector,
+// because dev/design-system/index.html shares this compiled CSS and has
+// no sticky header of its own — a global rule would incorrectly offset
+// its unrelated TOC-anchor specimens (the same reasoning already
+// documented on #main-content).
+body[data-page='solutions'] .page-section[id] {
+  scroll-margin-top: var(--header-offset);
+}

@@ -301,3 +301,148 @@ test('case-study template requires backLink pointing exactly at /work/', () => {
   };
   assert.deepEqual(validateContent(route, correct), []);
 });
+
+// PF-050 — a minimal but complete valid 'solutions' content fixture,
+// matching the shape src/content/pages/solutions.js uses for real.
+function validSolutionsContent() {
+  const ids = [
+    'custom-business-systems',
+    'workflow-process-solutions',
+    'corporate-websites',
+    'wordpress-development',
+    'existing-system-improvements',
+    'support-maintenance',
+  ];
+  const icons = [
+    'boxes',
+    'workflow',
+    'globe',
+    'code',
+    'refresh-cw',
+    'life-buoy',
+  ];
+  const accents = ['lime', 'amber', 'cyan', 'violet', 'coral', 'magenta'];
+  return {
+    title: 'Solutions',
+    description: 'Solutions description.',
+    heading: 'Solutions heading.',
+    paragraphs: ['Intro paragraph.'],
+    sections: ids.map((id, i) => ({
+      id,
+      icon: icons[i],
+      accent: accents[i],
+      heading: `Heading ${i}`,
+      problem: 'Problem.',
+      audience: 'Audience.',
+      build: 'Build.',
+      benefit: 'Benefit.',
+      ...(i === 1
+        ? {
+            evidence: {
+              label: 'Business Workflow System',
+              path: '/work/business-workflow-system/',
+            },
+          }
+        : {}),
+      cta: { label: `Discuss ${id}`, path: '/contact/' },
+    })),
+    cta: {
+      heading: 'Closing heading',
+      body: 'Closing body.',
+      action: { label: "Let's Discuss Your Project", path: '/contact/' },
+    },
+  };
+}
+
+test('valid solutions content produces no problems', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+  assert.deepEqual(validateContent(route, validSolutionsContent()), []);
+});
+
+test('solutions template requires exactly 6 sections', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+  const tooFew = validSolutionsContent();
+  tooFew.sections = tooFew.sections.slice(0, 5);
+  assert.ok(
+    validateContent(route, tooFew).some((p) =>
+      p.includes('"sections" must be an array of exactly 6'),
+    ),
+  );
+});
+
+test('solutions template rejects a duplicate section id', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+  const content = validSolutionsContent();
+  content.sections[1].id = content.sections[0].id;
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('sections[1].id')));
+});
+
+test('solutions template rejects a section id outside the approved 6 slugs', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+  const content = validSolutionsContent();
+  content.sections[0].id = 'not-a-real-section';
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('sections[0].id')));
+});
+
+test('solutions template reports every missing required per-section field', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+  const content = validSolutionsContent();
+  delete content.sections[0].problem;
+  delete content.sections[0].audience;
+  delete content.sections[0].build;
+  delete content.sections[0].benefit;
+  const problems = validateContent(route, content);
+  for (const field of ['problem', 'audience', 'build', 'benefit']) {
+    assert.ok(
+      problems.some((p) => p.includes(`sections[0].${field}`)),
+      `expected a problem mentioning "sections[0].${field}"`,
+    );
+  }
+});
+
+test('solutions template rejects an unknown section icon key and accent', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+  const content = validSolutionsContent();
+  content.sections[0].icon = 'not-a-real-icon';
+  content.sections[0].accent = 'not-a-real-accent';
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('sections[0].icon')));
+  assert.ok(problems.some((p) => p.includes('sections[0].accent')));
+});
+
+test('solutions template: evidence is valid when absent, and validated when present', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+
+  const noEvidence = validSolutionsContent();
+  delete noEvidence.sections[1].evidence;
+  assert.deepEqual(validateContent(route, noEvidence), []);
+
+  const badEvidence = validSolutionsContent();
+  badEvidence.sections[1].evidence = { label: '', path: 'not-safe' };
+  const problems = validateContent(route, badEvidence);
+  assert.ok(problems.some((p) => p.includes('sections[1].evidence.label')));
+  assert.ok(problems.some((p) => p.includes('sections[1].evidence.path')));
+});
+
+test('solutions template requires a valid per-section cta', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+  const content = validSolutionsContent();
+  delete content.sections[0].cta;
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('sections[0].cta')));
+});
+
+test('solutions template requires a valid closing cta', () => {
+  const route = { key: 'solutions', template: 'solutions' };
+
+  const missing = validSolutionsContent();
+  delete missing.cta;
+  assert.ok(validateContent(route, missing).some((p) => p.includes('"cta"')));
+
+  const badAction = validSolutionsContent();
+  badAction.cta.action = { label: '', path: 'not-safe' };
+  const problems = validateContent(route, badAction);
+  assert.ok(problems.some((p) => p.includes('cta.action')));
+});

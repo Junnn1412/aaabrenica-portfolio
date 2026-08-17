@@ -18,9 +18,10 @@ src/
 ├── components/
 │   ├── icon.js            — build-time SVG string renderer for the small, whitelisted set of Lucide icons in use (PF-031)
 │   ├── capability-card.js / project-card.js / process-steps.js / trust-list.js / engagement-options.js / cta.js — PF-041: one render*() module per Gate-C-approved component, each reproducing its documented markup contract exactly
+│   ├── section-header.js  — PF-050: eyebrow/heading/lede section header, extracted from home.js's template for its second real caller (solutions.js) — shared by both, not home-specific
 │   └── partials/          — shared structural markup: header, nav, footer
 ├── pages/
-│   ├── templates/          — standard / listing / case-study / home: the *shape* a page takes
+│   ├── templates/          — standard / listing / case-study / home / solutions: the *shape* a page takes
 │   ├── render.js            — route -> composed { head, header, main, footer }
 │   ├── compose.js           — marker validation + safe substitution into the HTML skeleton
 │   ├── escape.js             — escapeHtml — the only way content reaches HTML
@@ -39,10 +40,11 @@ scripts/                         — Node-only build tooling, deliberately outsi
 └── verify-build-output.mjs       — composed-output verifier, runs automatically after build
 ```
 
-`src/assets/`, and the `elements/`, `objects/`, `utilities/`, `pages/`
-layers under `src/styles/`, are not created yet — no real content exists for
-them. They're created only when a later milestone (PF-020 design system,
-PF-032+ components) needs them.
+`src/assets/` is not created yet — no images/static assets exist. Every
+ITCSS layer under `src/styles/` now has real content: `settings/`,
+`generic/`, `elements/`, `objects/`, `components/`, and `utilities/` since
+PF-020/021/031–034/040/041, and `pages/` since PF-050 (see "SCSS layering"
+below).
 
 ## How a page is composed
 
@@ -87,6 +89,29 @@ is the only path content ever takes into the HTML string, and
 is ever rendered. If a future field genuinely needs to carry trusted HTML,
 it must be explicitly named (e.g. `trustedHtml`) and separately
 documented/approved — no such field exists today.
+
+## Per-section containers and anchor composition
+
+Most templates (`standard`, `listing`, `case-study`) wrap their entire
+`main` output in one template-owned `<div class="container">` (see
+`docs/DECISION_LOG.md`'s PF-040 entry for why container ownership sits at
+the template layer, not the skeleton). `home` and `solutions` are the two
+exceptions: each top-level `<section>` owns its own inner `.container`
+instead, so a full-bleed section never has to fight a page-level wrapper.
+Both share the `.page-section` vertical-rhythm wrapper
+(`src/styles/objects/_page-section.scss`) and the `renderSectionHeader()`
+helper (`src/components/section-header.js`).
+
+`solutions.js`'s six sections are anchored (`<section id="...">`), with
+every id sourced from `src/content/pages/solutions.js`'s own
+`sections[].id` field — never hardcoded a second time. The page's own jump
+navigation and `home.js`'s capability-card links (composed as
+`/solutions/#<id>`) are both derived from/checked against that same set of
+ids, so the two pages' cross-links cannot silently drift apart:
+`content-schema.js`'s `SOLUTION_SECTION_IDS` allow-list rejects any section
+id outside the six approved slugs, and a dedicated cross-file test in
+`tests/home-render.test.mjs` asserts every homepage capability link points
+at the Solutions section with the matching heading.
 
 ## Validation, at three points
 
@@ -137,11 +162,19 @@ it isn't part of a normal site section. Verified in
 ## SCSS layering
 
 `src/styles/` follows an ITCSS-lite order — settings, generic, elements,
-objects, components, utilities, pages — but only `settings/`, `generic/`,
-and `components/` currently have real content (the one existing font-stack
-token, the reset, and the skip-link rule). `main.scss` is a thin `@use`
-aggregator. The remaining layers are created only when PF-020 introduces
-real design tokens and components.
+objects, components, utilities, pages — and `main.scss` is a thin `@use`
+aggregator in that exact order. Every layer now has real content.
+`objects/` holds shared, cross-page layout primitives: `container`,
+`page-shell`, `section-header`, and — since PF-050 — `page-section`, the
+inter-section spacing/divider wrapper generalized out of the
+homepage-only `.home-section` (`components/_hero.scss`) for its second
+real caller, `solutions.js`. `pages/` holds page-specific overrides that
+don't belong in a shared object or component — reserved since PF-011 but
+empty until PF-050's `pages/_solutions.scss` became its first real content
+(jump-nav chips, section icon badges, the problem/audience/build/benefit
+detail list, and the sticky-header-safe anchor offset). See
+`docs/DESIGN_SYSTEM.md`'s "Solutions page (PF-050)" section for the full
+rationale.
 
 ## Deferred
 

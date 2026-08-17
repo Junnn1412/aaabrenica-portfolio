@@ -58,30 +58,38 @@ for (const route of routes) {
   // composed output must still show it immediately inside <main> — proves
   // the invariant end-to-end regardless of which layer produced it.
   //
-  // PF-041: the home route is the one deliberate exception, anticipated by
-  // PF-040's own decision-log entry — instead of one container wrapping the
-  // whole main, each top-level <section> (hero, home-section) owns its own
-  // inner .container, so later full-bleed sections never fight a
-  // page-level wrapper. Verified end-to-end here the same way: <main> must
-  // open directly with a section, and every such section must itself open
-  // with .container.
-  if (route.key === 'home') {
-    if (
-      !/<main id="main-content" tabindex="-1">\s*<section class="hero">/.test(
-        html,
-      )
-    ) {
+  // PF-041/PF-050: home and solutions are the two per-section-container
+  // exceptions, anticipated by PF-040's own decision-log entry — instead of
+  // one container wrapping the whole main, each top-level <section> owns
+  // its own inner .container, so later full-bleed sections never fight a
+  // page-level wrapper. `home`'s main opens directly with `.hero`; every
+  // other top-level section on either route carries `.page-section` (an
+  // optional leading `id="..."` attribute — solutions' anchored sections
+  // only — doesn't change that match). `solutions` additionally opens with
+  // one bare intro `<div class="container">` (heading + jump nav) before
+  // its first section — not itself a section, so it's checked separately
+  // here rather than folded into the per-section count.
+  if (route.key === 'home' || route.key === 'solutions') {
+    const opensCorrectly =
+      route.key === 'home'
+        ? /<main id="main-content" tabindex="-1">\s*<section class="hero">/.test(
+            html,
+          )
+        : /<main id="main-content" tabindex="-1">\s*<div class="container">/.test(
+            html,
+          );
+    if (!opensCorrectly) {
       add(
-        `route "${route.key}": expected <main id="main-content" tabindex="-1"> to open with the hero section`,
+        `route "${route.key}": expected <main id="main-content" tabindex="-1"> to open with its documented top-level element`,
       );
     }
     const sectionCount = countMatches(
       html,
-      /<section class="(?:hero|home-section)/g,
+      /<section(?: id="[^"]*")? class="(?:hero|page-section)/g,
     );
     const sectionContainerCount = countMatches(
       html,
-      /<section class="(?:hero|home-section)[^"]*"><div class="container/g,
+      /<section(?: id="[^"]*")? class="(?:hero|page-section)[^"]*"><div class="container/g,
     );
     if (sectionCount === 0 || sectionCount !== sectionContainerCount) {
       add(

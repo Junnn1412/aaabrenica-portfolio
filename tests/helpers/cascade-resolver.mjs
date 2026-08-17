@@ -43,6 +43,17 @@ export function compareSpecificity(a, b) {
 
 export function elementMatchesSimpleSelector(element, simpleSelector) {
   const trimmed = simpleSelector.trim();
+  // Pseudo-elements (::selection, ::before, ::after, ...) target a
+  // generated/pseudo box, never the element itself — without this check
+  // one with no tag or class of its own (e.g. generic/_document.scss's
+  // bare `::selection { ... }`) would vacuously "match" any tag/class
+  // query below (empty tag check passes, empty class list has nothing to
+  // fail on), and its "::" would even inflate its measured specificity
+  // above a real one-class selector, letting it silently win properties
+  // it was never actually declaring for that element.
+  if (trimmed.includes('::')) {
+    return false;
+  }
   // Strip pseudo-classes for matching purposes (:hover etc. never apply to
   // a statically-rendered element the way base/default styling does) —
   // deliberately excluded from this resolver, which only answers "what

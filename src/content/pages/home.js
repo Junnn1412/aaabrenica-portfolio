@@ -51,7 +51,7 @@ export default {
         heading: 'Custom Business Systems',
         description:
           'Purpose-built internal tools designed around how your team actually works.',
-        link: '/solutions/',
+        link: '/solutions/#custom-business-systems',
       },
       {
         accent: 'amber',
@@ -59,7 +59,7 @@ export default {
         heading: 'Workflow & Process Solutions',
         description:
           'Turning manual, error-prone approval and reporting processes into reliable, trackable systems.',
-        link: '/solutions/',
+        link: '/solutions/#workflow-process-solutions',
       },
       {
         accent: 'cyan',
@@ -67,7 +67,7 @@ export default {
         heading: 'Corporate Websites',
         description:
           'Professional, fast, and easy-to-maintain websites that represent your business well.',
-        link: '/solutions/',
+        link: '/solutions/#corporate-websites',
       },
       {
         accent: 'violet',
@@ -75,7 +75,7 @@ export default {
         heading: 'WordPress Development',
         description:
           'Custom WordPress builds and improvements for teams that need a familiar, editable platform.',
-        link: '/solutions/',
+        link: '/solutions/#wordpress-development',
       },
       {
         accent: 'coral',
@@ -83,7 +83,7 @@ export default {
         heading: 'Existing-System Improvements',
         description:
           'Modernizing or extending systems that no longer match how the business runs today.',
-        link: '/solutions/',
+        link: '/solutions/#existing-system-improvements',
       },
       {
         accent: 'magenta',
@@ -91,7 +91,7 @@ export default {
         heading: 'Support & Maintenance',
         description:
           'Ongoing support so systems stay reliable long after launch.',
-        link: '/solutions/',
+        link: '/solutions/#support-maintenance',
       },
     ],
   },

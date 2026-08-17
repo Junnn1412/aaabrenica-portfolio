@@ -10,12 +10,15 @@ extended again in PF-032 (capability cards), extended again in PF-033
 (project cards — see "Project cards (PF-033)" below), extended again in
 PF-034 (process steps, trust indicators, engagement options, and a reusable
 CTA panel — see "Process, trust, engagement, and CTA components (PF-034)"
-below), and extended again in PF-041 (the real homepage — six new render*()
+below), extended again in PF-041 (the real homepage — six new render*()
 modules composing the PF-032/033/034 components, plus a new `.hero`
-layout wrapper — see "Homepage (PF-041)" below). See
-[`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy and
-tooling decisions this builds on, and for the
-PF-020/PF-021/PF-030/PF-031/PF-032/PF-033/PF-034/PF-041 decisions
+layout wrapper — see "Homepage (PF-041)" below), and extended again in
+PF-050 (the real Solutions page — a dedicated template, the `.home-section`
+wrapper generalized into the shared `.page-section` object, and this
+project's first page-specific SCSS layer — see "Solutions page (PF-050)"
+below). See [`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy
+and tooling decisions this builds on, and for the
+PF-020/PF-021/PF-030/PF-031/PF-032/PF-033/PF-034/PF-041/PF-050 decisions
 themselves.
 
 ## Token architecture
@@ -55,7 +58,8 @@ src/styles/
 ├── objects/                   — PF-021: structural, non-cosmetic
 │   ├── _container.scss        — .container / --wide / --reading
 │   ├── _page-shell.scss       — PF-040: #main-content's flex: 1 + padding-block: var(--space-section)
-│   └── _section-header.scss   — .section-header
+│   ├── _section-header.scss   — .section-header
+│   └── _page-section.scss     — PF-050: .page-section, generalized out of _hero.scss's homepage-only .home-section for its second real caller (solutions.js)
 ├── components/
 │   ├── _skip-link.scss
 │   ├── _button.scss           — PF-021: .btn
@@ -66,9 +70,11 @@ src/styles/
 │   ├── _capability-card.scss   — PF-032: .capability-card, rendered by src/components/capability-card.js since PF-041
 │   ├── _project-card.scss      — PF-033: .project-card, rendered by src/components/project-card.js since PF-041
 │   ├── _process-steps.scss / _trust-list.scss / _engagement-options.scss / _cta.scss — PF-034, each rendered by its matching src/components/*.js module since PF-041
-│   └── _hero.scss              — PF-041: .hero + .home-section (thin layout wrapper only, no new tokens)
+│   └── _hero.scss              — PF-041: .hero (thin layout wrapper only, no new tokens); no longer carries .home-section — see objects/_page-section.scss above
 ├── utilities/
 │   └── _visually-hidden.scss  — PF-021: .visually-hidden
+├── pages/                     — PF-050: page-specific overrides that don't belong in a shared object or component
+│   └── _solutions.scss        — jump-nav chips, section icon badges, the problem/audience/build/benefit detail list, and the sticky-header-safe anchor offset — see "Solutions page (PF-050)" below
 └── main.scss
 ```
 
@@ -1087,6 +1093,9 @@ PF-040 decision-log entry anticipated when it made `.container`
 template-owned rather than skeleton-owned. `scripts/verify-build-output.mjs`
 and `tests/render.test.mjs` both special-case the home route to verify this
 end-to-end instead of the single-wrapper invariant every other route keeps.
+(`.home-section` was later generalized to `.page-section` in PF-050 for its
+second real caller, `solutions.js` — see "Solutions page (PF-050)" below;
+the class name here reflects what PF-041 itself shipped.)
 
 **Hero sits flush against the header.** `body[data-page='home'] #main-content`
 locally zeroes `padding-block-start` (leaving `padding-block-end` at the
@@ -1166,6 +1175,143 @@ column-count/pixel-simulation checks stay local to each `*-layout` file,
 since those are about the compiled stylesheet or the showcase's own
 specific wide-container arrangement, not the general markup contract a
 renderer must reproduce.
+
+## Solutions page (PF-050)
+
+`src/content/pages/solutions.js` now carries real content — six anchored
+sections, one per approved capability — composed by a new dedicated
+`solutions` template (`src/pages/templates/solutions.js`), registered
+alongside `standard`/`listing`/`case-study`/`home` in
+`src/pages/templates/index.js`. AAA's desktop and mobile visual review of
+the rendered page passed, including the provisional copy; see
+`docs/TESTING_AND_QA.md` for the full manual-check ledger, including which
+specialized modes (forced-colors, 200% zoom, reduced-motion) are still
+pending explicit verification.
+
+**A dedicated template, not `standard`.** `standard` wraps `heading` +
+`paragraphs` + one optional `link` in a single container — it cannot
+express six anchored, individually-structured sections. `solutions.js`
+follows `home.js`'s per-section-container shape instead (see "Per-section
+containers" above) rather than inventing a third page-composition pattern.
+
+**`.page-section`, the generalized successor to `.home-section`.** PF-041
+shipped `.home-section` (the shared inter-section spacing/divider wrapper)
+inside `_hero.scss` with an explicit note that it was homepage-only pending
+a real second caller, per CLAUDE.md's "extract reusable patterns only after
+a real second use demonstrates the need." Solutions is that second caller.
+The two rules moved, unchanged, from `src/styles/components/_hero.scss`
+into `src/styles/objects/_page-section.scss` (renamed `.home-section` →
+`.page-section`, no other change) — a rename, not a redesign, proven by a
+compiled-CSS test (`tests/page-section-layout.test.mjs`) that resolves both
+`.page-section`'s `padding-block` and `.page-section + .page-section`'s
+divider `border-top` and asserts they match the original `.home-section`
+declarations exactly, plus a check that `.home-section` no longer appears
+anywhere in the compiled stylesheet. `home.js`'s own eight section wrappers
+were updated to the new class name; its rendered output, section count, and
+heading structure are otherwise unchanged. The shared `renderSectionHeader()`
+helper was extracted the same way, from a private function inside
+`home.js` into `src/components/section-header.js`, imported unmodified by
+both templates.
+
+**Solutions-page-only structural hooks, not new reusable Gate-C
+components.** Every prior component addition (capability cards, project
+cards, process/trust/engagement/CTA) went through a showcase specimen in
+`dev/design-system/index.html` and a Gate-C-style visual approval before a
+real page consumed it. The six sections' problem/audience/build/benefit
+detail list, the section icon badges, and the jump navigation have no such
+specimen and are not offered as reusable design-system components — they
+live in `src/styles/pages/_solutions.scss`, this project's first real file
+in the `pages/` ITCSS layer (reserved since PF-011/PF-021 but empty until
+now — see `docs/SOURCE_ARCHITECTURE.md`'s SCSS-layering section). This
+mirrors the precedent PF-041's own Hero/Problems-preview sections already
+set: compose new page-specific markup from already-approved base elements
+and narrowly-scoped page hooks, not a new component-library entry, when no
+second real caller is anticipated.
+
+**Icon/accent reuse, no new registry entries.** Each section's icon badge
+reuses the exact same `CAPABILITY_ICONS`/`CAPABILITY_ACCENTS` registry
+(`src/pages/icon-registry.js`) the homepage's capability cards already use
+— same six icon keys, same six accent tokens, same visual identity carried
+from the homepage card straight through to its matching Solutions section.
+`.solution-section__icon--<accent>` reads the identical `--accent-<accent>`
+custom properties `.capability-card--<accent>` does, verified equal by
+`tests/solutions-page-layout.test.mjs`, so the two can never silently
+drift apart. No new icon or accent was added to the registry.
+
+**Sticky-header anchor offset.** `/solutions/#<slug>` deep links (jump-nav
+clicks, external links, browser back/forward) needed the same protection
+`#main-content`'s skip-link target already has: `scroll-margin-top:
+var(--header-offset)`, so a landed section's heading is never hidden
+beneath the sticky desktop header. Scoped to
+`body[data-page='solutions'] .page-section[id]` rather than a bare `[id]`
+selector — the same reasoning already documented on `#main-content`'s own
+rule (`_site-header.scss`) and on `_hero.scss`'s `body[data-page='home']`
+override: `dev/design-system/index.html` shares this compiled CSS and has
+no sticky header of its own, so a global rule would incorrectly offset its
+unrelated in-page anchor specimens. No JavaScript/smooth-scroll
+interception was added — native anchor navigation handles the rest once
+`scroll-margin-top` is set.
+
+**Evidence is omitted, not rendered empty, when unavailable.** Only one of
+the six sections (Workflow & Process Solutions) carries a project-evidence
+link, to Business Workflow System — the one project with a documented
+category match; case studies for the other two real projects are still
+placeholder content (M6, a later milestone), and assigning them to a
+specific section without documented category data would be an unsupported
+claim. The other five sections render no `.solution-section__evidence`
+element at all — not an empty wrapper — matching the same
+omit-cleanly rule the architecture doc already states and the same pattern
+`renderCta`'s optional `body`/`capability-card`'s optional icon-link
+already use. `tests/solutions-render.test.mjs` proves this end-to-end:
+exactly one evidence element exists sitewide, inside the correct section.
+
+**Supporting technologies are intentionally absent, not deferred
+silently.** §10.1 asks each section to name supporting technologies, but no
+approved per-capability technology list exists anywhere in the requirements
+docs — §5's Approved Technology Stack governs the portfolio site's own
+build, not what AAA offers per solution area. Naming frameworks now would
+be fabricated. No `technologies` field exists in `solutions.js`'s content,
+no markup/wrapper for it exists in the template, and
+`tests/solutions-render.test.mjs` asserts the string "technologies" never
+appears anywhere in the rendered output. See `docs/DECISION_LOG.md`'s
+PF-050 entry for the full decision record, including why engagement
+options also remain homepage-only rather than duplicated here.
+
+**Content provenance.** Every string is one of: verbatim reuse of an
+already-approved `home.js` capability heading/description (all six section
+headings; four of the six "what I can build" fields, carried over
+unchanged), a paraphrase of `DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md`
+§4.2's typical-client-problems list (four of the six problem statements) or
+of §10.1's organizing principle (the page-level intro paragraph), or
+provisional copy drafted for this task (every audience/benefit field, the
+remaining two problem/build fields, all six CTA labels, and the page-level
+heading/closing CTA heading and body) — no invented outcomes, technologies,
+or project-category claims anywhere. AAA's visual review approved the
+rendered page including this provisional copy; it remains provisional
+production copy in the same sense the homepage's own capability-card
+descriptions were at PF-041 (approved for the visible page, still subject
+to further wording revision if AAA requests it later).
+
+**Test strategy.** `tests/solutions-render.test.mjs` mirrors
+`tests/home-render.test.mjs`'s approach — real `renderRoute()` output
+asserted against the shared structural helpers in
+`tests/helpers/component-markup.mjs`, plus escaping and optional-field-
+omission checks only real output can prove. Two new compiled-CSS files
+(`tests/page-section-layout.test.mjs`, `tests/solutions-page-layout.test.mjs`)
+extend the existing `sass.compile()` + `resolveProperty()` method
+(`tests/helpers/cascade-resolver.mjs`) to the rename-invariant and
+sticky-header-offset/jump-nav-cascade checks above. Implementing the
+icon/accent-token equality check surfaced a real, previously-unexercised
+bug in `resolveProperty()` itself: a pseudo-element selector with no tag or
+class of its own (`::selection`, `generic/_document.scss`) vacuously
+matched any tag/class query and its `::` inflated its measured specificity
+above a real one-class selector, silently winning `background-color`
+resolution it never actually declared for the queried element. Fixed by
+excluding any selector containing `::` from matching in
+`elementMatchesSimpleSelector()` — verified against every other existing
+caller of the resolver, none of which queried a property `::selection`
+also declares, so no other test's result changed. See
+`docs/DECISION_LOG.md`'s PF-050 entry.
 
 ## Accessibility rationale summary
 

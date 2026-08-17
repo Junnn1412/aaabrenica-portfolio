@@ -76,6 +76,43 @@ function checkSectionHeader(section, fieldName, problems) {
   checkNonEmptyString(section?.heading, `${fieldName}.heading`, problems);
 }
 
+// Shared by the 'home' and 'solutions' template branches — both close with
+// a { heading, body?, action: {label, path} } CTA panel rendered by the
+// same src/components/cta.js.
+function checkCtaShape(cta, fieldName, problems) {
+  if (cta == null || typeof cta !== 'object') {
+    problems.push(`"${fieldName}" is required`);
+    return;
+  }
+  checkNonEmptyString(cta.heading, `${fieldName}.heading`, problems);
+  if (
+    'body' in cta &&
+    cta.body != null &&
+    (typeof cta.body !== 'string' || cta.body.length === 0)
+  ) {
+    problems.push(
+      `"${fieldName}.body", when present, must be a non-empty string`,
+    );
+  }
+  checkLink(cta.action, `${fieldName}.action`, problems);
+}
+
+// PF-050 helpers below, used only by the 'solutions' template branch.
+
+// The exact 6 approved anchor slugs (§7.1/home.js's six capability
+// categories) — not just a kebab-case format check, since these ids are
+// also the anchors home.js's capability-card links target directly
+// (/solutions/#<id>), so an unrecognized id would silently break that
+// cross-page link.
+const SOLUTION_SECTION_IDS = [
+  'custom-business-systems',
+  'workflow-process-solutions',
+  'corporate-websites',
+  'wordpress-development',
+  'existing-system-improvements',
+  'support-maintenance',
+];
+
 function checkHomeContent(content, problems) {
   const c = content;
 
@@ -246,19 +283,69 @@ function checkHomeContent(content, problems) {
     checkLink(c.about.link, 'about.link', problems);
   }
 
-  if (c.cta == null || typeof c.cta !== 'object') {
-    problems.push('"cta" is required for the home page');
-  } else {
-    checkNonEmptyString(c.cta.heading, 'cta.heading', problems);
-    if (
-      'body' in c.cta &&
-      c.cta.body != null &&
-      (typeof c.cta.body !== 'string' || c.cta.body.length === 0)
-    ) {
-      problems.push('"cta.body", when present, must be a non-empty string');
-    }
-    checkLink(c.cta.action, 'cta.action', problems);
+  checkCtaShape(c.cta, 'cta', problems);
+}
+
+function checkSolutionsContent(content, problems) {
+  const c = content;
+
+  if (checkExactArray(c.sections, 'sections', 6, problems)) {
+    const seenIds = new Set();
+    c.sections.forEach((section, i) => {
+      checkNonEmptyString(section?.heading, `sections[${i}].heading`, problems);
+      checkNonEmptyString(section?.problem, `sections[${i}].problem`, problems);
+      checkNonEmptyString(
+        section?.audience,
+        `sections[${i}].audience`,
+        problems,
+      );
+      checkNonEmptyString(section?.build, `sections[${i}].build`, problems);
+      checkNonEmptyString(section?.benefit, `sections[${i}].benefit`, problems);
+
+      if (
+        typeof section?.id !== 'string' ||
+        !SOLUTION_SECTION_IDS.includes(section.id)
+      ) {
+        problems.push(
+          `"sections[${i}].id" must be one of: ${SOLUTION_SECTION_IDS.join(', ')}`,
+        );
+      } else if (seenIds.has(section.id)) {
+        problems.push(
+          `"sections[${i}].id" duplicates an id already used by another section: "${section.id}"`,
+        );
+      } else {
+        seenIds.add(section.id);
+      }
+
+      if (
+        typeof section?.icon !== 'string' ||
+        !(section.icon in CAPABILITY_ICONS)
+      ) {
+        problems.push(
+          `"sections[${i}].icon" must be one of: ${Object.keys(CAPABILITY_ICONS).join(', ')}`,
+        );
+      }
+      if (
+        typeof section?.accent !== 'string' ||
+        !CAPABILITY_ACCENTS.includes(section.accent)
+      ) {
+        problems.push(
+          `"sections[${i}].accent" must be one of: ${CAPABILITY_ACCENTS.join(', ')}`,
+        );
+      }
+
+      // Optional — only the Workflow & Process Solutions section carries
+      // one in V1 (see the plan's "Approved content exceptions"); absent
+      // is valid, present-but-malformed is not.
+      if (section?.evidence != null) {
+        checkLink(section.evidence, `sections[${i}].evidence`, problems);
+      }
+
+      checkLink(section?.cta, `sections[${i}].cta`, problems);
+    });
   }
+
+  checkCtaShape(c.cta, 'cta', problems);
 }
 
 // Single-route content shape + literal link safety — used by both
@@ -302,6 +389,10 @@ export function validateContent(route, content) {
 
   if (route.template === 'home') {
     checkHomeContent(content, problems);
+  }
+
+  if (route.template === 'solutions') {
+    checkSolutionsContent(content, problems);
   }
 
   return problems;

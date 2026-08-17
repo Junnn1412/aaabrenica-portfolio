@@ -8,6 +8,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderRoute } from '../src/pages/render.js';
 import { routes } from '../src/config/routes.js';
+import homeContent from '../src/content/pages/home.js';
+import solutionsContent from '../src/content/pages/solutions.js';
 import { renderCapabilityCards } from '../src/components/capability-card.js';
 import { renderProjectCards } from '../src/components/project-card.js';
 import { renderProcessSteps } from '../src/components/process-steps.js';
@@ -31,21 +33,21 @@ function homeMain() {
   return renderRoute(route).main;
 }
 
-// Several sections share the same wrapping <section class="home-section">
+// Several sections share the same wrapping <section class="page-section">
 // class, so helpers that count "every <a>"/"every <svg>" in the given HTML
 // (expectSingleSectionAction, expectDecorativeIcons) need to be scoped to
 // just one section's own markup, not the whole page — this isolates the
-// <section class="home-section">...</section> that contains `innerMarker`.
+// <section class="page-section">...</section> that contains `innerMarker`.
 function extractSection(main, innerMarker) {
   const markerIndex = main.indexOf(innerMarker);
   assert.ok(markerIndex >= 0, `marker "${innerMarker}" not found in main`);
   const sectionStart = main.lastIndexOf(
-    '<section class="home-section">',
+    '<section class="page-section">',
     markerIndex,
   );
   assert.ok(
     sectionStart >= 0,
-    'containing <section class="home-section"> not found',
+    'containing <section class="page-section"> not found',
   );
   const closeTag = '</section>';
   const sectionEnd = main.indexOf(closeTag, markerIndex) + closeTag.length;
@@ -187,6 +189,29 @@ test('home: exactly one <h1> and every section heading is a real <h2>', () => {
     .length;
   // trust, problems, capabilities, projects, process, engagement, about = 7
   assert.equal(h2s, 7, 'expected 7 section-header headings');
+});
+
+// PF-050 — guards §9.5 ("Each card links to the relevant Solutions-page
+// section") permanently: every home capability card's link must point at
+// the /solutions/ anchor for the section with the matching heading, not
+// just the bare /solutions/ route. Derived from both content modules, not
+// hardcoded twice, so it can't silently drift if either changes.
+test('home: every capability card links to its matching Solutions-page section anchor', () => {
+  const idByHeading = new Map(
+    solutionsContent.sections.map((section) => [section.heading, section.id]),
+  );
+  for (const item of homeContent.capabilities.items) {
+    const expectedId = idByHeading.get(item.heading);
+    assert.ok(
+      expectedId,
+      `no Solutions-page section found with heading "${item.heading}"`,
+    );
+    assert.equal(
+      item.link,
+      `/solutions/#${expectedId}`,
+      `expected capability "${item.heading}" to link to its matching Solutions-page anchor`,
+    );
+  }
 });
 
 // --- Individual renderer units: escaping and optional-field behavior ----

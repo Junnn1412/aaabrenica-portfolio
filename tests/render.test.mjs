@@ -38,8 +38,12 @@ test('renderRoute("not-found") renders its optional link', () => {
 // PF-040: the page container is wired at the template layer (not the
 // skeleton) so PF-041+ can introduce full-bleed sections without fighting
 // a global wrapper — every route's main output must still open with it.
-test('every route wraps its main content in the page container', () => {
+// PF-041: home is the anticipated exception (docs/DECISION_LOG.md's PF-040
+// entry) — each top-level <section> owns its own inner .container instead
+// of one wrapping the whole page.
+test('every non-home route wraps its main content in the page container', () => {
   for (const route of routes) {
+    if (route.key === 'home') continue;
     const { main } = renderRoute(route);
     assert.match(
       main,
@@ -47,4 +51,27 @@ test('every route wraps its main content in the page container', () => {
       `route "${route.key}": expected main to be wrapped in <div class="container">...</div>`,
     );
   }
+});
+
+test('home route composes per-section containers instead of one page-level wrapper', () => {
+  const { main } = renderRoute(routeByKey('home'));
+  assert.match(
+    main,
+    /^<section class="hero"><div class="container/,
+    'expected main to open with the hero section, itself opening with its own .container',
+  );
+  const sectionOpens = [
+    ...main.matchAll(/<section class="(hero|home-section)[^"]*">/g),
+  ];
+  const sectionContainers = [
+    ...main.matchAll(
+      /<section class="(?:hero|home-section)[^"]*"><div class="container/g,
+    ),
+  ];
+  assert.ok(sectionOpens.length > 0, 'expected at least one top-level section');
+  assert.equal(
+    sectionOpens.length,
+    sectionContainers.length,
+    'every top-level section must open with its own <div class="container">',
+  );
 });

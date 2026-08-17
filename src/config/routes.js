@@ -7,7 +7,7 @@ export const routes = [
     path: '/',
     entry: 'index.html',
     navKey: 'home',
-    template: 'standard',
+    template: 'home',
     content: 'home',
   },
   {

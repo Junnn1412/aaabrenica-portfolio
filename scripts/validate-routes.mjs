@@ -14,6 +14,7 @@ import {
   isSafeEmail,
   isSafeExternalUrl,
 } from '../src/pages/link-safety.js';
+import { findWorkProjectRouteProblems } from './work-project-routes.mjs';
 
 const projectRootUrl = new URL('../', import.meta.url);
 
@@ -182,18 +183,18 @@ function checkNavigation() {
   }
 }
 
-function checkWorkListingLinks() {
+function checkWorkProjectLinks() {
   const workContent = contentByKey.work;
-  if (!workContent?.links) return; // already reported by checkContentShape
-  const caseStudyPaths = new Set(
-    routes.filter((r) => r.template === 'case-study').map((r) => r.path),
-  );
-  for (const link of workContent.links) {
-    if (!caseStudyPaths.has(link.path)) {
-      add(
-        `work listing link "${link.label}" (${link.path}) does not match a registered case-study route`,
-      );
-    }
+  if (!workContent?.projects?.items) return; // already reported by checkContentShape
+  const projectLinks = workContent.projects.items.map((item) => item.link);
+  const caseStudyRoutePaths = routes
+    .filter((r) => r.template === 'case-study')
+    .map((r) => r.path);
+  for (const problem of findWorkProjectRouteProblems(
+    projectLinks,
+    caseStudyRoutePaths,
+  )) {
+    add(`work project directory: ${problem}`);
   }
 }
 
@@ -319,7 +320,7 @@ checkRegistries();
 checkContentShape();
 checkSiteConfig();
 checkNavigation();
-checkWorkListingLinks();
+checkWorkProjectLinks();
 checkSingletons();
 checkFormats();
 checkApprovedRoutes();

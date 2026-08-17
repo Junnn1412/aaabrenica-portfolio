@@ -17,13 +17,15 @@ src/
 │   └── pages/            — one plain-data module per route (title, description?, heading, paragraphs, ...)
 ├── components/
 │   ├── icon.js            — build-time SVG string renderer for the small, whitelisted set of Lucide icons in use (PF-031)
+│   ├── capability-card.js / project-card.js / process-steps.js / trust-list.js / engagement-options.js / cta.js — PF-041: one render*() module per Gate-C-approved component, each reproducing its documented markup contract exactly
 │   └── partials/          — shared structural markup: header, nav, footer
 ├── pages/
-│   ├── templates/          — standard / listing / case-study: the *shape* a page takes
+│   ├── templates/          — standard / listing / case-study / home: the *shape* a page takes
 │   ├── render.js            — route -> composed { head, header, main, footer }
 │   ├── compose.js           — marker validation + safe substitution into the HTML skeleton
 │   ├── escape.js             — escapeHtml — the only way content reaches HTML
 │   ├── link-safety.js        — isSafeInternalPath/isSafeEmail/isSafeExternalUrl — rejects javascript:, external, protocol-relative URLs, and unsafe mailto:/social-URL shapes (PF-031)
+│   ├── icon-registry.js       — PF-041: closed-set icon-key/accent registry (TRUST_ICONS, CAPABILITY_ICONS, CAPABILITY_ACCENTS, CARD_ARROW_ICON) — the single source content-schema.js validates against and the components/*.js renderers resolve icons from, keeping the pure validation layer free of any dependency on renderer modules
 │   ├── content-schema.js     — per-template required-field/type + link-safety checks
 │   └── dev-watcher.js         — attaches the dev-server file watcher that restarts on architecture edits
 ├── scripts/
@@ -144,22 +146,19 @@ real design tokens and components.
 ## Deferred
 
 - `src/assets/`, `public/` — no images/static assets yet.
-- Capability cards (PF-032) and project cards (PF-033) both shipped as
-  CSS-only components (`src/styles/components/_capability-card.scss`,
-  `_project-card.scss`) with no JS renderer or content-data module for
-  either — deferred until a real page composes them (PF-041/052/060–062);
-  see `docs/DESIGN_SYSTEM.md`'s "Capability cards (PF-032)"/"Project cards
-  (PF-033)" sections. Real project content (technologies, summaries,
-  images) — still PF-003, then PF-060–062.
-- Process steps, trust indicators, engagement options, and a reusable CTA
-  panel (PF-034) shipped the same way: four CSS-only components
-  (`src/styles/components/_process-steps.scss`, `_trust-list.scss`,
-  `_engagement-options.scss`, `_cta.scss`), no JS renderer or content-data
-  module for any — deferred until PF-041 composes real homepage content
-  into these sections; see `docs/DESIGN_SYSTEM.md`'s "Process, trust,
-  engagement, and CTA components (PF-034)" section.
-- Page-specific browser JS — `data-page` on `<body>` is a ready, documented,
-  currently-unused seam for this.
+- **No longer deferred as of PF-041**: capability cards, project cards,
+  process steps, trust indicators, engagement options, and the CTA panel
+  all now have real `render*()` modules in `src/components/` and real
+  content in `src/content/pages/home.js`, validated by a `home`-template
+  branch in `src/pages/content-schema.js`. See `docs/DESIGN_SYSTEM.md`'s
+  "Homepage (PF-041)" section. Project cards still carry only
+  title/category/link — no summary/tech/outcome copy is approved for any
+  real project yet (PF-003 still blocked); when PF-060–062 add that content,
+  `renderProjectCard()` already supports the optional `summary`/`tags`
+  fields it will need.
+- Page-specific browser JS — `data-page` on `<body>` is a ready, documented
+  seam for this; PF-041 is its first real consumer, scoping a homepage-only
+  CSS rule (`body[data-page='home'] #main-content`) in `_hero.scss`.
 - External social/contact link _values_ — `site.social.github`/`.linkedin`/
   `.contactEmail`/`.resumePath` stay `null` until PF-003/PF-053 supplies
   real values. The safety policy itself is no longer deferred:

@@ -161,6 +161,31 @@ milestone automates them:
     introduced; jump-nav navigation is native anchor scrolling only)
   - 200% zoom — jump-nav chips wrap without overlap or clipping, and the
     sticky-header anchor offset still clears each section heading
+- (PF-051) Process page — **pending AAA's browser review.** `npm run verify`
+  passes (320/320 automated tests, lint, format, build, `html-validate`),
+  but the following manual checks have not yet been performed and are not
+  assumed to pass by extension of the automated suite:
+  - Responsive review at 320/375/768/1024/1440/1920px, with particular
+    attention to the 768px breakpoint (`spacing.$bp-md`) where each stage's
+    facts switch from a single stacked column to a 2-column term/detail
+    grid — confirm the term column is readable, not cramped, right at that
+    width, and the detail column isn't excessively wide at 1920px
+  - Read all 7 stages plus Working Together for tone/accuracy — every fact
+    sentence is provisional copy pending content sign-off, **especially**
+    the revised Support-stage language, meta description, and intro
+    sentence, which should read as an agreed/scoped arrangement rather than
+    automatic or indefinite
+  - Keyboard-only pass: skip link → nav → closing CTA button → footer, one
+    stop per interactive element, visible focus throughout, no trap
+  - Forced-colors mode: the stage number badges keep a visible boundary
+    once their fill is dropped
+  - `prefers-reduced-motion` — nothing to disable (no motion introduced)
+  - 200% zoom — stage facts wrap normally with no clipping or overlap, at
+    both the stacked and grid layouts
+  - Confirm the closing CTA looks visually identical to the homepage's and
+    Solutions page's own closing CTA despite now rendering as `<h2>`
+    instead of `<h3>` — expected to be identical, since `.cta__heading`'s
+    `font-size` did not change, but not yet confirmed in a real browser
 
 These are out of scope for PF-012 by design — see the task's explicit scope
 boundaries (no browser automation, visual regression, end-to-end tests,

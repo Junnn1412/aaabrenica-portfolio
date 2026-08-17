@@ -17,17 +17,17 @@ src/
 │   └── pages/            — one plain-data module per route (title, description?, heading, paragraphs, ...)
 ├── components/
 │   ├── icon.js            — build-time SVG string renderer for the small, whitelisted set of Lucide icons in use (PF-031)
-│   ├── capability-card.js / project-card.js / process-steps.js / trust-list.js / engagement-options.js / cta.js — PF-041: one render*() module per Gate-C-approved component, each reproducing its documented markup contract exactly
+│   ├── capability-card.js / project-card.js / process-steps.js / trust-list.js / engagement-options.js / cta.js — PF-041: one render*() module per Gate-C-approved component, each reproducing its documented markup contract exactly. cta.js — PF-051: gained an optional `headingLevel` render parameter (closed set `{2, 3}`, default `3` unchanged for every prior caller) so a top-level sibling section's own CTA (Process's closing CTA) can render `<h2>` instead of the default `<h3>`
 │   ├── section-header.js  — PF-050: eyebrow/heading/lede section header, extracted from home.js's template for its second real caller (solutions.js) — shared by both, not home-specific
 │   └── partials/          — shared structural markup: header, nav, footer
 ├── pages/
-│   ├── templates/          — standard / listing / case-study / home / solutions: the *shape* a page takes
+│   ├── templates/          — standard / listing / case-study / home / solutions / process: the *shape* a page takes
 │   ├── render.js            — route -> composed { head, header, main, footer }
 │   ├── compose.js           — marker validation + safe substitution into the HTML skeleton
 │   ├── escape.js             — escapeHtml — the only way content reaches HTML
 │   ├── link-safety.js        — isSafeInternalPath/isSafeEmail/isSafeExternalUrl — rejects javascript:, external, protocol-relative URLs, and unsafe mailto:/social-URL shapes (PF-031)
 │   ├── icon-registry.js       — PF-041: closed-set icon-key/accent registry (TRUST_ICONS, CAPABILITY_ICONS, CAPABILITY_ACCENTS, CARD_ARROW_ICON) — the single source content-schema.js validates against and the components/*.js renderers resolve icons from, keeping the pure validation layer free of any dependency on renderer modules
-│   ├── content-schema.js     — per-template required-field/type + link-safety checks
+│   ├── content-schema.js     — per-template required-field/type + link-safety checks. PF-051 adds `PROCESS_STAGE_NAMES` (exported single source of truth for the canonical 7-stage lifecycle order) and `checkProcessContent`, which enforces stage order/naming positionally and forbids a `next` property on the terminal stage via `Object.hasOwn` (presence, not truthiness)
 │   └── dev-watcher.js         — attaches the dev-server file watcher that restarts on architecture edits
 ├── scripts/
 │   ├── main.js                 — global JS entry (imports the SCSS entry, nav-toggle.js)
@@ -43,8 +43,8 @@ scripts/                         — Node-only build tooling, deliberately outsi
 `src/assets/` is not created yet — no images/static assets exist. Every
 ITCSS layer under `src/styles/` now has real content: `settings/`,
 `generic/`, `elements/`, `objects/`, `components/`, and `utilities/` since
-PF-020/021/031–034/040/041, and `pages/` since PF-050 (see "SCSS layering"
-below).
+PF-020/021/031–034/040/041, and `pages/` since PF-050 (a second file,
+`pages/_process.scss`, since PF-051 — see "SCSS layering" below).
 
 ## How a page is composed
 
@@ -95,12 +95,12 @@ documented/approved — no such field exists today.
 Most templates (`standard`, `listing`, `case-study`) wrap their entire
 `main` output in one template-owned `<div class="container">` (see
 `docs/DECISION_LOG.md`'s PF-040 entry for why container ownership sits at
-the template layer, not the skeleton). `home` and `solutions` are the two
-exceptions: each top-level `<section>` owns its own inner `.container`
-instead, so a full-bleed section never has to fight a page-level wrapper.
-Both share the `.page-section` vertical-rhythm wrapper
-(`src/styles/objects/_page-section.scss`) and the `renderSectionHeader()`
-helper (`src/components/section-header.js`).
+the template layer, not the skeleton). `home`, `solutions`, and (since
+PF-051) `process` are the exceptions: each top-level `<section>` owns its
+own inner `.container` instead, so a full-bleed section never has to fight
+a page-level wrapper. All three share the `.page-section` vertical-rhythm
+wrapper (`src/styles/objects/_page-section.scss`) and the
+`renderSectionHeader()` helper (`src/components/section-header.js`).
 
 `solutions.js`'s six sections are anchored (`<section id="...">`), with
 every id sourced from `src/content/pages/solutions.js`'s own
@@ -112,6 +112,19 @@ ids, so the two pages' cross-links cannot silently drift apart:
 id outside the six approved slugs, and a dedicated cross-file test in
 `tests/home-render.test.mjs` asserts every homepage capability link points
 at the Solutions section with the matching heading.
+
+`process.js`'s seven stages are **not** anchored — §10.2 of the
+requirements doc, unlike §10.1's Solutions page, carries no anchor/deep-link
+requirement, and the stages are read in fixed sequential order rather than
+looked up independently, so no jump navigation exists. Stage order is
+enforced positionally by `content-schema.js`'s exported `PROCESS_STAGE_NAMES`
+constant — the single place the 7-stage sequence (`Discover → Define →
+Design → Develop → Test → Deploy → Support`) is spelled out; tests import
+the same constant rather than re-typing it. The terminal stage (Support)
+must not declare a `next` property at all — checked via `Object.hasOwn`,
+so `next: null`/`undefined`/`''` are rejected exactly like a present
+non-empty string, not just a falsy-value check that could be fooled by
+treating `undefined` as "absent."
 
 ## Validation, at three points
 
@@ -168,13 +181,18 @@ aggregator in that exact order. Every layer now has real content.
 `page-shell`, `section-header`, and — since PF-050 — `page-section`, the
 inter-section spacing/divider wrapper generalized out of the
 homepage-only `.home-section` (`components/_hero.scss`) for its second
-real caller, `solutions.js`. `pages/` holds page-specific overrides that
-don't belong in a shared object or component — reserved since PF-011 but
-empty until PF-050's `pages/_solutions.scss` became its first real content
-(jump-nav chips, section icon badges, the problem/audience/build/benefit
-detail list, and the sticky-header-safe anchor offset). See
-`docs/DESIGN_SYSTEM.md`'s "Solutions page (PF-050)" section for the full
-rationale.
+real caller, `solutions.js` (now a third real caller, `process.js`, since
+PF-051). `pages/` holds page-specific overrides that don't belong in a
+shared object or component — reserved since PF-011, first populated by
+PF-050's `pages/_solutions.scss` (jump-nav chips, section icon badges, the
+problem/audience/build/benefit detail list, and the sticky-header-safe
+anchor offset), and joined by a second file, `pages/_process.scss`, since
+PF-051 (the ordered stage list's number/heading row, the shared
+`.process-facts` term/detail pattern reused by both the stages and Working
+Together sections, and the mobile-stack/desktop-grid responsive contract
+for it, gated behind `spacing.$bp-md`). See `docs/DESIGN_SYSTEM.md`'s
+"Solutions page (PF-050)" and "Process page (PF-051)" sections for the
+full rationale.
 
 ## Deferred
 

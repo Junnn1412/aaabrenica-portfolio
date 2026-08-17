@@ -1003,6 +1003,17 @@ already verified in `tests/design-tokens.test.mjs` (the same pair
 `.cta__body` is genuinely optional: the second showcase specimen omits the
 element entirely rather than rendering it empty.
 
+**PF-051 — `renderCta()` gained an optional `headingLevel` parameter**
+(closed `Set([2, 3])`, default `3` unchanged) so a CTA that is itself a
+top-level sibling section (Process's closing CTA, which needed `<h2>`, not
+a `<h3>` orphaned beneath its sibling `<h2>` sections) can request a
+different heading tag without duplicating the component. `.cta__heading`'s
+`font-size: var(--font-size-h2)` was already declared explicitly and
+independent of tag, so the tag change carries zero visual/CSS change. See
+this document's "Process page (PF-051)" section below for the full
+rationale and `docs/DECISION_LOG.md`'s PF-051 entry for the decision
+record.
+
 **Forced-colors boundaries, handled per component depending on what the
 boundary depends on in normal mode:**
 
@@ -1312,6 +1323,176 @@ excluding any selector containing `::` from matching in
 caller of the resolver, none of which queried a property `::selection`
 also declares, so no other test's result changed. See
 `docs/DECISION_LOG.md`'s PF-050 entry.
+
+## Process page (PF-051)
+
+`src/content/pages/process.js` now carries real content — the full delivery
+lifecycle, `Discover → Define → Design → Develop → Test → Deploy → Support`
+(§10.2), each stage explaining what happens, what's needed from the client,
+what AAA delivers, how review/approval works, and (for all but the last
+stage) what happens next — composed by a new dedicated `process` template
+(`src/pages/templates/process.js`), registered in
+`src/pages/templates/index.js` alongside `standard`/`listing`/
+`case-study`/`home`/`solutions`. `src/config/routes.js`'s `process` route
+changed `template: 'standard'` → `'process'`; `path`/`entry`/`navKey`/
+`content` unchanged.
+
+**A dedicated template, not `standard`, same reasoning as Solutions.**
+`standard` cannot express seven ordered, individually-structured stages.
+`process.js` follows `home.js`/`solutions.js`'s per-section-container shape
+(see `docs/SOURCE_ARCHITECTURE.md`'s "Per-section containers" section) —
+reusing `.page-section`, `.container`, and `renderSectionHeader()`
+unmodified — rather than inventing a fourth page-composition pattern.
+
+**`.process-steps` (the homepage's 4-stage preview) is deliberately not
+reused or extended.** This section's own earlier PF-034 entry already
+states the reason: "the fuller wording belongs to the dedicated Process
+page (PF-051); reusing [`.process-steps`] here would duplicate page copy."
+`process.js` composes entirely new, page-specific markup instead —
+`src/styles/pages/_process.scss`, this project's second real file in the
+`pages/` ITCSS layer (after PF-050's `_solutions.scss`).
+
+**Canonical stage order is enforced, not just documented.**
+`src/pages/content-schema.js` exports `PROCESS_STAGE_NAMES` — the single
+place the 7-stage sequence is spelled out — and `checkProcessContent()`
+requires `stages.items[i].heading === PROCESS_STAGE_NAMES[i]` **at that
+exact index**, not merely membership in a set (unlike Solutions'
+unordered `SOLUTION_SECTION_IDS` allow-list, because sequence is the whole
+point of a lifecycle). Tests import the same exported constant rather than
+re-typing the sequence, so schema and tests can never silently drift apart.
+
+**The terminal stage's `next` is forbidden by property presence, not by
+value.** Support (the last stage) must not declare a `next` key at all.
+`hasOwnNextProperty()` checks `Object.hasOwn(stage, 'next')` — deliberately
+not a truthiness or `!= null` check — so `next: 'text'`, `next: null`,
+`next: undefined` (a real own property with an `undefined` value; a plain
+`!= null` check would wrongly treat this as "absent"), and `next: ''` are
+all rejected identically. Every other stage requires the opposite: a
+present, non-empty string. `src/content/pages/process.js`'s Support object
+simply never writes a `next:` line — the only form that passes. The
+template renderer (`renderStage()` in `process.js`) still uses a plain
+`if (stage.next)` truthiness check when deciding whether to render the
+"What Happens Next" pair; this stays correct because
+`src/pages/render.js` re-validates content through `checkProcessContent()`
+before any template runs (`docs/SOURCE_ARCHITECTURE.md`'s "Validation, at
+three points" — render-time re-validation), so by the time the template
+runs, presence and non-empty value already coincide by contract. The
+stricter `Object.hasOwn` check is a schema-layer concern; the
+template-layer check does not need to repeat it.
+
+**Shared `.process-facts` term/detail pattern, reused across two different
+sections.** Each stage's own facts (`whatHappens`/`clientInput`/`delivers`/
+`approval`/optional `next`) and the Working Together section's two grouped
+facts (Communication; Scope, Revisions & Change Requests) both render
+through the same `renderFacts()` helper and the same `.process-facts`
+markup/CSS — one `<dl>` pattern, not two near-identical ones.
+
+**Mobile-stack, desktop-grid — no full-width page collapsing into one
+narrow reading column.** `.process-facts` renders as plain stacked block
+flow (`dt` immediately above its own `dd`) below `spacing.$bp-md` (48em/
+768px), then switches to a 2-column term/detail CSS Grid at and above it
+(`grid-template-columns: minmax(12rem, 16rem) 1fr`), via Grid's own
+implicit row auto-placement — no wrapper `<div>` per pair, so DOM/reading/
+tab order is identical at every width; only visual placement changes.
+Because each stage owns its own separate `<dl>` nested inside its own
+`<li>`, this grid can never place two different stages' content side by
+side. `spacing.$bp-md` is the same already-defined, already-used named
+breakpoint `_site-header.scss`/`_site-nav.scss` consume (not a new
+literal). `.process-facts__term`/`.process-facts__detail`'s `margin` is
+declared once at the base (mobile) level and reset again inside the media
+query — the one property in this file that
+`tests/helpers/cascade-resolver.mjs`'s `resolveProperty()` cannot safely
+answer (it resolves the whole cascade, including media-nested rules, by
+ordinary specificity/source order, without modeling whether the media
+condition is true), so both values are asserted via direct regex against
+the compiled CSS in `tests/process-page-layout.test.mjs` instead — same
+reasoning already documented for `tests/solutions-page-layout.test.mjs`'s
+own sticky-anchor-offset check.
+
+**No anchors, unlike Solutions.** §10.2 carries no anchor/deep-link
+requirement (unlike §10.1's explicit "one page with anchored sections"),
+and the seven stages are read in fixed sequential order rather than looked
+up independently, so `process.js` has no jump navigation and no per-stage
+`id`/`scroll-margin-top` handling.
+
+**Heading-row alignment audited against PF-050's own defect, not just
+copied.** PF-050's visual review found `.solution-section__heading-row`
+centering its icon against an inflated box, because its flex child
+(`.section-header`) carried its own `margin-bottom` _and_ its own child
+heading carried a second, separately-trapped `margin-bottom` (a flex item
+establishes its own block-formatting context, so neither margin collapses
+away). `.process-detail__heading-row` avoids this defect class by
+construction rather than by a second scoped reset: it never wraps
+`.section-header` at all — the per-stage `<h3>` is the row's direct flex
+child, with `margin: 0` declared explicitly, so there is only one box with
+one (already-zero) margin, never two nested ones. The page's three real
+`<h2>`s (Stages, Working Together, closing CTA) still use
+`renderSectionHeader()`/`renderCta()` completely unmodified from their
+proven PF-041/PF-050 shape — the audit confirms nothing new interacts with
+`.section-header` at all.
+
+**Closing CTA heading level — `renderCta()` extended, not forked.** The
+Process page's three top-level sections (Stages, Working Together, closing
+CTA) are document-outline siblings — all three are `.page-section`s
+hanging directly off `<main>`, and Stages/Working Together each open with
+their own `<h2>`. Rendering the closing CTA with `renderCta()`'s prior
+fixed `<h3>` would have left it a level deeper than its sibling sections
+with no intervening `<h2>` of its own — an orphaned/skipped level, not
+valid heading hierarchy. `src/components/cta.js`'s `renderCta()` gained one
+new optional parameter, `headingLevel`, validated against a closed
+`Set([2, 3])` — 2 for a top-level sibling section's own heading (Process's
+closing CTA), 3 for the prior default (nested inside a page-level `<h2>`
+section, every other caller: `home.js`, `solutions.js`). The default is
+unchanged, so both prior callers keep rendering `<h3 class="cta__heading">`
+with zero code change. Any value outside `{2, 3}` throws before any HTML is
+built — the tag string is only ever computed as literally `"h2"` or `"h3"`
+after validation passes, so no input can reach the template-literal
+interpolation unvalidated (`tests/cta-render.test.mjs` proves this directly,
+including a script-injection-shaped `headingLevel` value). No `_cta.scss`
+change was needed: `.cta__heading` already declared its own explicit
+`font-size: var(--font-size-h2)`, fully decoupled from whichever tag
+renders it (the same pattern `.text-display` already uses for `<h1>`), so
+promoting the tag produces zero visual change.
+
+**No absolute or indefinite promises — corrected during planning, not
+after a defect report.** An early draft of this page's meta description
+("...and ongoing support") and intro paragraph ("...so you always know...")
+read as automatic/indefinite commitments; both were rewritten before
+implementation ("...and agreed post-launch support"; "...so you can see...").
+Support's own stage facts describe an agreed, project-scoped arrangement —
+no monitoring guarantee, no fixed check-in cadence, no permanent
+availability claim, and no package/price/SLA introduced as a substitute.
+
+**Content provenance.** The page heading is verbatim §3.3's Core Promise;
+the seven stage names are verbatim §10.2; the Stages/Working Together
+section headings and every stage's five facts are provisional copy pending
+AAA's content sign-off (§10.2 specifies what each facet must cover, not its
+exact wording); the closing CTA's action label/path is approved reuse,
+identical to `home.js`'s and `solutions.js`'s own closing CTA. No
+timelines, prices, guarantees, packages, or SLAs appear anywhere.
+
+**Test strategy.** `tests/process-render.test.mjs` mirrors
+`tests/solutions-render.test.mjs`'s approach: real `renderRoute()` output
+against the shared structural helpers, plus this page's own canonical-order
+assertion (rendered `<h3>` stage headings, in DOM order, equal
+`PROCESS_STAGE_NAMES`), the exact 34-fact-pair count (5 × 6 + 4, Support's
+missing "What Happens Next" proven absent specifically from its own
+extracted `<li>`, not just undercounted overall), and the corrected
+heading-hierarchy contract (exactly 3 `<h2>`s, exactly 7 `<h3>`s, zero
+`<h3 class="cta__heading">`). `tests/content-schema.test.mjs` proves both
+directions of the `next` invariant separately — a non-terminal stage
+missing `next` fails, and Support declaring `next` as a non-empty string,
+`null`, `undefined`, or `''` each independently fails, plus the valid
+"key fully absent" case passes. `tests/cta-render.test.mjs` is new: direct
+unit coverage of `renderCta()` itself (previously only exercised indirectly
+through page renderers), proving the default is unchanged and out-of-set
+`headingLevel` values throw. `tests/process-page-layout.test.mjs` extends
+the `sass.compile()` + `resolveProperty()` method to the new ol/li/h3/dl/dd
+resets, the sibling-divider rule, the forced-colors badge boundary, and the
+mobile/desktop `.process-facts` contract. Every deliberate-failure pass
+(canonical order, both `next`-invariant directions, three SCSS resets, and
+`renderCta()`'s heading-level validation) was run and confirmed correct
+before being restored — see `docs/DECISION_LOG.md`'s PF-051 entry.
 
 ## Accessibility rationale summary
 

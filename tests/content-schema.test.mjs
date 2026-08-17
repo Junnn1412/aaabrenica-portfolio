@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateContent } from '../src/pages/content-schema.js';
+import {
+  validateContent,
+  PROCESS_STAGE_NAMES,
+} from '../src/pages/content-schema.js';
 
 test('valid standard content produces no problems', () => {
   const route = { key: 'about', template: 'standard' };
@@ -442,6 +445,218 @@ test('solutions template requires a valid closing cta', () => {
   assert.ok(validateContent(route, missing).some((p) => p.includes('"cta"')));
 
   const badAction = validSolutionsContent();
+  badAction.cta.action = { label: '', path: 'not-safe' };
+  const problems = validateContent(route, badAction);
+  assert.ok(problems.some((p) => p.includes('cta.action')));
+});
+
+// PF-051 — a minimal but complete valid 'process' content fixture, matching
+// the shape src/content/pages/process.js uses for real: 7 stages in the
+// exact PROCESS_STAGE_NAMES order, "next" present on all but the last.
+function validProcessContent() {
+  return {
+    title: 'Process',
+    description: 'Process description.',
+    heading: 'Process heading.',
+    paragraphs: ['Intro paragraph.'],
+    stages: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      items: PROCESS_STAGE_NAMES.map((name, i) => {
+        const stage = {
+          heading: name,
+          whatHappens: 'What happens.',
+          clientInput: 'Client input.',
+          delivers: 'Delivers.',
+          approval: 'Approval.',
+        };
+        if (i < PROCESS_STAGE_NAMES.length - 1) {
+          stage.next = 'Next.';
+        }
+        return stage;
+      }),
+    },
+    workingTogether: {
+      heading: 'Working together heading.',
+      items: [
+        { heading: 'One', body: 'Body one.' },
+        { heading: 'Two', body: 'Body two.' },
+      ],
+    },
+    cta: {
+      heading: 'Closing heading',
+      body: 'Closing body.',
+      action: { label: "Let's Discuss Your Project", path: '/contact/' },
+    },
+  };
+}
+
+test('valid process content produces no problems', () => {
+  const route = { key: 'process', template: 'process' };
+  assert.deepEqual(validateContent(route, validProcessContent()), []);
+});
+
+test('process template requires exactly 7 stages', () => {
+  const route = { key: 'process', template: 'process' };
+  const tooFew = validProcessContent();
+  tooFew.stages.items = tooFew.stages.items.slice(0, 6);
+  assert.ok(
+    validateContent(route, tooFew).some((p) =>
+      p.includes('"stages.items" must be an array of exactly 7'),
+    ),
+  );
+});
+
+test('process template rejects a stage heading out of the canonical order', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  content.stages.items[0].heading = 'Discovery'; // wrong name
+  const problems = validateContent(route, content);
+  assert.ok(
+    problems.some(
+      (p) =>
+        p.includes('stages.items[0].heading') &&
+        p.includes('must be "Discover"') &&
+        p.includes('canonical order'),
+    ),
+  );
+});
+
+test('process template rejects two stages swapped out of order', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  // Swap Design (index 2) and Develop (index 3) headings, valid names but
+  // wrong positions.
+  const tmp = content.stages.items[2].heading;
+  content.stages.items[2].heading = content.stages.items[3].heading;
+  content.stages.items[3].heading = tmp;
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('stages.items[2].heading')));
+  assert.ok(problems.some((p) => p.includes('stages.items[3].heading')));
+});
+
+test('process template reports every missing required per-stage field', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  delete content.stages.items[0].whatHappens;
+  delete content.stages.items[0].clientInput;
+  delete content.stages.items[0].delivers;
+  delete content.stages.items[0].approval;
+  const problems = validateContent(route, content);
+  for (const field of ['whatHappens', 'clientInput', 'delivers', 'approval']) {
+    assert.ok(
+      problems.some((p) => p.includes(`stages.items[0].${field}`)),
+      `expected a problem mentioning "stages.items[0].${field}"`,
+    );
+  }
+});
+
+test('process template requires "next" on a non-terminal stage (Design, index 2)', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  delete content.stages.items[2].next;
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"stages.items[2].next"')));
+});
+
+// PF-051 — the four Support-specific cases AAA required proven separately:
+// a non-empty string, null, undefined, and an empty string must all fail,
+// exactly like a fully-present valid string would on any other stage. Only
+// a "next" key that is entirely absent (the valid fixture's own shape) may
+// pass for Support (index 6).
+
+test('process template rejects Support (index 6) declaring next as a non-empty string', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  content.stages.items[6].next = 'Some non-empty string';
+  const problems = validateContent(route, content);
+  assert.ok(
+    problems.some(
+      (p) =>
+        p.includes('"stages.items[6].next"') && p.includes('must be omitted'),
+    ),
+  );
+});
+
+test('process template rejects Support (index 6) declaring next as null', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  content.stages.items[6].next = null;
+  const problems = validateContent(route, content);
+  assert.ok(
+    problems.some(
+      (p) =>
+        p.includes('"stages.items[6].next"') && p.includes('must be omitted'),
+    ),
+  );
+});
+
+test('process template rejects Support (index 6) declaring next as undefined (a real own property)', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  content.stages.items[6].next = undefined;
+  // Guard the fixture itself: an object literal assigning `next: undefined`
+  // must still be a real own property, or this test would silently prove
+  // nothing.
+  assert.ok(Object.hasOwn(content.stages.items[6], 'next'));
+  const problems = validateContent(route, content);
+  assert.ok(
+    problems.some(
+      (p) =>
+        p.includes('"stages.items[6].next"') && p.includes('must be omitted'),
+    ),
+  );
+});
+
+test('process template rejects Support (index 6) declaring next as an empty string', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  content.stages.items[6].next = '';
+  const problems = validateContent(route, content);
+  assert.ok(
+    problems.some(
+      (p) =>
+        p.includes('"stages.items[6].next"') && p.includes('must be omitted'),
+    ),
+  );
+});
+
+test('process template accepts Support (index 6) with no next key at all', () => {
+  const route = { key: 'process', template: 'process' };
+  const content = validProcessContent();
+  assert.ok(!Object.hasOwn(content.stages.items[6], 'next'));
+  const problems = validateContent(route, content);
+  assert.ok(!problems.some((p) => p.includes('stages.items[6].next')));
+});
+
+test('process template requires exactly 2 workingTogether items', () => {
+  const route = { key: 'process', template: 'process' };
+
+  const tooFew = validProcessContent();
+  tooFew.workingTogether.items = tooFew.workingTogether.items.slice(0, 1);
+  assert.ok(
+    validateContent(route, tooFew).some((p) =>
+      p.includes('"workingTogether.items" must be an array of exactly 2'),
+    ),
+  );
+
+  const tooMany = validProcessContent();
+  tooMany.workingTogether.items.push({ heading: 'Three', body: 'Body three.' });
+  assert.ok(
+    validateContent(route, tooMany).some((p) =>
+      p.includes('"workingTogether.items" must be an array of exactly 2'),
+    ),
+  );
+});
+
+test('process template requires a valid closing cta', () => {
+  const route = { key: 'process', template: 'process' };
+
+  const missing = validProcessContent();
+  delete missing.cta;
+  assert.ok(validateContent(route, missing).some((p) => p.includes('"cta"')));
+
+  const badAction = validProcessContent();
   badAction.cta.action = { label: '', path: 'not-safe' };
   const problems = validateContent(route, badAction);
   assert.ok(problems.some((p) => p.includes('cta.action')));

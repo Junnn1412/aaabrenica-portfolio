@@ -7,11 +7,24 @@
 // outline rule of its own — the action reuses .btn's existing global ring.
 import { escapeHtml } from '../pages/escape.js';
 
-export function renderCta({ heading, body, action }) {
+// PF-051 — closed set: 2 (a top-level sibling section's own heading, e.g.
+// the Process page's closing CTA) and 3 (nested inside a page-level h2
+// section — every prior caller: home.js, solutions.js). Never interpolate
+// an unvalidated value into the tag string; the Set membership check below
+// is what makes that safe, not caller discipline.
+const ALLOWED_CTA_HEADING_LEVELS = new Set([2, 3]);
+
+export function renderCta({ heading, body, action, headingLevel = 3 }) {
+  if (!ALLOWED_CTA_HEADING_LEVELS.has(headingLevel)) {
+    throw new Error(
+      `renderCta: headingLevel must be one of ${[...ALLOWED_CTA_HEADING_LEVELS].join(', ')}, received ${JSON.stringify(headingLevel)}`,
+    );
+  }
+  const tag = `h${headingLevel}`;
   const bodyMarkup = body ? `<p class="cta__body">${escapeHtml(body)}</p>` : '';
   return (
     `<div class="cta">` +
-    `<h3 class="cta__heading">${escapeHtml(heading)}</h3>` +
+    `<${tag} class="cta__heading">${escapeHtml(heading)}</${tag}>` +
     bodyMarkup +
     `<a class="btn btn--primary" href="${escapeHtml(action.path)}">${escapeHtml(action.label)}</a>` +
     `</div>`

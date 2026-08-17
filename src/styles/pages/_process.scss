@@ -1,0 +1,142 @@
+// PF-051 — Process-page-only structural hooks. Page-specific (ITCSS
+// `pages/` layer, second real file after `_solutions.scss`), not a
+// reusable design-system component: no showcase specimen, no second
+// caller expected. Reuses existing tokens/breakpoints only.
+@use '../settings/spacing';
+
+// Resets the generic `ul, ol { max-width: var(--width-reading); margin: 0 0
+// var(--space-4); padding-left: var(--space-5); }` prose rule
+// (elements/_body-copy.scss) — same fix, same reasoning as
+// .process-steps/.trust-list/.engagement-options/.solutions-jump-nav__list.
+.process-detail {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Resets the generic `li { margin-bottom: var(--space-2); }` prose rule.
+// Inter-stage rhythm comes from padding-block + the sibling divider below,
+// not li margin — same spacing/divider split as .page-section's own.
+.process-detail__stage {
+  margin: 0;
+  padding-block: var(--space-7);
+}
+
+.process-detail__stage:first-child {
+  padding-top: 0;
+}
+
+.process-detail__stage + .process-detail__stage {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+// Deliberately NOT built from .section-header (used only for the page's
+// three real <h2>s — Stages, Working Together, closing CTA — never for a
+// per-stage <h3>), so PF-050's icon/heading vertical-misalignment defect
+// cannot recur here: that defect came from a flex item (.section-header)
+// carrying its own margin-bottom AND its child heading carrying a second,
+// separately-trapped margin-bottom. Here the <h3> itself is the direct
+// flex item, with margin: 0 declared explicitly below — one box, one
+// margin, already zero, so there is no second nested margin to trap.
+.process-detail__heading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+
+// Decorative numbered badge, same idiom as .process-steps__number — not a
+// CSS counter. Ordinal semantics come from the real <ol>/<li> structure,
+// not from this badge's visible digit.
+.process-detail__number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-2);
+  color: var(--color-accent-text);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  font-weight: 600;
+}
+
+.process-detail__heading {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-heading);
+}
+
+@media (forced-colors: active) {
+  // Same reasoning as .process-steps__number: its only boundary today is a
+  // background-color fill, which forced-colors drops.
+  .process-detail__number {
+    border: 1px solid CanvasText;
+    background-color: transparent;
+  }
+}
+
+// Shared by both a stage's own facts and the Working Together section's
+// facts. Mobile-default: plain stacked flow (no grid) — dt immediately
+// above its own dd, in DOM order, spaced by the dt's own top margin so a
+// new pair reads as visually grouped. No project generic rule exists for
+// dl/dt/dd at all (confirmed against elements/_body-copy.scss); the
+// browser default `dl { margin: 1em 0 }` is reset here explicitly.
+.process-facts {
+  max-width: none;
+  margin: var(--space-6) 0 0;
+}
+
+.process-facts__term {
+  margin: var(--space-5) 0 var(--space-2);
+  color: var(--color-accent-text);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-label);
+  text-transform: uppercase;
+}
+
+.process-facts__term:first-of-type {
+  margin-top: 0;
+}
+
+// Resets the browser default `dd { margin-inline-start: 40px }` — dd has
+// no project generic rule either, so this is a real UA-stylesheet reset.
+// max-width caps line length even once the desktop grid (below) hands dd a
+// wider track than 68ch on very wide viewports.
+.process-facts__detail {
+  max-width: var(--width-reading);
+  margin: 0 0 var(--space-4);
+}
+
+// Desktop+: term/detail 2-column grid via CSS Grid's implicit row
+// auto-placement. .process-facts' children stay <dt>, <dd>, <dt>, <dd>… in
+// that exact DOM order — declaring exactly 2 grid-template-columns makes
+// the browser wrap each pair onto its own grid row automatically (dt1 ->
+// row1/col1, dd1 -> row1/col2, dt2 -> row2/col1, …) with zero markup
+// change and zero effect on DOM/reading/tab order, which CSS Grid
+// placement never alters. Because every stage owns its own separate <dl>
+// nested inside its own <li>, this grid can never place two different
+// stages' content side by side — the column split only ever operates
+// within one stage's own facts.
+@media (min-width: spacing.$bp-md) {
+  .process-facts {
+    display: grid;
+    grid-template-columns: minmax(12rem, 16rem) 1fr;
+    gap: var(--space-4) var(--space-6);
+    align-items: start;
+  }
+
+  .process-facts__term {
+    margin: 0;
+  }
+
+  .process-facts__detail {
+    margin: 0;
+  }
+}

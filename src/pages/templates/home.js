@@ -1,4 +1,4 @@
-// PF-041 — the homepage template. Unlike standard/listing/case-study (one
+// PF-041 — the homepage template. Unlike standard/case-study (one
 // <div class="container"> wrapping the whole main), each section here owns
 // its own inner .container, per docs/DECISION_LOG.md's PF-040 entry, which
 // names this exact shape as the reason .container became template-owned
@@ -80,7 +80,7 @@ function renderCapabilitiesSection(capabilities) {
   return (
     `<section class="page-section"><div class="container">` +
     renderSectionHeader(capabilities) +
-    renderCapabilityCards(capabilities.items) +
+    renderCapabilityCards(capabilities.items, 3) +
     `</div></section>`
   );
 }
@@ -89,7 +89,7 @@ function renderProjectsSection(projects) {
   return (
     `<section class="page-section"><div class="container">` +
     renderSectionHeader(projects) +
-    renderProjectCards(projects.items) +
+    renderProjectCards(projects.items, 3) +
     `<p><a href="${escapeHtml(projects.link.path)}">${escapeHtml(projects.link.label)}</a></p>` +
     `</div></section>`
   );

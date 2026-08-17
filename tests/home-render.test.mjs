@@ -70,6 +70,19 @@ test('home: capability cards satisfy the shared list/pairing contract with all 6
     linkClass: 'capability-card__link',
     pairedClass: 'capability-card__arrow',
   });
+  // PF-052 accessibility correction: capability cards sit directly under
+  // this section's own <h2>, so their headings must be <h3>, not the
+  // component's prior unconditional <h4>.
+  assert.equal(
+    [...main.matchAll(/<h3 class="capability-card__heading">/g)].length,
+    6,
+    'expected 6 capability-card <h3>s',
+  );
+  assert.equal(
+    [...main.matchAll(/<h4 class="capability-card__heading">/g)].length,
+    0,
+    'expected zero capability-card <h4>s',
+  );
 });
 
 test('home: project cards satisfy the shared list/pairing contract with all 3 real items, exactly one featured', () => {
@@ -107,6 +120,19 @@ test('home: project cards satisfy the shared list/pairing contract with all 3 re
     categoryCount,
     1,
     'expected exactly one project card with a category tag',
+  );
+  // PF-052 accessibility correction: project cards sit directly under this
+  // section's own <h2>, so their headings must be <h3>, not the
+  // component's prior unconditional <h4>.
+  assert.equal(
+    [...main.matchAll(/<h3 class="project-card__heading">/g)].length,
+    3,
+    'expected 3 project-card <h3>s',
+  );
+  assert.equal(
+    [...main.matchAll(/<h4 class="project-card__heading">/g)].length,
+    0,
+    'expected zero project-card <h4>s',
   );
 });
 

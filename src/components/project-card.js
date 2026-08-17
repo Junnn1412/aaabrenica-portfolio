@@ -9,6 +9,16 @@
 // content, but no home.js content currently populates them.
 import { escapeHtml } from '../pages/escape.js';
 
+// PF-052 — closed set: 3 (nested directly under a page-level h2 section —
+// every real caller today: home.js's Projects section, work.js's Projects
+// section) and 4 (the prior unconditional default, preserved so the
+// Gate-C showcase's static markup and any future unchanged caller keep
+// their current contract). Never interpolate an unvalidated value into
+// the tag string — the Set membership check below is what makes that
+// safe. headingLevel is a template-authored render parameter, never
+// content-driven.
+const ALLOWED_PROJECT_CARD_HEADING_LEVELS = new Set([3, 4]);
+
 function renderProjectCard({
   featured = false,
   category,
@@ -16,7 +26,14 @@ function renderProjectCard({
   summary,
   tags,
   link,
+  headingLevel = 4,
 }) {
+  if (!ALLOWED_PROJECT_CARD_HEADING_LEVELS.has(headingLevel)) {
+    throw new Error(
+      `renderProjectCard: headingLevel must be one of ${[...ALLOWED_PROJECT_CARD_HEADING_LEVELS].join(', ')}, received ${JSON.stringify(headingLevel)}`,
+    );
+  }
+  const headingTag = `h${headingLevel}`;
   const cardClass = featured
     ? 'project-card project-card--featured'
     : 'project-card';
@@ -47,7 +64,7 @@ function renderProjectCard({
   const content =
     `<div class="project-card__content">` +
     categoryMarkup +
-    `<h4 class="project-card__heading">${headingInner}</h4>` +
+    `<${headingTag} class="project-card__heading">${headingInner}</${headingTag}>` +
     summaryMarkup +
     tagsMarkup +
     actionMarkup +
@@ -69,9 +86,11 @@ function needsFeaturedPairLayout(items) {
   return featuredCount === 1 && items.length - featuredCount === 2;
 }
 
-export function renderProjectCards(items) {
+export function renderProjectCards(items, headingLevel = 4) {
   const listClass = needsFeaturedPairLayout(items)
     ? 'project-cards project-cards--featured-pair'
     : 'project-cards';
-  return `<ul class="${listClass}">${items.map(renderProjectCard).join('')}</ul>`;
+  return `<ul class="${listClass}">${items
+    .map((item) => renderProjectCard({ ...item, headingLevel }))
+    .join('')}</ul>`;
 }

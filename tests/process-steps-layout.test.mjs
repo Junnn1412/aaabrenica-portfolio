@@ -4,6 +4,11 @@ import * as sass from 'sass';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { parseRules, resolveProperty } from './helpers/cascade-resolver.mjs';
+import {
+  expectSingleList,
+  expectSingleSectionAction,
+  expectAriaHiddenBadges,
+} from './helpers/component-markup.mjs';
 
 // Compiles the real source of truth, same method as
 // tests/capability-card-layout.test.mjs / tests/project-card-layout.test.mjs.
@@ -117,86 +122,36 @@ function getProcessStepsSection() {
   return section[0];
 }
 
+// PF-041 — shared with tests/home-render.test.mjs's real renderer-output
+// check via tests/helpers/component-markup.mjs (docs/DECISION_LOG.md).
 test('the showcase has exactly one <ol class="process-steps"> with exactly four .process-steps__step items, each with a real <ol> parent', () => {
   const section = getProcessStepsSection();
-  const lists = [
-    ...section.matchAll(/<ol class="process-steps">[\s\S]*?<\/ol>/g),
-  ];
-  assert.equal(
-    lists.length,
-    1,
-    `expected exactly 1 <ol class="process-steps">, found ${lists.length}`,
-  );
-
-  const stepsInsideList = [
-    ...lists[0][0].matchAll(/<li class="process-steps__step">/g),
-  ].length;
-  const stepsAnywhereInSection = [
-    ...section.matchAll(/<li class="process-steps__step">/g),
-  ].length;
-  assert.equal(
-    stepsInsideList,
-    4,
-    `expected 4 steps, found ${stepsInsideList}`,
-  );
-  assert.equal(
-    stepsInsideList,
-    stepsAnywhereInSection,
-    'every .process-steps__step must be inside the <ol class="process-steps">',
-  );
+  expectSingleList(section, {
+    listTag: 'ol',
+    listClass: 'process-steps',
+    itemClass: 'process-steps__step',
+    count: 4,
+  });
 });
 
 test('the process-steps specimen carries exactly one interactive element: a .process-steps__action link that is not a descendant of the <ol> or any <li>', () => {
   const section = getProcessStepsSection();
-  const links = [...section.matchAll(/<a\s/g)].length;
-  assert.equal(
-    links,
-    1,
-    `expected exactly one <a> in the process-steps section, found ${links}`,
-  );
-
-  // Not merely "not inside an <li>" — checks the link is entirely outside
-  // the <ol>...</ol> substring, so it cannot be nested at any depth inside
-  // the list (fixing the defect where a same-DOM-position sibling link
-  // still visually read as belonging to the first grid item).
-  const list = section.match(/<ol class="process-steps">[\s\S]*?<\/ol>/);
-  assert.ok(list, '<ol class="process-steps"> not found');
-  assert.doesNotMatch(
-    list[0],
-    /<a\s/,
-    'the section-level link must not be a descendant of <ol class="process-steps"> at any depth',
-  );
-
-  const action = section.match(
-    /<p class="process-steps__action"><a href="\/process\/">[^<]*<\/a><\/p>/,
-  );
-  assert.ok(
-    action,
-    'expected the link to be wrapped in <p class="process-steps__action">',
-  );
-  assert.ok(
-    section.indexOf(list[0]) + list[0].length <= section.indexOf(action[0]),
-    'the .process-steps__action element must appear after the closing </ol>, not before or inside it',
-  );
+  const listHtml = section.match(/<ol class="process-steps">[\s\S]*?<\/ol>/);
+  assert.ok(listHtml, '<ol class="process-steps"> not found');
+  expectSingleSectionAction(section, {
+    listHtml: listHtml[0],
+    actionClass: 'process-steps__action',
+    linkHref: '/process/',
+    linkText: 'See the Full Process',
+  });
 });
 
 test('.process-steps__number carries aria-hidden="true" on every step (decorative badge, not the source of ordinal semantics)', () => {
   const section = getProcessStepsSection();
-  const numbers = [
-    ...section.matchAll(/<span class="process-steps__number"([^>]*)>/g),
-  ];
-  assert.equal(
-    numbers.length,
-    4,
-    `expected 4 number badges, found ${numbers.length}`,
-  );
-  for (const [index, match] of numbers.entries()) {
-    assert.match(
-      match[1],
-      /aria-hidden="true"/,
-      `step #${index + 1}'s number badge must carry aria-hidden="true"`,
-    );
-  }
+  expectAriaHiddenBadges(section, {
+    badgeClass: 'process-steps__number',
+    count: 4,
+  });
 });
 
 test('multi-column layout is gated behind two plain media queries (2 columns, then 4), no nested CSS math functions', () => {

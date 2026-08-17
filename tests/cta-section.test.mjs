@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as sass from 'sass';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
+import { expectCtaPanels } from './helpers/component-markup.mjs';
 
 // No cascade-resolver here — .cta is not list-based, so the ul/ol/li reset
 // defect class the resolver exists to catch does not apply. See
@@ -26,32 +27,11 @@ function getCtaSection() {
   return section[0];
 }
 
-test('the showcase has exactly two .cta panels (with and without supporting copy)', () => {
+// PF-041 — shared with tests/home-render.test.mjs's real renderer-output
+// check via tests/helpers/component-markup.mjs (docs/DECISION_LOG.md).
+test('the showcase has exactly two .cta panels (with and without supporting copy), each with exactly one interactive element', () => {
   const section = getCtaSection();
-  const panels = [...section.matchAll(/<div class="cta">[\s\S]*?<\/div>/g)];
-  assert.equal(
-    panels.length,
-    2,
-    `expected 2 .cta panels, found ${panels.length}`,
-  );
-});
-
-test('every .cta panel carries exactly one interactive element (the .btn action link)', () => {
-  const section = getCtaSection();
-  const panels = [...section.matchAll(/<div class="cta">[\s\S]*?<\/div>/g)];
-  for (const [index, panel] of panels.entries()) {
-    const links = [...panel[0].matchAll(/<a\s/g)].length;
-    assert.equal(
-      links,
-      1,
-      `panel #${index + 1}: expected exactly one <a>, found ${links}`,
-    );
-    assert.match(
-      panel[0],
-      /<a class="btn btn--primary"/,
-      `panel #${index + 1}: expected the action link to use .btn.btn--primary`,
-    );
-  }
+  expectCtaPanels(section, { count: 2, actionClass: 'btn btn--primary' });
 });
 
 test('the second .cta panel omits .cta__body entirely rather than rendering an empty element', () => {

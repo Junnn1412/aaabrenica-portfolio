@@ -8,6 +8,10 @@ import {
   parseRules,
   resolveProperty,
 } from './helpers/cascade-resolver.mjs';
+import {
+  expectItemsHaveListParent,
+  expectLinkPairing,
+} from './helpers/component-markup.mjs';
 
 // Compiles the real source of truth, same method (and the same shared
 // resolver — this is its second real caller, docs/DECISION_LOG.md) as
@@ -124,6 +128,58 @@ test('multi-column layout is gated behind a single, plain media query using auto
   );
 });
 
+// PF-041 visual-review defect fix: the default auto-fit grid resolves to 3
+// columns at widths wide enough (1440/1920px), but with exactly one
+// featured card (spanning the full row) plus two secondary cards, that
+// leaves a third column empty — the section reads as incomplete
+// (docs/DECISION_LOG.md). `.project-cards--featured-pair` forces a fixed
+// 2-column grid instead, so the two secondary cards always balance,
+// regardless of how wide the container is.
+test('.project-cards--featured-pair forces a fixed 2-column grid at the same >=36em breakpoint, overriding the default auto-fit/minmax', () => {
+  const block = css.match(
+    /@media \(width\s*>=\s*36em\)\s*\{\s*\.project-cards--featured-pair\s*\{([^}]*)\}\s*\}/,
+  );
+  assert.ok(
+    block,
+    'expected exactly one @media (width >= 36em) block overriding .project-cards--featured-pair',
+  );
+  assert.match(
+    block[1],
+    /grid-template-columns:\s*repeat\(2,\s*1fr\);/,
+    'expected a fixed repeat(2, 1fr) — not auto-fit/minmax — so the column count never depends on container width',
+  );
+});
+
+// A fixed repeat(2, 1fr) has no third track to leave empty at any width —
+// this asserts that directly against the real compiled tokens rather than
+// re-deriving the same auto-fit column-count math the base grid already
+// has its own simulation for (above).
+test('.project-cards--featured-pair never resolves to more than 2 columns at any required review width', () => {
+  const getToken = (name) => {
+    const match = css.match(new RegExp(`--${name}:\\s*([^;]+);`));
+    assert.ok(match, `token --${name} not found in compiled CSS`);
+    return match[1].trim();
+  };
+  const containerWideRem = parseFloat(getToken('container-wide'));
+  assert.ok(
+    containerWideRem > 0,
+    'sanity check: --container-wide must be a positive rem value',
+  );
+  // repeat(2, 1fr) is a fixed track count declared directly in the
+  // compiled CSS (verified above) — it cannot resolve to a different
+  // number of columns at any width, so no per-width simulation is needed
+  // to prove "never 3 columns"; this test documents that invariant
+  // explicitly rather than leaving it implicit.
+  const block = css.match(
+    /@media \(width\s*>=\s*36em\)\s*\{\s*\.project-cards--featured-pair\s*\{([^}]*)\}\s*\}/,
+  )[1];
+  assert.doesNotMatch(
+    block,
+    /auto-fit|repeat\(3/,
+    'expected no auto-fit or 3-column track in .project-cards--featured-pair at any width',
+  );
+});
+
 test('.project-card--featured spans every grid column, staying inside the same list as secondary cards rather than a second one', () => {
   const rule = css.match(/\.project-card--featured\s*\{([^}]*)\}/);
   assert.ok(rule, '.project-card--featured rule not found');
@@ -152,8 +208,11 @@ function getProjectCardsSection() {
 
 test('every <ul class="project-cards"> in the showcase is well-formed: equal open/close tags for li, div, svg, span, h4, and p', () => {
   const section = getProjectCardsSection();
+  // [^"]* tolerates the real-cards list's added .project-cards--featured-pair
+  // modifier class (PF-041 defect fix, docs/DECISION_LOG.md) — the demo
+  // specimens list has no featured card, so it keeps the bare class.
   const lists = [
-    ...section.matchAll(/<ul class="project-cards">[\s\S]*?<\/ul>/g),
+    ...section.matchAll(/<ul class="project-cards[^"]*">[\s\S]*?<\/ul>/g),
   ];
   assert.equal(
     lists.length,
@@ -179,55 +238,24 @@ test('every <ul class="project-cards"> in the showcase is well-formed: equal ope
   }
 });
 
+// PF-041 — shared with tests/home-render.test.mjs's real renderer-output
+// check via tests/helpers/component-markup.mjs (docs/DECISION_LOG.md).
 test('every .project-card / .project-card--featured <li> has a <ul class="project-cards"> as its real parent', () => {
   const section = getProjectCardsSection();
-  const lists = [
-    ...section.matchAll(/<ul class="project-cards">([\s\S]*?)<\/ul>/g),
-  ];
-  const cardsInsideLists = lists.reduce(
-    (total, list) =>
-      total + [...list[1].matchAll(/<li class="project-card[" ]/g)].length,
-    0,
-  );
-  const cardsAnywhereInSection = [
-    ...section.matchAll(/<li class="project-card[" ]/g),
-  ].length;
-  assert.equal(
-    cardsInsideLists,
-    cardsAnywhereInSection,
-    `found ${cardsAnywhereInSection} .project-card <li> elements in the section but only ${cardsInsideLists} are actually inside a <ul class="project-cards"> — at least one card <li> has an invalid/missing list parent`,
-  );
-  assert.ok(
-    cardsAnywhereInSection > 0,
-    'expected at least one .project-card specimen in the section',
-  );
+  expectItemsHaveListParent(section, {
+    listTag: 'ul',
+    listClass: 'project-cards',
+    itemClass: 'project-card',
+  });
 });
 
 test('every specimen with .project-card__link carries exactly one .project-card__action, and vice versa', () => {
   const section = getProjectCardsSection();
-  const cards = [
-    ...section.matchAll(/<li class="project-card[^"]*">[\s\S]*?<\/li>/g),
-  ];
-  assert.ok(cards.length > 0, 'expected at least one card specimen');
-
-  for (const [index, card] of cards.entries()) {
-    const hasLink = /class="project-card__link"/.test(card[0]);
-    const actionCount = [...card[0].matchAll(/class="project-card__action"/g)]
-      .length;
-    if (hasLink) {
-      assert.equal(
-        actionCount,
-        1,
-        `card #${index + 1} has .project-card__link but ${actionCount} .project-card__action element(s) — every linked card must carry exactly one`,
-      );
-    } else {
-      assert.equal(
-        actionCount,
-        0,
-        `card #${index + 1} has no .project-card__link but carries .project-card__action — a non-interactive card must have neither`,
-      );
-    }
-  }
+  expectLinkPairing(section, {
+    cardClass: 'project-card',
+    linkClass: 'project-card__link',
+    pairedClass: 'project-card__action',
+  });
 });
 
 test('non-interactive specimen has neither .project-card__link nor .project-card__action', () => {

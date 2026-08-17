@@ -1058,9 +1058,16 @@
           reworded). Business Workflow System is shown as the featured specimen arbitrarily, for demonstration
           only — this is not a production or editorial decision.
         </p>
+        <p>
+          This specimen also carries <code>.project-cards--featured-pair</code>: with exactly one featured card
+          and two secondary cards, the default <code>auto-fit</code>/<code>minmax()</code> grid resolves to 3
+          columns at wide viewports (it only knows the container's width, not that the featured card spans every
+          column), leaving the third column empty once the two secondary cards are placed. This modifier forces a
+          fixed 2-column grid instead, so the pair always balances — see <code>docs/DECISION_LOG.md</code>.
+        </p>
 
         <h3>The three real projects</h3>
-        <ul class="project-cards">
+        <ul class="project-cards project-cards--featured-pair">
           <li class="project-card project-card--featured">
             <div class="project-card__frame">
               <span class="project-card__frame-dots" aria-hidden="true"></span>

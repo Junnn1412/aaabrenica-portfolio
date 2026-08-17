@@ -4,6 +4,11 @@ import * as sass from 'sass';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { resolveProperty } from './helpers/cascade-resolver.mjs';
+import {
+  expectSingleList,
+  expectSingleSectionAction,
+  expectDecorativeIcons,
+} from './helpers/component-markup.mjs';
 
 // Same cascade-resolver method as tests/process-steps-layout.test.mjs. No
 // repeated deliberate-failure pass here — the ul/li reset defect class is
@@ -59,73 +64,31 @@ function getTrustListSection() {
   return section[0];
 }
 
+// PF-041 — shared with tests/home-render.test.mjs's real renderer-output
+// check via tests/helpers/component-markup.mjs (docs/DECISION_LOG.md).
 test('the showcase has exactly one <ul class="trust-list"> with exactly three .trust-list__item entries, each with a real <ul> parent', () => {
   const section = getTrustListSection();
-  const lists = [...section.matchAll(/<ul class="trust-list">[\s\S]*?<\/ul>/g)];
-  assert.equal(
-    lists.length,
-    1,
-    `expected exactly 1 <ul class="trust-list">, found ${lists.length}`,
-  );
-
-  const itemsInsideList = [
-    ...lists[0][0].matchAll(/<li class="trust-list__item">/g),
-  ].length;
-  const itemsAnywhereInSection = [
-    ...section.matchAll(/<li class="trust-list__item">/g),
-  ].length;
-  assert.equal(
-    itemsInsideList,
-    3,
-    `expected 3 items, found ${itemsInsideList}`,
-  );
-  assert.equal(itemsInsideList, itemsAnywhereInSection);
+  expectSingleList(section, {
+    listTag: 'ul',
+    listClass: 'trust-list',
+    itemClass: 'trust-list__item',
+    count: 3,
+  });
 });
 
 test('the trust-indicators specimen carries exactly one interactive element: a .trust-list__action link that is not a descendant of the <ul> or any <li>', () => {
   const section = getTrustListSection();
-  const links = [...section.matchAll(/<a\s/g)].length;
-  assert.equal(links, 1, `expected exactly one <a>, found ${links}`);
-
-  // Not merely "not inside an <li>" — checks the link is entirely outside
-  // the <ul>...</ul> substring, so it cannot be nested at any depth inside
-  // the list (fixing the defect where a same-DOM-position sibling link
-  // still visually read as belonging to the first grid item).
-  const list = section.match(/<ul class="trust-list">[\s\S]*?<\/ul>/);
-  assert.ok(list, '<ul class="trust-list"> not found');
-  assert.doesNotMatch(
-    list[0],
-    /<a\s/,
-    'the section-level link must not be a descendant of <ul class="trust-list"> at any depth',
-  );
-
-  const action = section.match(
-    /<p class="trust-list__action"><a href="\/about\/">[^<]*<\/a><\/p>/,
-  );
-  assert.ok(
-    action,
-    'expected the link to be wrapped in <p class="trust-list__action">',
-  );
-  assert.ok(
-    section.indexOf(list[0]) + list[0].length <= section.indexOf(action[0]),
-    'the .trust-list__action element must appear after the closing </ul>, not before or inside it',
-  );
+  const listHtml = section.match(/<ul class="trust-list">[\s\S]*?<\/ul>/);
+  assert.ok(listHtml, '<ul class="trust-list"> not found');
+  expectSingleSectionAction(section, {
+    listHtml: listHtml[0],
+    actionClass: 'trust-list__action',
+    linkHref: '/about/',
+    linkText: 'Learn About My Approach',
+  });
 });
 
 test('every trust-list icon <svg> is decorative: aria-hidden="true" and focusable="false"', () => {
   const section = getTrustListSection();
-  const icons = [...section.matchAll(/<svg([^>]*)>/g)];
-  assert.equal(icons.length, 3, `expected 3 icons, found ${icons.length}`);
-  for (const [index, match] of icons.entries()) {
-    assert.match(
-      match[1],
-      /aria-hidden="true"/,
-      `icon #${index + 1} missing aria-hidden="true"`,
-    );
-    assert.match(
-      match[1],
-      /focusable="false"/,
-      `icon #${index + 1} missing focusable="false"`,
-    );
-  }
+  expectDecorativeIcons(section, { count: 3 });
 });

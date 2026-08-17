@@ -23,7 +23,7 @@ export const routes = [
     path: '/process/',
     entry: 'process/index.html',
     navKey: 'process',
-    template: 'standard',
+    template: 'process',
     content: 'process',
   },
   {

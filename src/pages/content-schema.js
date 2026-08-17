@@ -113,6 +113,32 @@ const SOLUTION_SECTION_IDS = [
   'support-maintenance',
 ];
 
+// PF-051 helpers below, used only by the 'process' template branch.
+
+// Single source of truth for the canonical 7-stage lifecycle order (§10.2).
+// Exported so tests assert against this same array rather than re-typing
+// the sequence independently.
+export const PROCESS_STAGE_NAMES = [
+  'Discover',
+  'Define',
+  'Design',
+  'Develop',
+  'Test',
+  'Deploy',
+  'Support',
+];
+
+// Property-presence check, not a truthiness/length check — Support (the
+// terminal stage) must not declare a "next" key at all, including
+// next: null/undefined/''. A plain `stage.next != null` check would wrongly
+// accept `next: undefined` as "absent" in some callers' minds even though
+// it's a real own property; Object.hasOwn is unambiguous.
+function hasOwnNextProperty(stage) {
+  return (
+    stage != null && typeof stage === 'object' && Object.hasOwn(stage, 'next')
+  );
+}
+
 function checkHomeContent(content, problems) {
   const c = content;
 
@@ -348,6 +374,101 @@ function checkSolutionsContent(content, problems) {
   checkCtaShape(c.cta, 'cta', problems);
 }
 
+function checkProcessContent(content, problems) {
+  const c = content;
+
+  if (c.stages == null || typeof c.stages !== 'object') {
+    problems.push('"stages" is required for the process page');
+  } else {
+    checkSectionHeader(c.stages, 'stages', problems);
+    if (
+      checkExactArray(
+        c.stages.items,
+        'stages.items',
+        PROCESS_STAGE_NAMES.length,
+        problems,
+      )
+    ) {
+      c.stages.items.forEach((stage, i) => {
+        const expectedName = PROCESS_STAGE_NAMES[i];
+        if (stage?.heading !== expectedName) {
+          problems.push(
+            `"stages.items[${i}].heading" must be "${expectedName}" — stages must appear in the canonical order ${PROCESS_STAGE_NAMES.join(' → ')}`,
+          );
+        }
+        checkNonEmptyString(
+          stage?.whatHappens,
+          `stages.items[${i}].whatHappens`,
+          problems,
+        );
+        checkNonEmptyString(
+          stage?.clientInput,
+          `stages.items[${i}].clientInput`,
+          problems,
+        );
+        checkNonEmptyString(
+          stage?.delivers,
+          `stages.items[${i}].delivers`,
+          problems,
+        );
+        checkNonEmptyString(
+          stage?.approval,
+          `stages.items[${i}].approval`,
+          problems,
+        );
+
+        const isLastStage = i === PROCESS_STAGE_NAMES.length - 1;
+        if (isLastStage) {
+          if (hasOwnNextProperty(stage)) {
+            problems.push(
+              `"stages.items[${i}].next" must be omitted entirely — ${expectedName} is the terminal stage and must not declare a "next" property at all (found one; even null, undefined, or an empty string is rejected)`,
+            );
+          }
+        } else if (
+          !hasOwnNextProperty(stage) ||
+          typeof stage.next !== 'string' ||
+          stage.next.length === 0
+        ) {
+          problems.push(`"stages.items[${i}].next" must be a non-empty string`);
+        }
+      });
+    }
+  }
+
+  if (c.workingTogether == null || typeof c.workingTogether !== 'object') {
+    problems.push('"workingTogether" is required for the process page');
+  } else {
+    checkNonEmptyString(
+      c.workingTogether.heading,
+      'workingTogether.heading',
+      problems,
+    );
+    if (
+      checkExactArray(
+        c.workingTogether.items,
+        'workingTogether.items',
+        2,
+        problems,
+      )
+    ) {
+      c.workingTogether.items.forEach((item, i) => {
+        checkNonEmptyString(
+          item?.heading,
+          `workingTogether.items[${i}].heading`,
+          problems,
+        );
+        checkNonEmptyString(
+          item?.body,
+          `workingTogether.items[${i}].body`,
+          problems,
+        );
+      });
+    }
+  }
+
+  checkCtaShape(c.cta, 'cta', problems);
+}
+
 // Single-route content shape + literal link safety — used by both
 // src/pages/render.js (fail-fast, route-specific) and
 // scripts/validate-routes.mjs (collect-all, project-wide).
@@ -393,6 +514,10 @@ export function validateContent(route, content) {
 
   if (route.template === 'solutions') {
     checkSolutionsContent(content, problems);
+  }
+
+  if (route.template === 'process') {
+    checkProcessContent(content, problems);
   }
 
   return problems;

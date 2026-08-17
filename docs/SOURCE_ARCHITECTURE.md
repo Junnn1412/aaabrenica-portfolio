@@ -17,17 +17,17 @@ src/
 │   └── pages/            — one plain-data module per route (title, description?, heading, paragraphs, ...)
 ├── components/
 │   ├── icon.js            — build-time SVG string renderer for the small, whitelisted set of Lucide icons in use (PF-031)
-│   ├── capability-card.js / project-card.js / process-steps.js / trust-list.js / engagement-options.js / cta.js — PF-041: one render*() module per Gate-C-approved component, each reproducing its documented markup contract exactly. cta.js — PF-051: gained an optional `headingLevel` render parameter (closed set `{2, 3}`, default `3` unchanged for every prior caller) so a top-level sibling section's own CTA (Process's closing CTA) can render `<h2>` instead of the default `<h3>`
+│   ├── capability-card.js / project-card.js / process-steps.js / trust-list.js / engagement-options.js / cta.js — PF-041: one render*() module per Gate-C-approved component, each reproducing its documented markup contract exactly. cta.js — PF-051: gained an optional `headingLevel` render parameter (closed set `{2, 3}`, default `3` unchanged for every prior caller) so a top-level sibling section's own CTA (Process's closing CTA) can render `<h2>` instead of the default `<h3>`. capability-card.js/project-card.js — PF-052: gained the identical optional `headingLevel` parameter (closed set `{3, 4}`, default `4` unchanged) so a card nested directly under a page-level `<h2>` (Home's Capabilities/Projects sections, Work's Projects section) can render `<h3>` instead of the default `<h4>` — an accessibility correction to an already-shipped skipped-heading-level defect, not a redesign
 │   ├── section-header.js  — PF-050: eyebrow/heading/lede section header, extracted from home.js's template for its second real caller (solutions.js) — shared by both, not home-specific
 │   └── partials/          — shared structural markup: header, nav, footer
 ├── pages/
-│   ├── templates/          — standard / listing / case-study / home / solutions / process: the *shape* a page takes
+│   ├── templates/          — standard / case-study / home / solutions / process / work: the *shape* a page takes (`listing` renamed to `work` at PF-052 — see `DECISION_LOG.md`)
 │   ├── render.js            — route -> composed { head, header, main, footer }
 │   ├── compose.js           — marker validation + safe substitution into the HTML skeleton
 │   ├── escape.js             — escapeHtml — the only way content reaches HTML
 │   ├── link-safety.js        — isSafeInternalPath/isSafeEmail/isSafeExternalUrl — rejects javascript:, external, protocol-relative URLs, and unsafe mailto:/social-URL shapes (PF-031)
 │   ├── icon-registry.js       — PF-041: closed-set icon-key/accent registry (TRUST_ICONS, CAPABILITY_ICONS, CAPABILITY_ACCENTS, CARD_ARROW_ICON) — the single source content-schema.js validates against and the components/*.js renderers resolve icons from, keeping the pure validation layer free of any dependency on renderer modules
-│   ├── content-schema.js     — per-template required-field/type + link-safety checks. PF-051 adds `PROCESS_STAGE_NAMES` (exported single source of truth for the canonical 7-stage lifecycle order) and `checkProcessContent`, which enforces stage order/naming positionally and forbids a `next` property on the terminal stage via `Object.hasOwn` (presence, not truthiness)
+│   ├── content-schema.js     — per-template required-field/type + link-safety checks. PF-051 adds `PROCESS_STAGE_NAMES` (exported single source of truth for the canonical 7-stage lifecycle order) and `checkProcessContent`, which enforces stage order/naming positionally and forbids a `next` property on the terminal stage via `Object.hasOwn` (presence, not truthiness). PF-052 adds the shared `checkProjectCardItem` helper (reused by `checkHomeContent`'s `projects` branch and the new `checkWorkContent`) — per-route content shape only; cross-route link *completeness* stays out of this module, see `scripts/work-project-routes.mjs` below
 │   └── dev-watcher.js         — attaches the dev-server file watcher that restarts on architecture edits
 ├── scripts/
 │   ├── main.js                 — global JS entry (imports the SCSS entry, nav-toggle.js)
@@ -37,7 +37,8 @@ src/
 
 scripts/                         — Node-only build tooling, deliberately outside src/scripts/ (which is browser code)
 ├── validate-routes.mjs           — pre-flight validator, runs automatically before dev and build
-└── verify-build-output.mjs       — composed-output verifier, runs automatically after build
+├── verify-build-output.mjs       — composed-output verifier, runs automatically after build
+└── work-project-routes.mjs       — PF-052: pure, exported `findWorkProjectRouteProblems(projectLinks, caseStudyRoutePaths)` — the Work directory's exact-set-equality check against every registered `case-study` route (no missing, duplicate, or unregistered destination). A separate tiny module, not a named export added to `validate-routes.mjs` itself, because that script's own top level runs its full check sequence (including a possible `process.exit(1)`) unconditionally on import — this module has no top-level side effects, so it is safe to import directly from tests
 ```
 
 `src/assets/` is not created yet — no images/static assets exist. Every
@@ -92,15 +93,16 @@ documented/approved — no such field exists today.
 
 ## Per-section containers and anchor composition
 
-Most templates (`standard`, `listing`, `case-study`) wrap their entire
-`main` output in one template-owned `<div class="container">` (see
+Most templates (`standard`, `case-study`) wrap their entire `main` output
+in one template-owned `<div class="container">` (see
 `docs/DECISION_LOG.md`'s PF-040 entry for why container ownership sits at
-the template layer, not the skeleton). `home`, `solutions`, and (since
-PF-051) `process` are the exceptions: each top-level `<section>` owns its
-own inner `.container` instead, so a full-bleed section never has to fight
-a page-level wrapper. All three share the `.page-section` vertical-rhythm
-wrapper (`src/styles/objects/_page-section.scss`) and the
-`renderSectionHeader()` helper (`src/components/section-header.js`).
+the template layer, not the skeleton). `home`, `solutions`, `process`
+(since PF-051), and `work` (since PF-052) are the exceptions: each
+top-level `<section>` owns its own inner `.container` instead, so a
+full-bleed section never has to fight a page-level wrapper. All four share
+the `.page-section` vertical-rhythm wrapper
+(`src/styles/objects/_page-section.scss`) and the `renderSectionHeader()`
+helper (`src/components/section-header.js`).
 
 `solutions.js`'s six sections are anchored (`<section id="...">`), with
 every id sourced from `src/content/pages/solutions.js`'s own
@@ -126,15 +128,26 @@ so `next: null`/`undefined`/`''` are rejected exactly like a present
 non-empty string, not just a falsy-value check that could be fooled by
 treating `undefined` as "absent."
 
-## Validation, at three points
+`work.js`'s project grid is also unanchored, for the same reason — no
+anchor requirement, no independent lookup. Unlike `home`'s fixed, curated
+3-project preview (`checkExactArray(..., 3, ...)`), `work`'s schema
+requires only a non-empty `projects.items` array — completeness (does the
+list contain every registered case-study route, exactly once) is enforced
+separately by `scripts/work-project-routes.mjs`'s exact-set-equality check,
+not by the per-route content schema, so the list can grow as PF-060–063
+registers more case studies without a schema edit.
 
 1. **Pre-flight** (`scripts/validate-routes.mjs`, runs automatically as
    `predev`/`prebuild`, also `npm run check:routes`): checks the whole
    manifest at once — duplicate keys/paths/entries, template/content
    registry membership, content shape and types, internal-link safety and
-   resolution (nav agrees with its route, Work-listing links match
-   registered case studies, every `backLink` points at `/work/`), exactly
-   one `/` and one `/404.html`, the manifest matches the 11 approved routes
+   resolution (nav agrees with its route; Work's project destinations have
+   exact set equality with the registered `case-study` routes — missing,
+   duplicate, extra, and unregistered destinations are all rejected, with
+   the expected set derived from the route registry itself, never a
+   hardcoded project count, via `scripts/work-project-routes.mjs`'s
+   `findWorkProjectRouteProblems()`; every `backLink` points at `/work/`),
+   exactly one `/` and one `/404.html`, the manifest matches the 11 approved routes
    exactly, every entry file exists, no unexpected HTML file exists in a
    known route directory, and every skeleton has each marker exactly once.
 2. **Render-time** (`src/pages/render.js`): re-validates the _specific_

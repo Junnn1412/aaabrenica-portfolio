@@ -85,12 +85,18 @@ milestone automates them:
   plays; the long-copy demo specimen wraps without truncation or overflow;
   the non-interactive demo specimen shows no pointer/hover/focus affordance
   at all
-- (PF-033) Project cards: at ~1900px/1440px the three real cards (Business
-  Workflow System featured, FES Challenger and eBarangay secondary) render
-  as a featured row plus a 2–3-column grid using the section's real width;
-  768–1024px shows 2 columns; 320/375px stays 1 column with no horizontal
-  overflow; the two demo specimens remain visually distinct from the three
-  real cards; keyboard tab order reaches each linked card's heading link
+- (PF-033) Project cards: `.project-cards`'s generic grid can auto-fit
+  across its supported column range depending on item count and available
+  width. The three real cards (Business Workflow System featured, FES
+  Challenger and eBarangay secondary) are the one-featured-plus-two-
+  secondary composition, which instead activates
+  `.project-cards--featured-pair`: at 320/375px all three stack in one
+  column with no horizontal overflow; from the applicable breakpoint
+  (`36em`/~576px) up through 768/1024/1440/1920px the featured card spans
+  the full row and the two secondary cards form exactly two columns — never
+  a third, so no track is ever left empty; the two demo specimens remain
+  visually distinct from the three real cards; keyboard tab order reaches
+  each linked card's heading link
   exactly once; the focus ring visibly wraps the whole card (not just the
   heading text), legible against both the card surface and the surrounding
   page, in both normal and forced-colors modes; hover-lift only on
@@ -186,6 +192,37 @@ milestone automates them:
     Solutions page's own closing CTA despite now rendering as `<h2>`
     instead of `<h3>` — expected to be identical, since `.cta__heading`'s
     `font-size` did not change, but not yet confirmed in a real browser
+- (PF-052) Work index, plus a corrected homepage — **desktop, tablet, and
+  mobile visual review passed** (AAA, 2026-08-18). `npm run verify` passes
+  (355/355 automated tests, lint, format, build, `html-validate`).
+  Confirmed in the browser:
+  - **Desktop**: one full-width featured card (FES Challenger) plus two
+    equal secondary columns, with no empty third track — the
+    `.project-cards--featured-pair` fixed 2-column grid, not the generic
+    grid's 1/1/2/2/3/3 pattern, which this one-featured-plus-two-secondary
+    composition never exercises.
+  - **Tablet**: the same correct featured-pair composition.
+  - **Mobile**: all three cards stack in a single column with no overflow
+    or clipping.
+  - CTA, typography, spacing, navigation, and footer integration are
+    visually consistent with the rest of the site.
+  - Empty `.media-frame`s render cleanly and read as intentionally empty
+    (no approved screenshots exist yet) — not a broken or fabricated
+    placeholder.
+  - The project-card and capability-card `headingLevel` corrections (H4 →
+    H3) produced **no visible styling change** on the homepage, confirmed
+    directly in the browser, matching the source-level prediction (both
+    `__heading` classes already set their font-size independent of tag).
+  - No browser-visible defect was found.
+
+  Still **not yet performed** and not assumed to pass by extension of the
+  above:
+  - Keyboard-only pass (skip link → nav → project-card links → closing CTA
+    → footer, visible focus throughout, no trap)
+  - Forced-colors mode (card boundaries and focus rings)
+  - `prefers-reduced-motion` (hover-lift disabled)
+  - Touch/no-hover behavior
+  - 200% zoom
 
 These are out of scope for PF-012 by design — see the task's explicit scope
 boundaries (no browser automation, visual regression, end-to-end tests,

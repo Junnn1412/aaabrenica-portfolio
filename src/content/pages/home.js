@@ -9,7 +9,11 @@
 // PF-060 — the FES Challenger project item spreads fes-challenger.js's own
 // `card` export instead of retyping category/summary/tags a second time, so
 // this file can't silently drift from the case study it links to.
+// PF-061 — Business Workflow System now does the same. Its card also
+// replaces the prior literal "Government/business workflow system" category
+// (prohibited wording, superseded by the fully anonymized case study).
 import fesChallenger from './work/fes-challenger.js';
+import businessWorkflowSystem from './work/business-workflow-system.js';
 
 export default {
   title: 'Practical Software Solutions for Growing Businesses',
@@ -111,9 +115,9 @@ export default {
         ...fesChallenger.card,
       },
       {
-        category: 'Government/business workflow system',
         heading: 'Business Workflow System',
         link: '/work/business-workflow-system/',
+        ...businessWorkflowSystem.card,
       },
       {
         heading: 'eBarangay',

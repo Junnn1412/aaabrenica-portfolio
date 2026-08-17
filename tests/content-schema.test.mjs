@@ -43,24 +43,6 @@ test('optional description is validated only when present', () => {
   assert.ok(validateContent(route, withBadDescription).length > 0);
 });
 
-test('listing template requires a non-empty links array of valid links', () => {
-  const route = { key: 'work', template: 'listing' };
-  const base = { title: 'Work', heading: 'Work', paragraphs: ['ok'] };
-
-  assert.ok(validateContent(route, base).some((p) => p.includes('"links"')));
-
-  const badLink = { ...base, links: [{ label: '', path: 'not-safe' }] };
-  const problems = validateContent(route, badLink);
-  assert.ok(problems.some((p) => p.includes('links[0].label')));
-  assert.ok(problems.some((p) => p.includes('links[0].path')));
-
-  const goodLink = {
-    ...base,
-    links: [{ label: 'FES Challenger', path: '/work/fes-challenger/' }],
-  };
-  assert.deepEqual(validateContent(route, goodLink), []);
-});
-
 // PF-041 — a minimal but complete valid 'home' content fixture, matching
 // the shape src/content/pages/home.js uses for real.
 function validHomeContent() {
@@ -660,4 +642,176 @@ test('process template requires a valid closing cta', () => {
   badAction.cta.action = { label: '', path: 'not-safe' };
   const problems = validateContent(route, badAction);
   assert.ok(problems.some((p) => p.includes('cta.action')));
+});
+
+// PF-052 — a minimal but complete valid 'work' content fixture, matching
+// the shape src/content/pages/work/index.js uses for real.
+function validWorkContent() {
+  return {
+    title: 'Work',
+    description: 'Work description.',
+    heading: 'Work heading.',
+    paragraphs: ['Intro paragraph.'],
+    projects: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      items: [
+        {
+          featured: true,
+          heading: 'FES Challenger',
+          link: '/work/fes-challenger/',
+        },
+        {
+          heading: 'Business Workflow System',
+          category: 'Government/business workflow system',
+          link: '/work/business-workflow-system/',
+        },
+        { heading: 'eBarangay', link: '/work/ebarangay/' },
+      ],
+    },
+    cta: {
+      heading: 'Closing heading',
+      body: 'Closing body.',
+      action: { label: "Let's Discuss Your Project", path: '/contact/' },
+    },
+  };
+}
+
+test('valid work content produces no problems', () => {
+  const route = { key: 'work', template: 'work' };
+  assert.deepEqual(validateContent(route, validWorkContent()), []);
+});
+
+test('work template requires "projects"', () => {
+  const route = { key: 'work', template: 'work' };
+  const content = validWorkContent();
+  delete content.projects;
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"projects"')));
+});
+
+test('work template requires a non-empty projects.items array (not a fixed count)', () => {
+  const route = { key: 'work', template: 'work' };
+  const content = validWorkContent();
+  content.projects.items = [];
+  const problems = validateContent(route, content);
+  assert.ok(
+    problems.some((p) =>
+      p.includes('"projects.items" must be a non-empty array'),
+    ),
+  );
+
+  // Growth-safety: a longer, still-valid list (more than the current 3
+  // real projects) must not be rejected for its length.
+  const longer = validWorkContent();
+  longer.projects.items.push({
+    heading: 'A Fourth Project',
+    link: '/work/a-fourth-project/',
+  });
+  assert.deepEqual(validateContent(route, longer), []);
+});
+
+test('work template reports every missing required per-item field', () => {
+  const route = { key: 'work', template: 'work' };
+  const content = validWorkContent();
+  delete content.projects.items[0].heading;
+  delete content.projects.items[0].link;
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('projects.items[0].heading')));
+  assert.ok(problems.some((p) => p.includes('projects.items[0].link')));
+});
+
+test('work template validates optional category/summary/tags only when present', () => {
+  const route = { key: 'work', template: 'work' };
+
+  const withoutOptional = validWorkContent();
+  assert.deepEqual(validateContent(route, withoutOptional), []);
+
+  const badOptional = validWorkContent();
+  badOptional.projects.items[2].category = '';
+  badOptional.projects.items[2].summary = '';
+  badOptional.projects.items[2].tags = [];
+  const problems = validateContent(route, badOptional);
+  assert.ok(problems.some((p) => p.includes('projects.items[2].category')));
+  assert.ok(problems.some((p) => p.includes('projects.items[2].summary')));
+  assert.ok(problems.some((p) => p.includes('projects.items[2].tags')));
+
+  const goodOptional = validWorkContent();
+  goodOptional.projects.items[2].category = 'Personal';
+  goodOptional.projects.items[2].summary = 'A summary.';
+  goodOptional.projects.items[2].tags = ['Vue', 'Firebase'];
+  assert.deepEqual(validateContent(route, goodOptional), []);
+});
+
+test('work template rejects more than one featured item, but allows zero or one', () => {
+  const route = { key: 'work', template: 'work' };
+
+  const zeroFeatured = validWorkContent();
+  delete zeroFeatured.projects.items[0].featured;
+  assert.deepEqual(validateContent(route, zeroFeatured), []);
+
+  const oneFeatured = validWorkContent();
+  assert.deepEqual(validateContent(route, oneFeatured), []);
+
+  const twoFeatured = validWorkContent();
+  twoFeatured.projects.items[1].featured = true;
+  const problems = validateContent(route, twoFeatured);
+  assert.ok(
+    problems.some((p) =>
+      p.includes(
+        '"projects.items" must contain at most one item with "featured: true", found 2',
+      ),
+    ),
+  );
+});
+
+test('work template rejects an unsafe project-card link', () => {
+  const route = { key: 'work', template: 'work' };
+  const content = validWorkContent();
+  content.projects.items[0].link = 'javascript:alert(1)';
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('projects.items[0].link')));
+});
+
+test('work template requires a valid closing cta', () => {
+  const route = { key: 'work', template: 'work' };
+
+  const missing = validWorkContent();
+  delete missing.cta;
+  assert.ok(validateContent(route, missing).some((p) => p.includes('"cta"')));
+
+  const badAction = validWorkContent();
+  badAction.cta.action = { label: '', path: 'not-safe' };
+  const problems = validateContent(route, badAction);
+  assert.ok(problems.some((p) => p.includes('cta.action')));
+});
+
+// PF-052 — refactor-safety: checkHomeContent's projects branch now calls
+// the shared checkProjectCardItem() helper (extracted for its second real
+// caller, 'work', above) instead of inline per-item checks. These re-run
+// the pre-existing home/projects assertions verbatim to prove the
+// extraction produced byte-identical problem messages, not just "some
+// problem is reported."
+test('refactor safety: home template project-item checks are unchanged after the checkProjectCardItem extraction', () => {
+  const route = { key: 'home', template: 'home' };
+  const content = validHomeContent();
+
+  assert.deepEqual(validateContent(route, content), []);
+
+  const unsafeLink = validHomeContent();
+  unsafeLink.capabilities.items[0].link = 'javascript:alert(1)';
+  unsafeLink.projects.items[0].link = '//evil.example.com';
+  const problems = validateContent(route, unsafeLink);
+  assert.ok(problems.some((p) => p.includes('capabilities.items[0].link')));
+  assert.ok(problems.some((p) => p.includes('projects.items[0].link')));
+
+  const badFeaturedType = validHomeContent();
+  badFeaturedType.projects.items[0].featured = 'yes';
+  assert.ok(
+    validateContent(route, badFeaturedType).some((p) =>
+      p.includes(
+        '"projects.items[0].featured", when present, must be a boolean',
+      ),
+    ),
+  );
 });

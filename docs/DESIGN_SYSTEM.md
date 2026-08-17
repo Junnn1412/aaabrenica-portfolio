@@ -588,6 +588,17 @@ currently live only as hand-authored, literal markup in
 `dev/design-system/index.html` — **not** a live render call — using the
 real compiled component classes.
 
+**PF-052 — `renderCapabilityCard()` gained an optional `headingLevel`
+parameter** (closed `Set([3, 4])`, default `4` unchanged), the identical
+pattern PF-051 gave `renderCta()` and PF-052 also gave `renderProjectCard()`
+— see "Work index (PF-052)" below for the full rationale. This corrected a
+real, already-shipped defect: `home.js`'s Capabilities section nests these
+cards directly under its own `<h2>`, so the cards' own heading needed to be
+`<h3>`, not the component's prior unconditional `<h4>`. `.capability-card__heading`
+already declared its own explicit `font-size: var(--font-size-h3)`
+independent of tag, so the fix is a pure markup/semantics correction with
+zero visual change.
+
 **Grid: `auto-fit`/`minmax()`, not viewport-breakpoint-gated column
 counts.** An earlier version used `@media (min-width: $bp-md/$bp-lg)` to
 force 2 then 3 fixed columns — but that only knows the viewport's width,
@@ -738,14 +749,29 @@ same pressed shadow feedback without depending on hover capability at all.
 
 ## Project cards (PF-033)
 
-`.project-card` (`src/styles/components/_project-card.scss`) is
-**CSS-only** — there is no `renderProjectCard()` function and no content
-data module. `work/index.js` and all three case-study content files
-(`fes-challenger`/`business-workflow-system`/`ebarangay`) are still
-placeholders, so there is no real production template to call a renderer
-from — the same precedent as `.btn`/`.tag`/`.media-frame`/
-`.capability-card`. The showcase specimens are hand-authored, literal
-markup using the real compiled component classes — not a live render call.
+`.project-card` (`src/styles/components/_project-card.scss`) was
+originally **CSS-only** — no `renderProjectCard()` function and no content
+data module, since `work/index.js` and all three case-study content files
+were still placeholders and there was no real production template to call
+a renderer from (the same precedent as `.btn`/`.tag`/`.media-frame`/
+`.capability-card`). PF-041 gave it a real first caller
+(`home.js`'s Selected Work section) and PF-052 gave it a real second
+caller (`work.js`'s Work index) — the three case-study content files
+themselves remain placeholders (PF-060–062). The showcase specimens
+(`dev/design-system/index.html`) remain hand-authored, literal markup
+using the real compiled component classes — still not a live render call.
+
+**PF-052 — `renderProjectCard()` gained an optional `headingLevel`
+parameter** (closed `Set([3, 4])`, default `4` unchanged), the identical
+pattern PF-051 gave `renderCta()` and PF-052 also gave
+`renderCapabilityCard()` — see "Work index (PF-052)" below. This corrected
+a real, already-shipped defect: both `home.js`'s Projects section and
+`work.js`'s Projects section nest these cards directly under their own
+`<h2>`, so the cards' own heading needed to be `<h3>`, not the component's
+prior unconditional `<h4>`. The desktop featured-card override
+(`.project-card--featured .project-card__heading { font-size:
+var(--font-size-h3); }`) is class-scoped, not tag-scoped, so the fix is a
+pure markup/semantics correction with zero visual change.
 
 **Deliberately NOT full-bleed bold color like `.capability-card`.**
 Requirements §7.2 frames project cards as _evidence_, not decoration
@@ -1493,6 +1519,168 @@ mobile/desktop `.process-facts` contract. Every deliberate-failure pass
 (canonical order, both `next`-invariant directions, three SCSS resets, and
 `renderCta()`'s heading-level validation) was run and confirmed correct
 before being restored — see `docs/DECISION_LOG.md`'s PF-051 entry.
+
+## Work index (PF-052)
+
+`src/content/pages/work/index.js` now carries real content — the three
+approved real projects (FES Challenger, Business Workflow System,
+eBarangay), each rendered as a real `.project-card`, plus a closing `.cta`
+panel — composed by a new dedicated `work` template
+(`src/pages/templates/work.js`), registered in
+`src/pages/templates/index.js` alongside `standard`/`case-study`/`home`/
+`solutions`/`process`. `src/config/routes.js`'s `work` route changed
+`template: 'listing'` → `'work'`.
+
+**Template renamed `listing` → `work`, not kept generic.** `listing`
+(`src/pages/templates/listing.js`) had exactly one caller ever (confirmed
+by grep across the repo), and PF-052 changes its content shape entirely —
+from a plain link list to project cards. Keeping a generic name for a
+permanently single-purpose template would misrepresent it as reusable when
+it never was and never will be. Renamed to `work`, matching `home`/
+`solutions`/`process`'s established single-purpose naming convention
+(template key = route key = content key). `listing.js` was deleted, not
+deprecated in place.
+
+**Two heading-level defects corrected together, as one accessibility
+fix, not deferred and not a redesign.** Diagnosed while building this
+page: `renderProjectCard()`/`renderCapabilityCard()`
+(`src/components/project-card.js`/`capability-card.js`) both rendered an
+unconditional `<h4>`, while both are nested directly under a page-level
+`<h2>` on every real caller (`home.js`'s Capabilities and Projects
+sections; `work.js`'s Projects section) — a skipped heading level on the
+**already-shipped homepage**, not something this task introduced. Fixed
+by giving both renderers the identical closed-set `headingLevel` pattern
+PF-051 already proved on `renderCta()`:
+
+```js
+const ALLOWED_PROJECT_CARD_HEADING_LEVELS = new Set([3, 4]);
+// ...and the identical shape on capability-card.js:
+const ALLOWED_CAPABILITY_CARD_HEADING_LEVELS = new Set([3, 4]);
+```
+
+`headingLevel` defaults to `4` on both (every caller that doesn't opt in —
+the Gate-C showcase's static markup — keeps its exact prior contract);
+`home.js` now explicitly requests `3` on both its calls
+(`renderCapabilityCards(capabilities.items, 3)`,
+`renderProjectCards(projects.items, 3)`); `work.js` requests `3` on its one
+call. Any value outside `{3, 4}` throws before any HTML is built on either
+renderer — the tag string is only ever computed as literally `"h3"` or
+`"h4"` after validation passes, proven directly by
+`tests/project-card-render.test.mjs`/`tests/capability-card-render.test.mjs`
+(default-`h4`, explicit-`h3`, and three reject cases each, including a
+script-injection-shaped value). **Zero visual change on either
+component** — verified directly against source, not assumed:
+`.capability-card__heading` already declared `font-size:
+var(--font-size-h3)` (styled at H3 size while rendered as `<h4>`), and
+`.project-card__heading`'s desktop featured-card override is class-scoped,
+not tag-scoped. `headingLevel` is a template-authored render parameter on
+both renderers, never content-driven — no content-schema field exists for
+it.
+
+**Schema: `checkProjectCardItem` extracted for its second real caller.**
+`content-schema.js` gains a shared `checkProjectCardItem(item, fieldPrefix,
+problems)` helper (validates `heading`/`link`/optional
+`category`/`summary`/`tags`/`featured`-type), reused by both
+`checkHomeContent`'s existing `projects` branch (refactored, identical
+resulting messages — proven by a dedicated refactor-safety test —
+`checkExactArray(..., 3, ...)` and "exactly one featured" unchanged) and
+the new `checkWorkContent`. Unlike Home's fixed, curated 3-project preview,
+Work's `projects.items` is validated as a non-empty array only — Work's
+job is "every real project," a count tied to how many case studies exist,
+not an editorial constant, so hardcoding today's count of 3 would create
+avoidable schema churn as PF-060–063 registers more. Featured-card
+validation is "at most one," not Home's "exactly one," for the same
+forward-looking reason.
+
+**Cross-file route completeness lives in a new, small, pure module —
+`scripts/work-project-routes.mjs` — not `content-schema.js`.** An initial
+draft placed the completeness check inside `content-schema.js`; on review,
+that was the wrong home even though no import cycle was ever actually at
+risk (the function takes plain arrays, never imports `routes.js`/
+`contentByKey`). `content-schema.js` is documented as per-route content
+shape validation, reused by `render.js` at request time, which never has
+the full route-manifest context to check completeness against.
+`docs/SOURCE_ARCHITECTURE.md`'s "Validation, at three points" section
+already scopes exactly this class of check ("Work-listing links match
+registered case studies") to the **pre-flight** validator. `scripts/
+validate-routes.mjs`'s own top level runs its full check sequence
+(including a possible `process.exit(1)`) unconditionally on import — its
+own header comment states this is deliberate — so a named export added
+directly to that file would be unsafe to import from a test. The new
+module has no top-level side effects at all, so `findWorkProjectRouteProblems(
+projectLinks, caseStudyRoutePaths)` is safe to unit-test directly:
+
+```js
+export function findWorkProjectRouteProblems(
+  projectLinks,
+  caseStudyRoutePaths,
+) {
+  // every registered path must appear in projectLinks exactly once —
+  // reports missing, duplicate, and unregistered/extra destinations
+}
+```
+
+`scripts/validate-routes.mjs`'s `checkWorkListingLinks()` was renamed
+`checkWorkProjectLinks()` and now imports and calls this function with the
+real `contentByKey.work`/`routes` data — it stays exactly where it already
+lived, just with its reusable logic factored out. Growth-safe by
+construction: the expected destination set is derived from whatever
+`caseStudyRoutePaths` is actually passed, never a hardcoded count —
+`tests/work-project-routes.test.mjs` proves this directly with a
+synthetic 4-route scenario. Because the function is pure, its five unit
+tests (valid exact set; missing link; duplicate link; unregistered/extra
+link; growth-safety) directly exercise every failure path — this _is_ the
+deliberate-failure proof for this invariant, alongside a real end-to-end
+check performed during implementation (temporarily pointing the real
+`eBarangay` card at a nonexistent path, confirming `node
+scripts/validate-routes.mjs` failed with both the expected "missing" and
+"unregistered" messages, then restoring it).
+
+**Featured-card behavior — reused, not reimplemented.** Work's real
+project composition (one featured, two secondary) is identical in shape to
+`home.js`'s own — `renderProjectCards()`'s existing
+`needsFeaturedPairLayout()` (PF-041) applies `.project-cards--featured-pair`
+automatically from the real item array, so Work's grid gets the same fixed
+2-column secondary layout with no empty third track at any width, with
+zero new detection logic or page-specific CSS.
+
+**Content provenance.** The three project items' `heading`/`category`/
+`featured` values are approved reuse of `home.js`'s own already-approved
+`projects.items` fields (same order: FES Challenger featured, Business
+Workflow System with its verbatim "Government/business workflow system"
+category, then eBarangay) — not new copy. The page-level `title`/
+`description`/`heading`/intro paragraph/section eyebrow-heading/closing-CTA
+strings are approved-as-provisional copy for this task (the same status
+category PF-034/041/050/051's own provisional strings carry), pending
+final production-content sign-off. No screenshot, outcome, technology, or
+result claim appears anywhere — none is approved for any of the three real
+projects (PF-003 still blocked) — and no visitor-facing sentence mentions
+deferred categorization, project-count growth, or task numbers; that
+context lives only in `docs/DECISION_LOG.md`.
+
+**No new page-specific SCSS file.** Every visual element on this page —
+`.container`, `.page-section`, `.section-header` (via
+`renderSectionHeader()`), `.project-cards`/`.project-card` (via
+`renderProjectCards()`), `.cta` (via `renderCta()`) — is already-approved,
+already-tested component/object CSS, unchanged except the one heading-tag
+fix above (which changes no declaration). `tests/project-card-layout.test.mjs`'s
+20 existing assertions (cascade resets, grid column simulation, the
+featured-pair modifier, focus/forced-colors) required no changes and
+continue to cover this page's one list unmodified.
+
+**Test strategy.** `tests/work-render.test.mjs` mirrors
+`tests/process-render.test.mjs`'s/`tests/solutions-render.test.mjs`'s
+approach: real `renderRoute()` output against the shared structural
+helpers, plus this page's own contract — exactly 3 `<h3
+class="project-card__heading">`/zero `<h4>`, exactly 2 `<h2>`s, DOM-order
+card composition (FES Challenger featured, then the other two), the
+featured-pair modifier class present, a cross-file check that every
+rendered project-card link matches a real registered `case-study` route
+and that the set of links equals the set of registered case-study routes
+exactly, category shown only on Business Workflow System's card, empty
+`.media-frame` on all three, and a hostile-content escaping test.
+`tests/home-render.test.mjs`'s existing capability-card and project-card
+structural tests each gained the corresponding H3/zero-H4 assertion.
 
 ## Accessibility rationale summary
 

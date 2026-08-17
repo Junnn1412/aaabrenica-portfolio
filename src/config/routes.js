@@ -31,7 +31,7 @@ export const routes = [
     path: '/work/',
     entry: 'work/index.html',
     navKey: 'work',
-    template: 'listing',
+    template: 'work',
     content: 'work',
   },
   {

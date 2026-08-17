@@ -233,27 +233,9 @@ function checkHomeContent(content, problems) {
     if (checkExactArray(c.projects.items, 'projects.items', 3, problems)) {
       let featuredCount = 0;
       c.projects.items.forEach((item, i) => {
-        checkNonEmptyString(
-          item?.heading,
-          `projects.items[${i}].heading`,
-          problems,
-        );
-        checkBarePath(item?.link, `projects.items[${i}].link`, problems);
-        if (
-          'category' in (item ?? {}) &&
-          item.category != null &&
-          (typeof item.category !== 'string' || item.category.length === 0)
-        ) {
-          problems.push(
-            `"projects.items[${i}].category", when present, must be a non-empty string`,
-          );
-        }
+        checkProjectCardItem(item, `projects.items[${i}]`, problems);
         if (item?.featured === true) {
           featuredCount++;
-        } else if (item?.featured !== undefined && item?.featured !== false) {
-          problems.push(
-            `"projects.items[${i}].featured", when present, must be a boolean`,
-          );
         }
       });
       if (featuredCount !== 1) {
@@ -469,6 +451,85 @@ function checkProcessContent(content, problems) {
   checkCtaShape(c.cta, 'cta', problems);
 }
 
+// PF-052 — used by both 'home' (curated, fixed-count preview) and 'work'
+// (every real project, growth-safe count) template branches. Each caller
+// still tallies its own featured count and applies its own aggregate rule
+// (home: exactly one; work: at most one), since that constraint differs.
+function checkProjectCardItem(item, fieldPrefix, problems) {
+  checkNonEmptyString(item?.heading, `${fieldPrefix}.heading`, problems);
+  checkBarePath(item?.link, `${fieldPrefix}.link`, problems);
+  if (
+    'category' in (item ?? {}) &&
+    item.category != null &&
+    (typeof item.category !== 'string' || item.category.length === 0)
+  ) {
+    problems.push(
+      `"${fieldPrefix}.category", when present, must be a non-empty string`,
+    );
+  }
+  if (
+    'summary' in (item ?? {}) &&
+    item.summary != null &&
+    (typeof item.summary !== 'string' || item.summary.length === 0)
+  ) {
+    problems.push(
+      `"${fieldPrefix}.summary", when present, must be a non-empty string`,
+    );
+  }
+  if ('tags' in (item ?? {}) && item.tags != null) {
+    if (
+      !Array.isArray(item.tags) ||
+      item.tags.length === 0 ||
+      item.tags.some((t) => typeof t !== 'string' || t.length === 0)
+    ) {
+      problems.push(
+        `"${fieldPrefix}.tags", when present, must be a non-empty array of non-empty strings`,
+      );
+    }
+  }
+  if (
+    item?.featured !== undefined &&
+    item?.featured !== true &&
+    item?.featured !== false
+  ) {
+    problems.push(`"${fieldPrefix}.featured", when present, must be a boolean`);
+  }
+}
+
+// PF-052 — Work's project list is "every real project," not a curated
+// fixed-count preview like home's — a non-empty-array rule, not
+// checkExactArray(..., 3, ...), keeps this growth-safe as PF-060–063
+// registers more case studies. Completeness (every registered case-study
+// route present exactly once) is the cross-file route check's job
+// (scripts/work-project-routes.mjs), not this per-item shape schema's.
+function checkWorkContent(content, problems) {
+  const c = content;
+
+  if (c.projects == null || typeof c.projects !== 'object') {
+    problems.push('"projects" is required for the work page');
+  } else {
+    checkSectionHeader(c.projects, 'projects', problems);
+    if (!Array.isArray(c.projects.items) || c.projects.items.length === 0) {
+      problems.push('"projects.items" must be a non-empty array');
+    } else {
+      let featuredCount = 0;
+      c.projects.items.forEach((item, i) => {
+        checkProjectCardItem(item, `projects.items[${i}]`, problems);
+        if (item?.featured === true) {
+          featuredCount++;
+        }
+      });
+      if (featuredCount > 1) {
+        problems.push(
+          `"projects.items" must contain at most one item with "featured: true", found ${featuredCount}`,
+        );
+      }
+    }
+  }
+
+  checkCtaShape(c.cta, 'cta', problems);
+}
+
 // Single-route content shape + literal link safety — used by both
 // src/pages/render.js (fail-fast, route-specific) and
 // scripts/validate-routes.mjs (collect-all, project-wide).
@@ -485,16 +546,6 @@ export function validateContent(route, content) {
 
   if ('link' in content && content.link != null) {
     checkLink(content.link, 'link', problems);
-  }
-
-  if (route.template === 'listing') {
-    if (!Array.isArray(content.links) || content.links.length === 0) {
-      problems.push('"links" must be a non-empty array for a listing page');
-    } else {
-      content.links.forEach((link, i) =>
-        checkLink(link, `links[${i}]`, problems),
-      );
-    }
   }
 
   if (route.template === 'case-study') {
@@ -518,6 +569,10 @@ export function validateContent(route, content) {
 
   if (route.template === 'process') {
     checkProcessContent(content, problems);
+  }
+
+  if (route.template === 'work') {
+    checkWorkContent(content, problems);
   }
 
   return problems;

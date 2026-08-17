@@ -38,11 +38,16 @@ test('renderRoute("not-found") renders its optional link', () => {
 // PF-040: the page container is wired at the template layer (not the
 // skeleton) so PF-041+ can introduce full-bleed sections without fighting
 // a global wrapper — every single-container-template route's main output
-// must still open with it. PF-041/PF-050/PF-051: home, solutions, and
-// process are the anticipated exceptions (docs/DECISION_LOG.md's PF-040
-// entry) — each top-level <section> owns its own inner .container instead
-// of one wrapping the whole page.
-const PER_SECTION_CONTAINER_TEMPLATES = ['home', 'solutions', 'process'];
+// must still open with it. PF-041/PF-050/PF-051/PF-052: home, solutions,
+// process, and work are the anticipated exceptions (docs/DECISION_LOG.md's
+// PF-040 entry) — each top-level <section> owns its own inner .container
+// instead of one wrapping the whole page.
+const PER_SECTION_CONTAINER_TEMPLATES = [
+  'home',
+  'solutions',
+  'process',
+  'work',
+];
 
 test('every route using a single-container template wraps its main content in the page container', () => {
   for (const route of routes) {

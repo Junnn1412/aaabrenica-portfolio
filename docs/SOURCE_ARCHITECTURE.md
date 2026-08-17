@@ -21,13 +21,13 @@ src/
 │   ├── section-header.js  — PF-050: eyebrow/heading/lede section header, extracted from home.js's template for its second real caller (solutions.js) — shared by both, not home-specific
 │   └── partials/          — shared structural markup: header, nav, footer
 ├── pages/
-│   ├── templates/          — standard / case-study / home / solutions / process / work / contact / not-found: the *shape* a page takes (`listing` renamed to `work` at PF-052; `contact` and `not-found` added at PF-054/PF-055 — see `DECISION_LOG.md`)
+│   ├── templates/          — standard / case-study / home / solutions / process / work / contact / not-found: the *shape* a page takes (`listing` renamed to `work` at PF-052; `contact` and `not-found` added at PF-054/PF-055; `case-study` extended from a bare heading/paragraphs/backLink shape to ten independently optional named sections at PF-060 — see `DECISION_LOG.md`)
 │   ├── render.js            — route -> composed { head, header, main, footer }
 │   ├── compose.js           — marker validation + safe substitution into the HTML skeleton
 │   ├── escape.js             — escapeHtml — the only way content reaches HTML
-│   ├── link-safety.js        — isSafeInternalPath/isSafeEmail/isSafeExternalUrl — rejects javascript:, external, protocol-relative URLs, and unsafe mailto:/social-URL shapes (PF-031)
+│   ├── link-safety.js        — isSafeInternalPath/isSafeEmail/isSafeExternalUrl — rejects javascript:, external, protocol-relative URLs, and unsafe mailto:/social-URL shapes (PF-031). PF-060 adds `isSafeCaseStudyExternalUrl(url, contentKey)`, checked against a private `CASE_STUDY_EXTERNAL_HOSTS` map keyed by `route.content` (never a content-supplied value) — a case study may link to at most one approved external production site
 │   ├── icon-registry.js       — PF-041: closed-set icon-key/accent registry (TRUST_ICONS, CAPABILITY_ICONS, CAPABILITY_ACCENTS, CARD_ARROW_ICON) — the single source content-schema.js validates against and the components/*.js renderers resolve icons from, keeping the pure validation layer free of any dependency on renderer modules
-│   ├── content-schema.js     — per-template required-field/type + link-safety checks. PF-051 adds `PROCESS_STAGE_NAMES` (exported single source of truth for the canonical 7-stage lifecycle order) and `checkProcessContent`, which enforces stage order/naming positionally and forbids a `next` property on the terminal stage via `Object.hasOwn` (presence, not truthiness). PF-052 adds the shared `checkProjectCardItem` helper (reused by `checkHomeContent`'s `projects` branch and the new `checkWorkContent`) — per-route content shape only; cross-route link *completeness* stays out of this module, see `scripts/work-project-routes.mjs` below. PF-053 adds `content.cta` as a universal optional field (validated unconditionally, like the existing `content.link`, not gated by `route.template`), reusing `checkCtaShape()`. PF-054's `contact` template needs no new branch — its contact-methods list is sourced from `site`, not `content`, so `contact.js`'s content only needs the base fields. PF-055 adds `checkNotFoundContent`, using `checkExactArray(content.links, 'links', 3, problems)` — a fixed 3-link recovery set, not a growth-safe count like Work's
+│   ├── content-schema.js     — per-template required-field/type + link-safety checks. PF-051 adds `PROCESS_STAGE_NAMES` (exported single source of truth for the canonical 7-stage lifecycle order) and `checkProcessContent`, which enforces stage order/naming positionally and forbids a `next` property on the terminal stage via `Object.hasOwn` (presence, not truthiness). PF-052 adds the shared `checkProjectCardItem` helper (reused by `checkHomeContent`'s `projects` branch and the new `checkWorkContent`) — per-route content shape only; cross-route link *completeness* stays out of this module, see `scripts/work-project-routes.mjs` below. PF-053 adds `content.cta` as a universal optional field (validated unconditionally, like the existing `content.link`, not gated by `route.template`), reusing `checkCtaShape()`. PF-054's `contact` template needs no new branch — its contact-methods list is sourced from `site`, not `content`, so `contact.js`'s content only needs the base fields. PF-055 adds `checkNotFoundContent`, using `checkExactArray(content.links, 'links', 3, problems)` — a fixed 3-link recovery set, not a growth-safe count like Work's. PF-060 replaces the prior bare `backLink`-only `case-study` branch with `checkCaseStudyContent`, validating ten independently optional named sections (`logo`, `client`, `problem`, `role`, `solution`, `technologyStack`, `decisions`, `outcomes`, `gallery`, `externalLink`) — absent is always valid; present gets its own required sub-fields checked. `externalLink.url` is validated by `link-safety.js`'s new `isSafeCaseStudyExternalUrl(url, route.content)` — see `docs/DESIGN_SYSTEM.md`'s "Case study page (PF-060)" section for the full contract
 │   └── dev-watcher.js         — attaches the dev-server file watcher that restarts on architecture edits
 ├── scripts/
 │   ├── main.js                 — global JS entry (imports the SCSS entry, nav-toggle.js)
@@ -93,16 +93,22 @@ documented/approved — no such field exists today.
 
 ## Per-section containers and anchor composition
 
-Most templates (`standard`, `case-study`) wrap their entire `main` output
-in one template-owned `<div class="container">` (see
-`docs/DECISION_LOG.md`'s PF-040 entry for why container ownership sits at
-the template layer, not the skeleton). `home`, `solutions`, `process`
-(since PF-051), and `work` (since PF-052) are the exceptions: each
-top-level `<section>` owns its own inner `.container` instead, so a
-full-bleed section never has to fight a page-level wrapper. All four share
-the `.page-section` vertical-rhythm wrapper
+Most templates (`standard`) wrap their entire `main` output in one
+template-owned `<div class="container">` (see `docs/DECISION_LOG.md`'s
+PF-040 entry for why container ownership sits at the template layer, not
+the skeleton). `home`, `solutions`, `process` (since PF-051), `work` (since
+PF-052), and `case-study` (since PF-060) are the exceptions: each top-level
+`<section>` owns its own inner `.container` instead, so a full-bleed
+section never has to fight a page-level wrapper. All five share the
+`.page-section` vertical-rhythm wrapper
 (`src/styles/objects/_page-section.scss`) and the `renderSectionHeader()`
-helper (`src/components/section-header.js`).
+helper (`src/components/section-header.js`). Unlike the other four,
+`case-study` may legitimately render **zero** top-level sections (a case
+study with no approved content yet) — `scripts/verify-build-output.mjs`'s
+"at least one section" check is gated behind `route.template !==
+'case-study'` for exactly that reason; every section that _is_ present
+must still open with its own container, so that half of the check applies
+unconditionally.
 
 `solutions.js`'s six sections are anchored (`<section id="...">`), with
 every id sourced from `src/content/pages/solutions.js`'s own
@@ -215,17 +221,23 @@ anchor offset), and joined by a second file, `pages/_process.scss`, since
 PF-051 (the ordered stage list's number/heading row, the shared
 `.process-facts` term/detail pattern reused by both the stages and Working
 Together sections, and the mobile-stack/desktop-grid responsive contract
-for it, gated behind `spacing.$bp-md`), and a third, `pages/_contact.scss`,
+for it, gated behind `spacing.$bp-md`), a third, `pages/_contact.scss`,
 since PF-054 (`.contact-methods`'s `ul`/`li` prose-rule reset — the one
 genuinely new structural hook the Contact page needed; no existing
-component fit "N independent clickable destinations"), and a fourth,
+component fit "N independent clickable destinations"), a fourth,
 `pages/_not-found.scss`, added in a PF-055 visual-review follow-up after
 AAA found the initial default `ul`/`li` presentation on the 404 page's
 recovery links read as unfinished — the same reset pattern as
 `_contact.scss`, styling `.not-found__link`/`.not-found__link-item`
-(explicit classes, not a descendant selector). See `docs/DESIGN_SYSTEM.md`'s
-"Solutions page (PF-050)", "Process page (PF-051)", and "Supporting pages:
-About, Contact, Privacy, 404 (PF-053/054/055)" sections for the full
+(explicit classes, not a descendant selector), and a fifth,
+`pages/_case-study.scss`, since PF-060 (the hero heading/logo row, the
+`.case-study-tech-stack` tag row mirroring `.project-card__tags`'
+declarations without depending on that component's class, and the
+`.case-study-gallery` grid — the same proactive `max-width: none; margin:
+0;` reset every `<ul>`-based grid in this project applies from the first
+draft). See `docs/DESIGN_SYSTEM.md`'s "Solutions page (PF-050)", "Process
+page (PF-051)", "Supporting pages: About, Contact, Privacy, 404
+(PF-053/054/055)", and "Case study page (PF-060)" sections for the full
 rationale.
 
 ## Deferred
@@ -236,11 +248,15 @@ rationale.
   all now have real `render*()` modules in `src/components/` and real
   content in `src/content/pages/home.js`, validated by a `home`-template
   branch in `src/pages/content-schema.js`. See `docs/DESIGN_SYSTEM.md`'s
-  "Homepage (PF-041)" section. Project cards still carry only
-  title/category/link — no summary/tech/outcome copy is approved for any
-  real project yet (PF-003 still blocked); when PF-060–062 add that content,
-  `renderProjectCard()` already supports the optional `summary`/`tags`
-  fields it will need.
+  "Homepage (PF-041)" section.
+- **Project-card `summary`/`category`/`tags` — no longer deferred for FES
+  Challenger as of PF-060**: `renderProjectCard()`'s already-supported
+  optional fields are now populated for FES, sourced from
+  `src/content/pages/work/fes-challenger.js`'s own `card` export (not
+  retyped in `home.js`/`work/index.js`). Business Workflow System and
+  eBarangay still carry only title/category(where quoted)/link — no
+  summary/tech/outcome copy is approved for either yet (PF-061/062 still
+  blocked).
 - Page-specific browser JS — `data-page` on `<body>` is a ready, documented
   seam for this; PF-041 is its first real consumer, scoping a homepage-only
   CSS rule (`body[data-page='home'] #main-content`) in `_hero.scss`.

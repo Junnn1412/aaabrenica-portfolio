@@ -42,6 +42,32 @@
   }
 }
 
+// PF-041 visual-review defect, fixed here: `auto-fit`/`minmax()` derives
+// its column count purely from the grid's available width, with no
+// knowledge that `.project-card--featured` spans every column
+// (`grid-column: 1 / -1` below). At container widths wide enough for 3
+// auto-fit tracks (≥ roughly 67rem of content width — true at 1440/1920px
+// against either `--container-max` or `--container-wide`), a list holding
+// exactly one featured card plus two secondary cards places those two into
+// columns 1–2 of the 3-column track and leaves column 3 empty — the
+// section reads as incomplete. Below that width auto-fit already resolves
+// to 2 columns on its own (verified in
+// tests/project-card-layout.test.mjs's column simulation), so this
+// modifier only needs to override the ≥36em breakpoint, not add a new one.
+// A fixed `repeat(2, 1fr)` — not a second, narrower `auto-fit`/`minmax()`
+// — is deliberate: with exactly two non-featured cards, "as many columns
+// as fit" is never the right question; there are only ever two cards to
+// place. Explicit component modifier, not a homepage-only selector, so any
+// future caller with the same one-featured-plus-two-secondary shape (e.g.
+// a smaller Work index listing) gets the same correct behavior for free —
+// applied by `renderProjectCards()` (`src/components/project-card.js`)
+// whenever the real item composition matches, not hardcoded per page.
+@media (width >= 36em) {
+  .project-cards--featured-pair {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .project-card {
   position: relative; // stretched-link containment
   overflow: hidden; // clips frame/content to the card's own rounded corners

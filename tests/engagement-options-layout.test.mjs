@@ -4,6 +4,11 @@ import * as sass from 'sass';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import { resolveProperty } from './helpers/cascade-resolver.mjs';
+import {
+  expectSingleList,
+  expectNoClass,
+  expectNoInteractiveChildren,
+} from './helpers/component-markup.mjs';
 
 // Same cascade-resolver method as tests/process-steps-layout.test.mjs /
 // tests/trust-list-layout.test.mjs. No repeated deliberate-failure pass —
@@ -44,50 +49,26 @@ function getEngagementOptionsSection() {
   return section[0];
 }
 
+// PF-041 — shared with tests/home-render.test.mjs's real renderer-output
+// check via tests/helpers/component-markup.mjs (docs/DECISION_LOG.md).
 test('the showcase has exactly one <ul class="engagement-options"> with exactly four .engagement-options__item entries, each with a real <ul> parent', () => {
   const section = getEngagementOptionsSection();
-  const lists = [
-    ...section.matchAll(/<ul class="engagement-options">[\s\S]*?<\/ul>/g),
-  ];
-  assert.equal(
-    lists.length,
-    1,
-    `expected exactly 1 <ul class="engagement-options">, found ${lists.length}`,
-  );
-
-  const itemsInsideList = [
-    ...lists[0][0].matchAll(/<li class="engagement-options__item">/g),
-  ].length;
-  const itemsAnywhereInSection = [
-    ...section.matchAll(/<li class="engagement-options__item">/g),
-  ].length;
-  assert.equal(
-    itemsInsideList,
-    4,
-    `expected 4 items, found ${itemsInsideList}`,
-  );
-  assert.equal(itemsInsideList, itemsAnywhereInSection);
+  expectSingleList(section, {
+    listTag: 'ul',
+    listClass: 'engagement-options',
+    itemClass: 'engagement-options__item',
+    count: 4,
+  });
 });
 
 test('no engagement-options item is composed from .tag — these are meaningful options, not filterable metadata', () => {
   const section = getEngagementOptionsSection();
-  assert.doesNotMatch(
-    section,
-    /class="[^"]*\btag\b[^"]*"/,
-    'the engagement-options section must not use the .tag class anywhere',
-  );
+  expectNoClass(section, 'tag');
 });
 
 test('the engagement-options items are entirely non-interactive: no <a>/<button> inside any .engagement-options__item', () => {
   const section = getEngagementOptionsSection();
-  const itemsWithControls = [
-    ...section.matchAll(
-      /<li class="engagement-options__item">[\s\S]*?<(a|button)[\s\S]*?<\/li>/g,
-    ),
-  ].length;
-  assert.equal(
-    itemsWithControls,
-    0,
-    'no .engagement-options__item should contain a link or button',
-  );
+  expectNoInteractiveChildren(section, {
+    itemClass: 'engagement-options__item',
+  });
 });

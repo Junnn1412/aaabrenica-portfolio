@@ -8,6 +8,7 @@ import {
   parseRules,
   resolveProperty,
 } from './helpers/cascade-resolver.mjs';
+import { expectLinkPairing } from './helpers/component-markup.mjs';
 
 // Compiles the real source of truth, same method as the other
 // capability-card tests.
@@ -259,6 +260,22 @@ test('every <ul class="capability-cards"> in the showcase is well-formed: equal 
       );
     }
   }
+});
+
+// PF-041 — shared with tests/home-render.test.mjs's real renderer-output
+// check via tests/helpers/component-markup.mjs, so the showcase and the
+// new renderer are checked against one markup contract, not two
+// independently-maintained descriptions of it (docs/DECISION_LOG.md).
+test('every specimen with .capability-card__link carries exactly one .capability-card__arrow, and vice versa', () => {
+  const section = previewHtml.match(
+    /<section class="preview-section preview-section--wide" id="capability-cards">[\s\S]*?<\/section>/,
+  );
+  assert.ok(section, 'capability-cards <section> not found');
+  expectLinkPairing(section[0], {
+    cardClass: 'capability-card',
+    linkClass: 'capability-card__link',
+    pairedClass: 'capability-card__arrow',
+  });
 });
 
 // A real layout simulation using the actual compiled token values — not

@@ -1,0 +1,80 @@
+// PF-041 — thin layout wrapper only. No new tokens, colors, or patterns:
+// built entirely from already-approved base elements (.text-display,
+// .text-lead, .btn) and existing spacing/breakpoint tokens. Also carries
+// the homepage's shared inter-section rhythm (.home-section) — kept in this
+// file rather than a second new one, since both are homepage-only concerns
+// with no second caller yet (CLAUDE.md: extract reusable patterns only
+// after a real second use demonstrates the need).
+
+// Flush against the header on the home route only — #main-content's
+// shell-level top padding (objects/_page-shell.scss) is removed locally
+// here, per docs/DECISION_LOG.md's PF-040 revisit note ("if PF-041 needs a
+// section flush against the header, override #main-content's padding-block
+// locally for that page rather than removing the shell-level default").
+// padding-block-end is left at its shell default, so the final CTA section
+// still gets its normal breathing room before the footer.
+body[data-page='home'] #main-content {
+  padding-block-start: 0;
+}
+
+.hero {
+  padding-block: var(--space-8) var(--space-9);
+}
+
+.hero__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.hero__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero__visual {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  height: auto;
+}
+
+@media (width >= 64em) {
+  .hero__inner {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-9);
+  }
+
+  .hero__content {
+    flex: 1 1 55%;
+  }
+
+  .hero__media {
+    flex: 1 1 45%;
+  }
+}
+
+// Shared vertical rhythm for every homepage section after the hero. A
+// divider between sections gives the "generous section spacing" editorial
+// rhythm the design direction calls for without any new color/token.
+.home-section {
+  padding-block: var(--space-8);
+}
+
+.home-section + .home-section {
+  border-top: var(--border-width) solid var(--color-border);
+}

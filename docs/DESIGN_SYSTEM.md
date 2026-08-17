@@ -7,12 +7,16 @@ form-control foundations), formalized as the component showcase in PF-030
 (table of contents, review checklist), extended again in PF-031 (global
 navigation and footer — see "Global navigation and footer (PF-031)" below),
 extended again in PF-032 (capability cards), extended again in PF-033
-(project cards — see "Project cards (PF-033)" below), and extended again in
+(project cards — see "Project cards (PF-033)" below), extended again in
 PF-034 (process steps, trust indicators, engagement options, and a reusable
 CTA panel — see "Process, trust, engagement, and CTA components (PF-034)"
-below). See [`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy
-and tooling decisions this builds on, and for the
-PF-020/PF-021/PF-030/PF-031/PF-032/PF-033/PF-034 decisions themselves.
+below), and extended again in PF-041 (the real homepage — six new render*()
+modules composing the PF-032/033/034 components, plus a new `.hero`
+layout wrapper — see "Homepage (PF-041)" below). See
+[`DECISION_LOG.md`](DECISION_LOG.md) for the composition-strategy and
+tooling decisions this builds on, and for the
+PF-020/PF-021/PF-030/PF-031/PF-032/PF-033/PF-034/PF-041 decisions
+themselves.
 
 ## Token architecture
 
@@ -59,8 +63,10 @@ src/styles/
 │   ├── _media-frame.scss       — PF-021: .media-frame
 │   ├── _form-control.scss      — PF-021: .field
 │   ├── _site-header.scss / _site-nav.scss / _site-footer.scss — PF-031
-│   ├── _capability-card.scss   — PF-032: .capability-card (CSS-only, no JS renderer yet — see docs/DESIGN_SYSTEM.md's "Capability cards (PF-032)" section)
-│   └── _project-card.scss      — PF-033: .project-card (CSS-only, no JS renderer yet — see "Project cards (PF-033)" section)
+│   ├── _capability-card.scss   — PF-032: .capability-card, rendered by src/components/capability-card.js since PF-041
+│   ├── _project-card.scss      — PF-033: .project-card, rendered by src/components/project-card.js since PF-041
+│   ├── _process-steps.scss / _trust-list.scss / _engagement-options.scss / _cta.scss — PF-034, each rendered by its matching src/components/*.js module since PF-041
+│   └── _hero.scss              — PF-041: .hero + .home-section (thin layout wrapper only, no new tokens)
 ├── utilities/
 │   └── _visually-hidden.scss  — PF-021: .visually-hidden
 └── main.scss
@@ -857,6 +863,52 @@ stacking order, hover-lift gated to `(hover: hover) and (pointer: fine)`,
 reset (never `filter`) so touch gets its own pressed feedback without
 depending on hover.
 
+**`.project-cards--featured-pair` (PF-041) — a documented grid variant,
+not a workaround.** AAA's browser review of the real homepage found the
+default `auto-fit`/`minmax(21rem, 1fr)` grid resolving to 3 columns at
+1440/1920px (the container is wide enough for 3 tracks), but with exactly
+one featured card (`grid-column: 1 / -1`, spanning the full row) plus two
+secondary cards, the two secondary cards filled only 2 of those 3 tracks —
+the third sat empty and the section read as unbalanced. `auto-fit` derives
+its column count purely from available width; it has no way to know a
+featured item removes itself from that count. **Fix:** an explicit
+modifier, applied to the same `<ul class="project-cards">` at the same
+`≥36em` breakpoint:
+
+```scss
+@media (width >= 36em) {
+  .project-cards--featured-pair {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+```
+
+A fixed `repeat(2, 1fr)` — not a second, narrower `auto-fit`/`minmax()` —
+because with exactly two non-featured cards there is no "as many columns
+as fit" question to ask; there are only ever two cards to place, so a
+fixed 2-track grid is correct at every width from 36em up, including
+1440/1920px where the default grid's own math would otherwise reach 3.
+Below 36em the unconditional single-column base rule (unchanged) still
+governs, so 320/375px is unaffected.
+
+**Applied by the renderer from the real item composition, not a
+page-specific selector.** `renderProjectCards()`
+(`src/components/project-card.js`) adds the modifier class only when the
+items passed to it are exactly one `featured: true` item plus exactly two
+non-featured items — detected from the actual array, not a homepage flag —
+so any future caller with the same shape (e.g. a smaller Work-index
+listing) gets the same correct layout automatically, and a different shape
+(more secondary cards, or none featured) keeps the default `auto-fit`
+grid, which already handles those cases correctly. No component SCSS
+outside this one new rule block was changed; `.project-card`,
+`.project-card--featured`, and every other existing rule are untouched.
+
+**Showcase updated to match.** The showcase's own "three real projects"
+specimen (`dev/design-system/index.html`) demonstrates the identical
+one-featured-plus-two-secondary shape, so it carries the same modifier now
+— the only showcase markup change; the three demo-only specimens (no
+featured card among them) are untouched.
+
 ## Process, trust, engagement, and CTA components (PF-034)
 
 Four components — `.process-steps`, `.trust-list`, `.engagement-options`
@@ -1005,6 +1057,116 @@ room between chrome and content. If a future section needs to sit flush
 against the header (a full-bleed hero with no gap), that page's template
 will need a local override — not solved speculatively here.
 
+## Homepage (PF-041)
+
+The real caller every capability-card/project-card/process-steps/
+trust-list/engagement-options/CTA revisit condition above pointed to.
+`src/content/pages/home.js` now carries real content; `src/pages/templates/home.js`
+composes it via six new renderer modules in `src/components/`
+(`capability-card.js`, `project-card.js`, `process-steps.js`,
+`trust-list.js`, `engagement-options.js`, `cta.js`) — each emitting exactly
+the markup contract documented in this file's own component sections above
+and proven in `dev/design-system/index.html`, with no change to any
+component's SCSS or approved showcase markup.
+
+**Hero and Problems preview have no prior component — genuinely new,
+built only from already-approved base elements.** Unlike the six Gate-C
+components, `.hero` (`src/styles/components/_hero.scss`) and the Problems
+preview section were never part of PF-032/033/034's scope. `.hero` is a
+thin two-column (stacked on mobile) layout wrapper using only
+`.text-display`, `.text-lead`, `.btn`, and existing spacing/breakpoint
+tokens — no new color, pattern, or interaction. Problems preview uses
+`.list--marked` and `.text-lead` directly, no new component CSS at all.
+About preview likewise reuses `.section-header` and base body copy only.
+
+**Per-section containers, not one page-level wrapper.** `home.js` is the
+first template that doesn't wrap its whole `main` in one
+`<div class="container">` — each top-level `<section>` (`.hero`,
+`.home-section`) owns its own inner `.container`, exactly the shape the
+PF-040 decision-log entry anticipated when it made `.container`
+template-owned rather than skeleton-owned. `scripts/verify-build-output.mjs`
+and `tests/render.test.mjs` both special-case the home route to verify this
+end-to-end instead of the single-wrapper invariant every other route keeps.
+
+**Hero sits flush against the header.** `body[data-page='home'] #main-content`
+locally zeroes `padding-block-start` (leaving `padding-block-end` at the
+shell default so the CTA section still gets normal breathing room before
+the footer) — the exact narrow, page-scoped override the PF-040 decision
+log's revisit condition described, not a change to the shell default itself.
+
+**Icon validation is layered through a pure registry, not through
+renderer modules.** `src/pages/icon-registry.js` is the single closed-set
+source of truth for every icon key (`TRUST_ICONS`, `CAPABILITY_ICONS`) and
+capability accent (`CAPABILITY_ACCENTS`) a route's content may reference,
+plus the fixed `CARD_ARROW_ICON` every linked capability/project card uses.
+It exports plain data only — no markup-building, no `escapeHtml` — so
+`src/pages/content-schema.js` can validate against it without depending on
+any `src/components/*` renderer module, the same role `link-safety.js`
+already plays for link fields. Renderers import the identical registry
+(not a duplicate) to resolve a validated key to a real Lucide iconNode
+before calling `icon.js`'s `renderIcon()`. Every icon in the registry was
+preflighted against `icon.js`'s real `ALLOWED_TAGS`/`ALLOWED_ATTRS` by
+reading each icon's source in `node_modules/lucide/dist/esm/icons/*.mjs`
+(v1.31.0) — all use only already-whitelisted `path`/`rect`/`circle` tags
+and `d`/`width`/`height`/`x`/`y`/`rx`/`cx`/`cy`/`r` attributes, so `icon.js`
+itself needed no change. Trust-list and capability-card icons now go
+through `renderIcon()` for the first time in production code — the
+showcase's hand-authored static SVGs (no build step to call a renderer
+from) remain unchanged and untouched.
+
+**Selected work uses reduced fields, matching the existing real-card
+state exactly.** Same content gap PF-033 already documented — no
+problem/outcome/technology copy is approved for any of the three real
+projects (PF-003 still blocked). The homepage ships the identical
+title/category/link fields already proven in the showcase's real cards, an
+empty `.media-frame` (no `<img>`, no decorative stand-in), and the same
+missing-category treatment (Business Workflow System only, verbatim
+"Government/business workflow system"; FES Challenger and eBarangay omit
+it rather than paraphrase). **FES Challenger is the featured card** — the
+first-listed project in both §9.6 and §11 of the requirements doc, a
+non-arbitrary rule (the showcase's own featured pick was explicitly
+arbitrary). This exact one-featured-plus-two-secondary shape is also what
+`.project-cards--featured-pair` exists for — see "Project cards (PF-033)"
+above for the grid defect AAA's browser review found and the fix.
+
+**Content provenance.** Every homepage string is one of: quoted/approved
+verbatim from `DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md`, existing
+approved project/site data, or provisional copy pending AAA's production
+content sign-off. Verbatim: the hero headline/supporting copy/CTA labels
+(§3.4), the three trust assurances (§9.3), the four problem items and
+reassurance sentence (§9.4), the six capability-card headings (§7.1), the
+"Explore All Work" and "Government/business workflow system" project
+strings (§9.6/PF-033), the four process stage names (§9.7), the engagement
+lead sentence and four labels (§9.8), and the full Final CTA copy (§9.10,
+already marked fully approved above). Provisional, pending sign-off: the
+`<title>`/meta-description pairing (the meta description itself is
+verbatim §3.2), every section eyebrow/heading, the six capability-card
+descriptions (carried over unchanged from their existing PF-032 provisional
+flag), the About preview paragraph (drafted only from the facts §9.9/§10.5
+already state as approved — no fabricated specifics), and the "Learn About
+My Approach"/"See the Full Process"/engagement-lede strings (already
+approved for provisional showcase use per the PF-034 entry above, now
+proposed as production copy). The full string-by-string table is recorded
+in the PF-041 implementation record, not duplicated here to avoid a second,
+driftable copy of the same classification.
+
+**Test strategy — one shared markup contract, two callers.** Structural
+assertions previously duplicated ad hoc inside each
+`tests/*-layout.test.mjs`/`cta-section.test.mjs` file (list parentage, item
+counts, link/action pairing, decorative-icon a11y, section-level action
+placement) are extracted into `tests/helpers/component-markup.mjs` — the
+same extraction pattern `tests/helpers/cascade-resolver.mjs` already
+established for cascade checks. Both the six existing showcase test files
+and the new `tests/home-render.test.mjs` call the identical helper
+functions, the former against `dev/design-system/index.html`, the latter
+against the six new renderers' real output — so the showcase and the
+production renderer can never silently drift into two different
+descriptions of the same contract. Cascade-resolution and grid
+column-count/pixel-simulation checks stay local to each `*-layout` file,
+since those are about the compiled stylesheet or the showcase's own
+specific wide-container arrangement, not the general markup contract a
+renderer must reproduce.
+
 ## Accessibility rationale summary
 
 - Every text/background pairing whose use is documented above is
@@ -1046,21 +1208,27 @@ will need a local override — not solved speculatively here.
 - **`.btn--ghost`'s lack of a border** (PF-021) — currently relies on text
   contrast alone, like a plain link; revisit if a future use case needs it
   to read as a bounded shape rather than a text action.
-- **Capability-card renderer/data module** (PF-032) — deferred for the same
-  reason the PF-021 icon renderer was: no real production template calls it
-  yet. Revisit when PF-041/050 first composes real capability-card content
-  into an actual page — that milestone is the natural point to add
-  `renderCapabilityCard()` and a validated content-data module, following
-  the same pattern PF-031 used to finally give the icon renderer its first
-  real caller.
+- **Capability-card renderer/data module** (PF-032) — **resolved by
+  PF-041.** `renderCapabilityCard()` (`src/components/capability-card.js`)
+  and real content in `src/content/pages/home.js` now exist, following the
+  same pattern PF-031 used to finally give the icon renderer its first real
+  caller. The six descriptions remain provisional pending final
+  production-content sign-off (see "Homepage (PF-041)" above) — the
+  deferral was about the renderer/data-module's existence, not the copy's
+  approval status.
+- **Project-card renderer/data module** (PF-033) — **resolved by PF-041**
+  the same way: `renderProjectCard()` now exists, composing the same
+  reduced (title/category/link, no summary/tags) fields already proven in
+  the showcase's real cards — still no summary/tech/outcome copy, since
+  none is approved (PF-003 still blocked).
 - **Process-steps/trust-list/engagement-options/CTA renderers, data
-  modules, and schema fields** (PF-034) — deferred for the same reason.
-  Revisit when PF-041 first composes real homepage content into these
-  sections; add the corresponding `render*()` functions and validated
-  content-data modules then, not before. The three provisional strings
-  flagged in "Process, trust, engagement, and CTA components (PF-034)"
-  above (the process/trust link labels, the trust link's target, and the
-  engagement-intro paraphrase) are approved for provisional showcase use —
-  they still need a separate final production-content review at that point,
-  since approval to date only covers this development showcase, not final
-  production copy.
+  modules, and schema fields** (PF-034) — **resolved by PF-041.**
+  `render*()` functions now exist for all four
+  (`src/components/{process-steps,trust-list,engagement-options,cta}.js`),
+  composing real `src/content/pages/home.js` content validated by a new
+  `home`-template branch in `src/pages/content-schema.js`. The three
+  strings previously flagged as approved-for-provisional-showcase-use only
+  (the process/trust link labels, the trust link's target, and the
+  engagement-lede paraphrase) are now proposed as production copy, carried
+  over verbatim — still pending final production-content sign-off, per
+  "Homepage (PF-041)" above.

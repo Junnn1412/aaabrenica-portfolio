@@ -57,7 +57,38 @@ for (const route of routes) {
   // PF-040: the page container is wired at the template layer, but the
   // composed output must still show it immediately inside <main> — proves
   // the invariant end-to-end regardless of which layer produced it.
-  if (
+  //
+  // PF-041: the home route is the one deliberate exception, anticipated by
+  // PF-040's own decision-log entry — instead of one container wrapping the
+  // whole main, each top-level <section> (hero, home-section) owns its own
+  // inner .container, so later full-bleed sections never fight a
+  // page-level wrapper. Verified end-to-end here the same way: <main> must
+  // open directly with a section, and every such section must itself open
+  // with .container.
+  if (route.key === 'home') {
+    if (
+      !/<main id="main-content" tabindex="-1">\s*<section class="hero">/.test(
+        html,
+      )
+    ) {
+      add(
+        `route "${route.key}": expected <main id="main-content" tabindex="-1"> to open with the hero section`,
+      );
+    }
+    const sectionCount = countMatches(
+      html,
+      /<section class="(?:hero|home-section)/g,
+    );
+    const sectionContainerCount = countMatches(
+      html,
+      /<section class="(?:hero|home-section)[^"]*"><div class="container/g,
+    );
+    if (sectionCount === 0 || sectionCount !== sectionContainerCount) {
+      add(
+        `route "${route.key}": expected every top-level section (found ${sectionCount}) to open with its own <div class="container"> (found ${sectionContainerCount})`,
+      );
+    }
+  } else if (
     countMatches(
       html,
       /<main id="main-content" tabindex="-1">\s*<div class="container">/g,

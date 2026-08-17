@@ -1,4 +1,9 @@
 import { isSafeInternalPath } from './link-safety.js';
+import {
+  TRUST_ICONS,
+  CAPABILITY_ICONS,
+  CAPABILITY_ACCENTS,
+} from './icon-registry.js';
 
 function checkBaseFields(content, problems) {
   if (typeof content.title !== 'string' || content.title.length === 0) {
@@ -34,6 +39,225 @@ function checkLink(link, fieldName, problems) {
     problems.push(
       `"${fieldName}.path" must be a safe internal path (start with "/", not "//")`,
     );
+  }
+}
+
+// PF-041 helpers below, used only by the 'home' template branch.
+
+function checkNonEmptyString(value, fieldName, problems) {
+  if (typeof value !== 'string' || value.length === 0) {
+    problems.push(`"${fieldName}" must be a non-empty string`);
+  }
+}
+
+// Capability-card and project-card links have no independent visible
+// label — the card's own heading text is the link's accessible name (see
+// docs/DESIGN_SYSTEM.md's Capability/Project card markup contracts), so
+// these are validated as a bare safe path, not the {label, path} shape
+// checkLink() expects.
+function checkBarePath(path, fieldName, problems) {
+  if (typeof path !== 'string' || !isSafeInternalPath(path)) {
+    problems.push(
+      `"${fieldName}" must be a safe internal path (start with "/", not "//")`,
+    );
+  }
+}
+
+function checkExactArray(value, fieldName, count, problems) {
+  if (!Array.isArray(value) || value.length !== count) {
+    problems.push(`"${fieldName}" must be an array of exactly ${count} items`);
+    return false;
+  }
+  return true;
+}
+
+function checkSectionHeader(section, fieldName, problems) {
+  checkNonEmptyString(section?.eyebrow, `${fieldName}.eyebrow`, problems);
+  checkNonEmptyString(section?.heading, `${fieldName}.heading`, problems);
+}
+
+function checkHomeContent(content, problems) {
+  const c = content;
+
+  if (c.hero == null || typeof c.hero !== 'object') {
+    problems.push('"hero" is required for the home page');
+  } else {
+    checkLink(c.hero.primaryCta, 'hero.primaryCta', problems);
+    checkLink(c.hero.secondaryCta, 'hero.secondaryCta', problems);
+  }
+
+  if (c.trust == null || typeof c.trust !== 'object') {
+    problems.push('"trust" is required for the home page');
+  } else {
+    checkSectionHeader(c.trust, 'trust', problems);
+    if (checkExactArray(c.trust.items, 'trust.items', 3, problems)) {
+      c.trust.items.forEach((item, i) => {
+        checkNonEmptyString(
+          item?.heading,
+          `trust.items[${i}].heading`,
+          problems,
+        );
+        if (typeof item?.icon !== 'string' || !(item.icon in TRUST_ICONS)) {
+          problems.push(
+            `"trust.items[${i}].icon" must be one of: ${Object.keys(TRUST_ICONS).join(', ')}`,
+          );
+        }
+      });
+    }
+    checkLink(c.trust.link, 'trust.link', problems);
+  }
+
+  if (c.problems == null || typeof c.problems !== 'object') {
+    problems.push('"problems" is required for the home page');
+  } else {
+    checkSectionHeader(c.problems, 'problems', problems);
+    if (checkExactArray(c.problems.items, 'problems.items', 4, problems)) {
+      c.problems.items.forEach((item, i) => {
+        checkNonEmptyString(item, `problems.items[${i}]`, problems);
+      });
+    }
+    checkNonEmptyString(
+      c.problems.reassurance,
+      'problems.reassurance',
+      problems,
+    );
+    checkLink(c.problems.link, 'problems.link', problems);
+  }
+
+  if (c.capabilities == null || typeof c.capabilities !== 'object') {
+    problems.push('"capabilities" is required for the home page');
+  } else {
+    checkSectionHeader(c.capabilities, 'capabilities', problems);
+    if (
+      checkExactArray(c.capabilities.items, 'capabilities.items', 6, problems)
+    ) {
+      c.capabilities.items.forEach((item, i) => {
+        checkNonEmptyString(
+          item?.heading,
+          `capabilities.items[${i}].heading`,
+          problems,
+        );
+        checkNonEmptyString(
+          item?.description,
+          `capabilities.items[${i}].description`,
+          problems,
+        );
+        if (
+          typeof item?.accent !== 'string' ||
+          !CAPABILITY_ACCENTS.includes(item.accent)
+        ) {
+          problems.push(
+            `"capabilities.items[${i}].accent" must be one of: ${CAPABILITY_ACCENTS.join(', ')}`,
+          );
+        }
+        if (
+          typeof item?.icon !== 'string' ||
+          !(item.icon in CAPABILITY_ICONS)
+        ) {
+          problems.push(
+            `"capabilities.items[${i}].icon" must be one of: ${Object.keys(CAPABILITY_ICONS).join(', ')}`,
+          );
+        }
+        checkBarePath(item?.link, `capabilities.items[${i}].link`, problems);
+      });
+    }
+  }
+
+  if (c.projects == null || typeof c.projects !== 'object') {
+    problems.push('"projects" is required for the home page');
+  } else {
+    checkSectionHeader(c.projects, 'projects', problems);
+    if (checkExactArray(c.projects.items, 'projects.items', 3, problems)) {
+      let featuredCount = 0;
+      c.projects.items.forEach((item, i) => {
+        checkNonEmptyString(
+          item?.heading,
+          `projects.items[${i}].heading`,
+          problems,
+        );
+        checkBarePath(item?.link, `projects.items[${i}].link`, problems);
+        if (
+          'category' in (item ?? {}) &&
+          item.category != null &&
+          (typeof item.category !== 'string' || item.category.length === 0)
+        ) {
+          problems.push(
+            `"projects.items[${i}].category", when present, must be a non-empty string`,
+          );
+        }
+        if (item?.featured === true) {
+          featuredCount++;
+        } else if (item?.featured !== undefined && item?.featured !== false) {
+          problems.push(
+            `"projects.items[${i}].featured", when present, must be a boolean`,
+          );
+        }
+      });
+      if (featuredCount !== 1) {
+        problems.push(
+          `"projects.items" must contain exactly one item with "featured: true", found ${featuredCount}`,
+        );
+      }
+    }
+    checkLink(c.projects.link, 'projects.link', problems);
+  }
+
+  if (c.process == null || typeof c.process !== 'object') {
+    problems.push('"process" is required for the home page');
+  } else {
+    checkSectionHeader(c.process, 'process', problems);
+    if (checkExactArray(c.process.steps, 'process.steps', 4, problems)) {
+      c.process.steps.forEach((step, i) => {
+        checkNonEmptyString(
+          step?.heading,
+          `process.steps[${i}].heading`,
+          problems,
+        );
+      });
+    }
+    checkLink(c.process.link, 'process.link', problems);
+  }
+
+  if (c.engagement == null || typeof c.engagement !== 'object') {
+    problems.push('"engagement" is required for the home page');
+  } else {
+    checkNonEmptyString(c.engagement.heading, 'engagement.heading', problems);
+    checkNonEmptyString(c.engagement.lede, 'engagement.lede', problems);
+    if (checkExactArray(c.engagement.items, 'engagement.items', 4, problems)) {
+      c.engagement.items.forEach((item, i) => {
+        checkNonEmptyString(item, `engagement.items[${i}]`, problems);
+      });
+    }
+  }
+
+  if (c.about == null || typeof c.about !== 'object') {
+    problems.push('"about" is required for the home page');
+  } else {
+    checkSectionHeader(c.about, 'about', problems);
+    if (
+      !Array.isArray(c.about.paragraphs) ||
+      c.about.paragraphs.length === 0 ||
+      c.about.paragraphs.some((p) => typeof p !== 'string' || p.length === 0)
+    ) {
+      problems.push(
+        '"about.paragraphs" must be a non-empty array of non-empty strings',
+      );
+    }
+    checkLink(c.about.link, 'about.link', problems);
+  }
+
+  if (c.cta == null || typeof c.cta !== 'object') {
+    problems.push('"cta" is required for the home page');
+  } else {
+    checkNonEmptyString(c.cta.heading, 'cta.heading', problems);
+    if (
+      'body' in c.cta &&
+      c.cta.body != null &&
+      (typeof c.cta.body !== 'string' || c.cta.body.length === 0)
+    ) {
+      problems.push('"cta.body", when present, must be a non-empty string');
+    }
+    checkLink(c.cta.action, 'cta.action', problems);
   }
 }
 
@@ -74,6 +298,10 @@ export function validateContent(route, content) {
         problems.push('"backLink.path" must be exactly "/work/"');
       }
     }
+  }
+
+  if (route.template === 'home') {
+    checkHomeContent(content, problems);
   }
 
   return problems;

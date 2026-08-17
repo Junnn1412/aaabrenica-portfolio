@@ -58,6 +58,228 @@ test('listing template requires a non-empty links array of valid links', () => {
   assert.deepEqual(validateContent(route, goodLink), []);
 });
 
+// PF-041 — a minimal but complete valid 'home' content fixture, matching
+// the shape src/content/pages/home.js uses for real.
+function validHomeContent() {
+  return {
+    title: 'Home',
+    description: 'Home description.',
+    heading: 'Hero heading.',
+    paragraphs: ['Hero supporting copy.'],
+    hero: {
+      primaryCta: { label: 'Discuss Your Project', path: '/contact/' },
+      secondaryCta: { label: 'Explore My Work', path: '/work/' },
+    },
+    trust: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      items: [
+        { icon: 'package-check', heading: 'One' },
+        { icon: 'handshake', heading: 'Two' },
+        { icon: 'workflow', heading: 'Three' },
+      ],
+      link: { label: 'Learn About My Approach', path: '/about/' },
+    },
+    problems: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      items: ['One', 'Two', 'Three', 'Four'],
+      reassurance: 'Reassurance.',
+      link: { label: 'Explore Solutions', path: '/solutions/' },
+    },
+    capabilities: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      items: [
+        {
+          accent: 'lime',
+          icon: 'boxes',
+          heading: 'One',
+          description: 'D',
+          link: '/solutions/',
+        },
+        {
+          accent: 'amber',
+          icon: 'workflow',
+          heading: 'Two',
+          description: 'D',
+          link: '/solutions/',
+        },
+        {
+          accent: 'cyan',
+          icon: 'globe',
+          heading: 'Three',
+          description: 'D',
+          link: '/solutions/',
+        },
+        {
+          accent: 'violet',
+          icon: 'code',
+          heading: 'Four',
+          description: 'D',
+          link: '/solutions/',
+        },
+        {
+          accent: 'coral',
+          icon: 'refresh-cw',
+          heading: 'Five',
+          description: 'D',
+          link: '/solutions/',
+        },
+        {
+          accent: 'magenta',
+          icon: 'life-buoy',
+          heading: 'Six',
+          description: 'D',
+          link: '/solutions/',
+        },
+      ],
+    },
+    projects: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      items: [
+        { featured: true, heading: 'One', link: '/work/fes-challenger/' },
+        {
+          category: 'Cat',
+          heading: 'Two',
+          link: '/work/business-workflow-system/',
+        },
+        { heading: 'Three', link: '/work/ebarangay/' },
+      ],
+      link: { label: 'Explore All Work', path: '/work/' },
+    },
+    process: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      steps: [
+        { heading: 'One' },
+        { heading: 'Two' },
+        { heading: 'Three' },
+        { heading: 'Four' },
+      ],
+      link: { label: 'See the Full Process', path: '/process/' },
+    },
+    engagement: {
+      heading: 'Start with what creates the most value.',
+      lede: 'Lede.',
+      items: ['One', 'Two', 'Three', 'Four'],
+    },
+    about: {
+      eyebrow: 'Eyebrow',
+      heading: 'Heading',
+      paragraphs: ['Paragraph.'],
+      link: { label: 'Read My Full Story', path: '/about/' },
+    },
+    cta: {
+      heading: 'Heading',
+      body: 'Body.',
+      action: { label: "Let's Discuss Your Project", path: '/contact/' },
+    },
+  };
+}
+
+test('valid home content produces no problems', () => {
+  const route = { key: 'home', template: 'home' };
+  assert.deepEqual(validateContent(route, validHomeContent()), []);
+});
+
+test('home template reports every missing top-level section', () => {
+  const route = { key: 'home', template: 'home' };
+  const content = {
+    title: 'Home',
+    heading: 'Heading',
+    paragraphs: ['P'],
+  };
+  const problems = validateContent(route, content);
+  for (const field of [
+    'hero',
+    'trust',
+    'problems',
+    'capabilities',
+    'projects',
+    'process',
+    'engagement',
+    'about',
+    'cta',
+  ]) {
+    assert.ok(
+      problems.some((p) => p.includes(`"${field}"`)),
+      `expected a problem mentioning "${field}"`,
+    );
+  }
+});
+
+test('home template enforces exact array lengths for every section', () => {
+  const route = { key: 'home', template: 'home' };
+  const content = validHomeContent();
+  content.trust.items = content.trust.items.slice(0, 2); // 2 instead of 3
+  content.capabilities.items = content.capabilities.items.slice(0, 5); // 5 instead of 6
+  const problems = validateContent(route, content);
+  assert.ok(
+    problems.some((p) =>
+      p.includes('"trust.items" must be an array of exactly 3'),
+    ),
+  );
+  assert.ok(
+    problems.some((p) =>
+      p.includes('"capabilities.items" must be an array of exactly 6'),
+    ),
+  );
+});
+
+test('home template rejects an unknown trust icon key', () => {
+  const route = { key: 'home', template: 'home' };
+  const content = validHomeContent();
+  content.trust.items[0].icon = 'not-a-real-icon';
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('trust.items[0].icon')));
+});
+
+test('home template rejects an unknown capability icon key and accent', () => {
+  const route = { key: 'home', template: 'home' };
+  const content = validHomeContent();
+  content.capabilities.items[0].icon = 'not-a-real-icon';
+  content.capabilities.items[1].accent = 'not-a-real-accent';
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('capabilities.items[0].icon')));
+  assert.ok(problems.some((p) => p.includes('capabilities.items[1].accent')));
+});
+
+test('home template rejects an unsafe capability/project card link', () => {
+  const route = { key: 'home', template: 'home' };
+  const content = validHomeContent();
+  content.capabilities.items[0].link = 'javascript:alert(1)';
+  content.projects.items[0].link = '//evil.example.com';
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('capabilities.items[0].link')));
+  assert.ok(problems.some((p) => p.includes('projects.items[0].link')));
+});
+
+test('home template requires exactly one featured project', () => {
+  const route = { key: 'home', template: 'home' };
+
+  const none = validHomeContent();
+  none.projects.items.forEach((item) => delete item.featured);
+  assert.ok(
+    validateContent(route, none).some((p) =>
+      p.includes(
+        '"projects.items" must contain exactly one item with "featured: true"',
+      ),
+    ),
+  );
+
+  const two = validHomeContent();
+  two.projects.items[1].featured = true;
+  assert.ok(
+    validateContent(route, two).some((p) =>
+      p.includes(
+        '"projects.items" must contain exactly one item with "featured: true"',
+      ),
+    ),
+  );
+});
+
 test('case-study template requires backLink pointing exactly at /work/', () => {
   const route = { key: 'work-fes-challenger', template: 'case-study' };
   const base = {

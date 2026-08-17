@@ -530,6 +530,17 @@ function checkWorkContent(content, problems) {
   checkCtaShape(c.cta, 'cta', problems);
 }
 
+// PF-055 helper, used only by the 'not-found' template branch. A fixed,
+// curated navigational set (Home/Work/Contact) — checkExactArray(..., 3,
+// ...), not a growth-safe non-empty-array rule like checkWorkContent's.
+function checkNotFoundContent(content, problems) {
+  if (checkExactArray(content.links, 'links', 3, problems)) {
+    content.links.forEach((link, i) =>
+      checkLink(link, `links[${i}]`, problems),
+    );
+  }
+}
+
 // Single-route content shape + literal link safety — used by both
 // src/pages/render.js (fail-fast, route-specific) and
 // scripts/validate-routes.mjs (collect-all, project-wide).
@@ -546,6 +557,13 @@ export function validateContent(route, content) {
 
   if ('link' in content && content.link != null) {
     checkLink(content.link, 'link', problems);
+  }
+
+  // PF-053: a universal optional field, the same way `link` already is —
+  // not gated by route.template — so any dedicated page can opt into a
+  // closing CTA panel without needing its own schema branch.
+  if ('cta' in content && content.cta != null) {
+    checkCtaShape(content.cta, 'cta', problems);
   }
 
   if (route.template === 'case-study') {
@@ -573,6 +591,10 @@ export function validateContent(route, content) {
 
   if (route.template === 'work') {
     checkWorkContent(content, problems);
+  }
+
+  if (route.template === 'not-found') {
+    checkNotFoundContent(content, problems);
   }
 
   return problems;

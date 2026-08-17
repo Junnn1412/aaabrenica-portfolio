@@ -8,11 +8,16 @@ export const site = {
   primaryCta: { label: 'Start a Project', path: '/contact/' },
   // No production domain is connected yet — canonical links are omitted while this is null.
   baseUrl: null,
-  // Structure only, no fabricated values — populated once PF-003's content inventory is approved.
+  // No résumé asset exists yet — deferred by explicit product decision
+  // (PF-053/054 scope); stays null until a later milestone approves and
+  // adds one.
   resumePath: null,
+  // Verified real values (PF-054) — both pass isSafeExternalUrl's
+  // https-only + closed host-allowlist check (src/pages/link-safety.js).
   social: {
-    github: null,
-    linkedin: null,
+    github: 'https://github.com/Junnn1412',
+    linkedin: 'https://www.linkedin.com/in/antonio-iii-abrenica-b17b181a7',
   },
-  contactEmail: null,
+  // Verified real value (PF-054) — passes isSafeEmail.
+  contactEmail: 'website@aaabrenica.site',
 };

@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderFooter } from '../src/components/partials/footer.js';
+import { site as realSite } from '../src/config/site.js';
 
 const navItems = [
   { key: 'home', label: 'Home', path: '/' },
@@ -75,6 +76,40 @@ test('invalid fixture contact data renders nothing for that field', () => {
   assert.doesNotMatch(html, /evil\.example\.com/);
   assert.doesNotMatch(html, /linkedin\.com/);
   assert.doesNotMatch(html, /resume\.pdf/);
+});
+
+// PF-054: fast, fixture-independent confidence that the real configured
+// contact values (src/config/site.js) actually render, so a Phase 0-style
+// regression is caught here even without a full `npm run build`.
+test('the real configured site renders its email, GitHub, and LinkedIn links', () => {
+  const html = renderFooter(navItems, realSite, { year: 2026 });
+  assert.match(
+    html,
+    new RegExp(
+      `<a href="mailto:${realSite.contactEmail}">Email</a>`.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&',
+      ),
+    ),
+  );
+  assert.match(
+    html,
+    new RegExp(
+      `<a href="${realSite.social.github}">GitHub</a>`.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&',
+      ),
+    ),
+  );
+  assert.match(
+    html,
+    new RegExp(
+      `<a href="${realSite.social.linkedin}">LinkedIn</a>`.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&',
+      ),
+    ),
+  );
 });
 
 test('privacy link and copyright are always present', () => {

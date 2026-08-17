@@ -71,7 +71,7 @@ export const routes = [
     path: '/contact/',
     entry: 'contact/index.html',
     navKey: 'contact',
-    template: 'standard',
+    template: 'contact',
     content: 'contact',
   },
   {
@@ -87,7 +87,7 @@ export const routes = [
     path: '/404.html',
     entry: '404.html',
     navKey: null,
-    template: 'standard',
+    template: 'not-found',
     content: 'not-found',
   },
 ];

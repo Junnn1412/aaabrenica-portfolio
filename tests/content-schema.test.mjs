@@ -43,6 +43,122 @@ test('optional description is validated only when present', () => {
   assert.ok(validateContent(route, withBadDescription).length > 0);
 });
 
+// PF-053 — 'cta' is a universal optional field (like 'link'), not gated by
+// route.template, so it's exercised here against the generic 'standard'
+// route rather than a dedicated template branch.
+test('optional cta is validated only when present', () => {
+  const route = { key: 'about', template: 'standard' };
+  const withoutCta = {
+    title: 'About',
+    heading: 'About',
+    paragraphs: ['ok'],
+  };
+  assert.deepEqual(validateContent(route, withoutCta), []);
+
+  const withValidCta = {
+    ...withoutCta,
+    cta: {
+      heading: 'Talk it through?',
+      body: 'Share the details.',
+      action: { label: 'Contact', path: '/contact/' },
+    },
+  };
+  assert.deepEqual(validateContent(route, withValidCta), []);
+});
+
+test('cta missing its heading is reported', () => {
+  const route = { key: 'about', template: 'standard' };
+  const content = {
+    title: 'About',
+    heading: 'About',
+    paragraphs: ['ok'],
+    cta: { action: { label: 'Contact', path: '/contact/' } },
+  };
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"cta.heading"')));
+});
+
+test('cta with an unsafe action path is reported', () => {
+  const route = { key: 'about', template: 'standard' };
+  const content = {
+    title: 'About',
+    heading: 'About',
+    paragraphs: ['ok'],
+    cta: {
+      heading: 'Talk it through?',
+      action: { label: 'Contact', path: '//evil.com' },
+    },
+  };
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"cta.action.path"')));
+});
+
+// PF-054 — the 'contact' template is deliberately schema-identical to
+// 'standard' (its contact-methods list is sourced from site.js, not
+// content), so this confirms "no new required content shape" is true, not
+// merely assumed.
+test('the contact template requires only the base fields, same as standard', () => {
+  const route = { key: 'contact', template: 'contact' };
+  const content = {
+    title: 'Contact',
+    heading: 'Contact',
+    paragraphs: ['ok'],
+  };
+  assert.deepEqual(validateContent(route, content), []);
+});
+
+// PF-055 — the 'not-found' template requires exactly 3 well-formed links
+// (a fixed, curated recovery set), not a growing collection.
+function validNotFoundContent() {
+  return {
+    title: 'Page Not Found',
+    heading: 'Page Not Found',
+    paragraphs: ['Not found.'],
+    links: [
+      { label: 'Home', path: '/' },
+      { label: 'Work', path: '/work/' },
+      { label: 'Contact', path: '/contact/' },
+    ],
+  };
+}
+
+test('valid not-found content produces no problems', () => {
+  const route = { key: 'not-found', template: 'not-found' };
+  assert.deepEqual(validateContent(route, validNotFoundContent()), []);
+});
+
+test('not-found content with 2 links is reported', () => {
+  const route = { key: 'not-found', template: 'not-found' };
+  const content = validNotFoundContent();
+  content.links = content.links.slice(0, 2);
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"links"')));
+});
+
+test('not-found content with 4 links is reported', () => {
+  const route = { key: 'not-found', template: 'not-found' };
+  const content = validNotFoundContent();
+  content.links = [...content.links, { label: 'Extra', path: '/extra/' }];
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"links"')));
+});
+
+test('not-found content with an unsafe link path is reported', () => {
+  const route = { key: 'not-found', template: 'not-found' };
+  const content = validNotFoundContent();
+  content.links[0] = { label: 'Home', path: '//evil.com' };
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"links[0].path"')));
+});
+
+test('not-found content missing links entirely is reported', () => {
+  const route = { key: 'not-found', template: 'not-found' };
+  const content = validNotFoundContent();
+  delete content.links;
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"links"')));
+});
+
 // PF-041 — a minimal but complete valid 'home' content fixture, matching
 // the shape src/content/pages/home.js uses for real.
 function validHomeContent() {

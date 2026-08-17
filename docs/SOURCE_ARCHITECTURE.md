@@ -10,7 +10,7 @@ for the reasoning behind the approach.
 ```text
 src/
 ├── config/
-│   ├── site.js         — site name, default description, base URL, primary CTA, contact/social/résumé (mostly still null)
+│   ├── site.js         — site name, default description, base URL, primary CTA. PF-054: `contactEmail`/`social.github`/`social.linkedin` are now real, verified values (not null); `resumePath`/`baseUrl` remain null, deferred by explicit product decision
 │   ├── navigation.js    — primary nav items [{ key, label, path }]
 │   └── routes.js        — single source of truth: every route's path, entry file, nav key, template, content key
 ├── content/
@@ -21,13 +21,13 @@ src/
 │   ├── section-header.js  — PF-050: eyebrow/heading/lede section header, extracted from home.js's template for its second real caller (solutions.js) — shared by both, not home-specific
 │   └── partials/          — shared structural markup: header, nav, footer
 ├── pages/
-│   ├── templates/          — standard / case-study / home / solutions / process / work: the *shape* a page takes (`listing` renamed to `work` at PF-052 — see `DECISION_LOG.md`)
+│   ├── templates/          — standard / case-study / home / solutions / process / work / contact / not-found: the *shape* a page takes (`listing` renamed to `work` at PF-052; `contact` and `not-found` added at PF-054/PF-055 — see `DECISION_LOG.md`)
 │   ├── render.js            — route -> composed { head, header, main, footer }
 │   ├── compose.js           — marker validation + safe substitution into the HTML skeleton
 │   ├── escape.js             — escapeHtml — the only way content reaches HTML
 │   ├── link-safety.js        — isSafeInternalPath/isSafeEmail/isSafeExternalUrl — rejects javascript:, external, protocol-relative URLs, and unsafe mailto:/social-URL shapes (PF-031)
 │   ├── icon-registry.js       — PF-041: closed-set icon-key/accent registry (TRUST_ICONS, CAPABILITY_ICONS, CAPABILITY_ACCENTS, CARD_ARROW_ICON) — the single source content-schema.js validates against and the components/*.js renderers resolve icons from, keeping the pure validation layer free of any dependency on renderer modules
-│   ├── content-schema.js     — per-template required-field/type + link-safety checks. PF-051 adds `PROCESS_STAGE_NAMES` (exported single source of truth for the canonical 7-stage lifecycle order) and `checkProcessContent`, which enforces stage order/naming positionally and forbids a `next` property on the terminal stage via `Object.hasOwn` (presence, not truthiness). PF-052 adds the shared `checkProjectCardItem` helper (reused by `checkHomeContent`'s `projects` branch and the new `checkWorkContent`) — per-route content shape only; cross-route link *completeness* stays out of this module, see `scripts/work-project-routes.mjs` below
+│   ├── content-schema.js     — per-template required-field/type + link-safety checks. PF-051 adds `PROCESS_STAGE_NAMES` (exported single source of truth for the canonical 7-stage lifecycle order) and `checkProcessContent`, which enforces stage order/naming positionally and forbids a `next` property on the terminal stage via `Object.hasOwn` (presence, not truthiness). PF-052 adds the shared `checkProjectCardItem` helper (reused by `checkHomeContent`'s `projects` branch and the new `checkWorkContent`) — per-route content shape only; cross-route link *completeness* stays out of this module, see `scripts/work-project-routes.mjs` below. PF-053 adds `content.cta` as a universal optional field (validated unconditionally, like the existing `content.link`, not gated by `route.template`), reusing `checkCtaShape()`. PF-054's `contact` template needs no new branch — its contact-methods list is sourced from `site`, not `content`, so `contact.js`'s content only needs the base fields. PF-055 adds `checkNotFoundContent`, using `checkExactArray(content.links, 'links', 3, problems)` — a fixed 3-link recovery set, not a growth-safe count like Work's
 │   └── dev-watcher.js         — attaches the dev-server file watcher that restarts on architecture edits
 ├── scripts/
 │   ├── main.js                 — global JS entry (imports the SCSS entry, nav-toggle.js)
@@ -183,7 +183,19 @@ The 404 route's `navKey` is `null`; the nav partial only sets
 `aria-current="page"` when a route's `navKey` matches a nav item's `key`, so
 the 404 page renders the full primary navigation with **no active item** —
 it isn't part of a normal site section. Verified in
-`scripts/verify-build-output.mjs`.
+`scripts/verify-build-output.mjs`. Unchanged by PF-055's move to a
+dedicated `not-found` template — this task confirmed the existing policy
+still holds end-to-end, it did not need new enforcement.
+
+`scripts/verify-build-output.mjs` also carries a PF-054 region-scoped check
+for the three real configured contact links (`site.contactEmail`/
+`social.github`/`social.linkedin`): each must appear exactly once inside
+every route's `<footer>...</footer>` substring, and — on the `contact`
+route specifically — exactly once inside `<main>...</main>` as well. This
+replaced a PF-011-era "never appears anywhere" check once the fields
+became real, non-null values; a single whole-document "exactly once" count
+would have been wrong for `contact`, which legitimately renders each link
+twice (once in its own contact-methods list, once in the shared footer).
 
 ## SCSS layering
 
@@ -203,9 +215,18 @@ anchor offset), and joined by a second file, `pages/_process.scss`, since
 PF-051 (the ordered stage list's number/heading row, the shared
 `.process-facts` term/detail pattern reused by both the stages and Working
 Together sections, and the mobile-stack/desktop-grid responsive contract
-for it, gated behind `spacing.$bp-md`). See `docs/DESIGN_SYSTEM.md`'s
-"Solutions page (PF-050)" and "Process page (PF-051)" sections for the
-full rationale.
+for it, gated behind `spacing.$bp-md`), and a third, `pages/_contact.scss`,
+since PF-054 (`.contact-methods`'s `ul`/`li` prose-rule reset — the one
+genuinely new structural hook the Contact page needed; no existing
+component fit "N independent clickable destinations"), and a fourth,
+`pages/_not-found.scss`, added in a PF-055 visual-review follow-up after
+AAA found the initial default `ul`/`li` presentation on the 404 page's
+recovery links read as unfinished — the same reset pattern as
+`_contact.scss`, styling `.not-found__link`/`.not-found__link-item`
+(explicit classes, not a descendant selector). See `docs/DESIGN_SYSTEM.md`'s
+"Solutions page (PF-050)", "Process page (PF-051)", and "Supporting pages:
+About, Contact, Privacy, 404 (PF-053/054/055)" sections for the full
+rationale.
 
 ## Deferred
 

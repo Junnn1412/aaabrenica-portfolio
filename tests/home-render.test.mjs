@@ -111,12 +111,12 @@ test('home: project cards satisfy the shared list/pairing contract with all 3 re
     3,
     'expected all 3 real project cards to use an empty .media-frame',
   );
-  // PF-060: FES Challenger's card now carries a category/summary/tags,
-  // sourced from fes-challenger.js's own `card` export (see
-  // tests/case-study-render.test.mjs's consistency check). Business
-  // Workflow System still carries its verbatim category only; eBarangay
-  // still has no approved category/summary/tags of its own (PF-062 still
-  // blocked).
+  // PF-060/PF-061: FES Challenger's and Business Workflow System's cards
+  // now each carry a category/summary/tags, sourced from their own `card`
+  // exports (see tests/fes-challenger-render.test.mjs's and
+  // tests/business-workflow-system-render.test.mjs's consistency checks).
+  // eBarangay still has no approved category/summary/tags of its own
+  // (PF-062 still blocked/untouched).
   const categoryCount = [
     ...main.matchAll(/class="project-card__category tag"/g),
   ].length;
@@ -127,13 +127,13 @@ test('home: project cards satisfy the shared list/pairing contract with all 3 re
   );
   assert.equal(
     [...main.matchAll(/class="project-card__summary"/g)].length,
-    1,
-    'expected exactly one project card with a summary (FES Challenger)',
+    2,
+    'expected exactly two project cards with a summary (FES Challenger, Business Workflow System)',
   );
   assert.equal(
     [...main.matchAll(/class="project-card__tags"/g)].length,
-    1,
-    'expected exactly one project card with tags (FES Challenger)',
+    2,
+    'expected exactly two project cards with tags (FES Challenger, Business Workflow System)',
   );
   // PF-052 accessibility correction: project cards sit directly under this
   // section's own <h2>, so their headings must be <h3>, not the
@@ -148,6 +148,31 @@ test('home: project cards satisfy the shared list/pairing contract with all 3 re
     0,
     'expected zero project-card <h4>s',
   );
+});
+
+// PF-061 — the prohibited-wording guard also applies to the homepage's
+// rendered output, since Business Workflow System's card is composed here.
+test('home: no prohibited identifying wording appears anywhere in the rendered homepage', () => {
+  const main = homeMain();
+  for (const pattern of [
+    /\bgovernment\b/i,
+    /\bagenc(?:y|ies)\b/i,
+    /\baccreditation\b/i,
+    /\bregional\b/i,
+    /\bcontract\b/i,
+    /\bdepartment\b/i,
+    /\bsector\b/i,
+    /\bindustry\b/i,
+    /\bprogram\b/i,
+    /\boffice\b/i,
+    /\blocation\b/i,
+  ]) {
+    assert.doesNotMatch(
+      main,
+      pattern,
+      `prohibited term ${pattern} found in the rendered homepage`,
+    );
+  }
 });
 
 // PF-041 visual-review defect fix (docs/DECISION_LOG.md): the real

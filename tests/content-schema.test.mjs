@@ -977,7 +977,7 @@ function validWorkContent() {
         },
         {
           heading: 'Business Workflow System',
-          category: 'Government/business workflow system',
+          category: 'Internal Workflow System',
           link: '/work/business-workflow-system/',
         },
         { heading: 'eBarangay', link: '/work/ebarangay/' },

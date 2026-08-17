@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { routes } from '../src/config/routes.js';
+import { site } from '../src/config/site.js';
 import { MARKERS } from '../src/pages/compose.js';
 import { normalizePath, resolveEntryPath } from '../src/pages/paths.js';
 
@@ -14,6 +15,28 @@ const add = (msg) => problems.push(msg);
 function countMatches(html, re) {
   return (html.match(re) || []).length;
 }
+
+function extractRegion(html, tag) {
+  const match = html.match(new RegExp(`<${tag}[^>]*>[\\s\\S]*?</${tag}>`));
+  return match ? match[0] : '';
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// PF-053/054/055: site.js's contact fields are real values now, not null.
+// Each rendered as an exact <a href="...">-prefixed anchor by
+// src/components/partials/footer.js (mailto/GitHub/LinkedIn) and, on the
+// contact route only, again by src/pages/templates/contact.js. Checked as
+// two region-scoped invariants below, not one whole-document count — the
+// contact route legitimately contains each link twice (once in <main>,
+// once in <footer>).
+const CONTACT_LINKS = [
+  { href: `mailto:${site.contactEmail}`, label: 'email' },
+  { href: site.social.github, label: 'GitHub' },
+  { href: site.social.linkedin, label: 'LinkedIn' },
+];
 
 for (const route of routes) {
   const distFile = new URL(route.entry, distRootUrl);
@@ -158,10 +181,32 @@ for (const route of routes) {
     );
   }
 
-  if (/mailto:|github\.com|linkedin\.com/.test(html)) {
-    add(
-      `route "${route.key}": unexpected contact/social reference (site.js fields are null in PF-011)`,
-    );
+  const footerHtml = extractRegion(html, 'footer');
+  for (const { href, label } of CONTACT_LINKS) {
+    if (
+      countMatches(
+        footerHtml,
+        new RegExp(`<a href="${escapeRegExp(href)}">`, 'g'),
+      ) !== 1
+    ) {
+      add(`route "${route.key}": expected exactly one footer ${label} link`);
+    }
+  }
+
+  if (route.key === 'contact') {
+    const mainHtml = extractRegion(html, 'main');
+    for (const { href, label } of CONTACT_LINKS) {
+      if (
+        countMatches(
+          mainHtml,
+          new RegExp(`<a href="${escapeRegExp(href)}">`, 'g'),
+        ) !== 1
+      ) {
+        add(
+          `route "${route.key}": expected exactly one main-content ${label} link`,
+        );
+      }
+    }
   }
 }
 

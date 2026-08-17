@@ -1,10 +1,6 @@
 // PF-041 — thin layout wrapper only. No new tokens, colors, or patterns:
 // built entirely from already-approved base elements (.text-display,
-// .text-lead, .btn) and existing spacing/breakpoint tokens. Also carries
-// the homepage's shared inter-section rhythm (.home-section) — kept in this
-// file rather than a second new one, since both are homepage-only concerns
-// with no second caller yet (CLAUDE.md: extract reusable patterns only
-// after a real second use demonstrates the need).
+// .text-lead, .btn) and existing spacing/breakpoint tokens.
 
 // Flush against the header on the home route only — #main-content's
 // shell-level top padding (objects/_page-shell.scss) is removed locally
@@ -66,15 +62,4 @@ body[data-page='home'] #main-content {
   .hero__media {
     flex: 1 1 45%;
   }
-}
-
-// Shared vertical rhythm for every homepage section after the hero. A
-// divider between sections gives the "generous section spacing" editorial
-// rhythm the design direction calls for without any new color/token.
-.home-section {
-  padding-block: var(--space-8);
-}
-
-.home-section + .home-section {
-  border-top: var(--border-width) solid var(--color-border);
 }

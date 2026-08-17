@@ -6,8 +6,14 @@ import { routes } from '../src/config/routes.js';
 import { site } from '../src/config/site.js';
 import { MARKERS } from '../src/pages/compose.js';
 import { normalizePath, resolveEntryPath } from '../src/pages/paths.js';
+import { contentByKey } from '../src/content/pages/index.js';
+import {
+  collectCaseStudyAssetPaths,
+  findMissingCaseStudyAssets,
+} from './case-study-assets.mjs';
 
 const distRootUrl = new URL('../dist/', import.meta.url);
+const distRootPath = fileURLToPath(distRootUrl);
 
 const problems = [];
 const add = (msg) => problems.push(msg);
@@ -81,19 +87,23 @@ for (const route of routes) {
   // composed output must still show it immediately inside <main> — proves
   // the invariant end-to-end regardless of which layer produced it.
   //
-  // PF-041/PF-050/PF-051/PF-052: home, solutions, process, and work are
-  // the four per-section-container exceptions, anticipated by PF-040's own
-  // decision-log entry — instead of one container wrapping the whole main,
-  // each top-level <section> owns its own inner .container, so later
-  // full-bleed sections never fight a page-level wrapper. `home`'s main
-  // opens directly with `.hero`; every other top-level section on any of
-  // the four routes carries `.page-section` (an optional leading
-  // `id="..."` attribute — solutions' anchored sections only — doesn't
-  // change that match). `solutions`/`process`/`work` additionally open with
-  // one bare intro `<div class="container">` (heading, plus solutions' jump
-  // nav) before their first section — not itself a section, so it's
-  // checked separately here rather than folded into the per-section count.
-  if (['home', 'solutions', 'process', 'work'].includes(route.key)) {
+  // PF-041/PF-050/PF-051/PF-052/PF-060: home, solutions, process, work, and
+  // every case-study route are the per-section-container exceptions,
+  // anticipated by PF-040's own decision-log entry — instead of one
+  // container wrapping the whole main, each top-level <section> owns its
+  // own inner .container, so later full-bleed sections never fight a
+  // page-level wrapper. `home`'s main opens directly with `.hero`; every
+  // other top-level section on any of these routes carries `.page-section`
+  // (an optional leading `id="..."` attribute — solutions' anchored
+  // sections only — doesn't change that match). `solutions`/`process`/
+  // `work`/case-study additionally open with one bare intro
+  // `<div class="container">` before their first section — not itself a
+  // section, so it's checked separately here rather than folded into the
+  // per-section count.
+  if (
+    ['home', 'solutions', 'process', 'work'].includes(route.key) ||
+    route.template === 'case-study'
+  ) {
     const opensCorrectly =
       route.key === 'home'
         ? /<main id="main-content" tabindex="-1">\s*<section class="hero">/.test(
@@ -115,7 +125,17 @@ for (const route of routes) {
       html,
       /<section(?: id="[^"]*")? class="(?:hero|page-section)[^"]*"><div class="container/g,
     );
-    if (sectionCount === 0 || sectionCount !== sectionContainerCount) {
+    // home/solutions/process/work always render at least one fixed,
+    // required section — zero is a real bug there. A case-study route is
+    // different: every named section is independently optional
+    // (docs/DECISION_LOG.md's PF-060 entry), so a case study with no
+    // approved sections yet (e.g. still-placeholder content) legitimately
+    // has zero — that's honest omission, not a defect.
+    const requiresAtLeastOneSection = route.template !== 'case-study';
+    if (
+      (requiresAtLeastOneSection && sectionCount === 0) ||
+      sectionCount !== sectionContainerCount
+    ) {
       add(
         `route "${route.key}": expected every top-level section (found ${sectionCount}) to open with its own <div class="container"> (found ${sectionContainerCount})`,
       );
@@ -206,6 +226,60 @@ for (const route of routes) {
           `route "${route.key}": expected exactly one main-content ${label} link`,
         );
       }
+    }
+  }
+
+  // PF-060 — region-scoped, not whole-document: the shared footer
+  // legitimately links to GitHub/LinkedIn on every route, case studies
+  // included, so only the <main> region is checked here. Generic across any
+  // case-study route (not FES-specific), reading the approved URL from the
+  // route's own content module rather than a second hardcoded copy — so no
+  // staging URL, admin path, or unapproved external host can ever appear in
+  // a case study's main content, regardless of which route it is.
+  if (route.template === 'case-study') {
+    const mainHtml = extractRegion(html, 'main');
+    const content = contentByKey[route.content];
+    const allowedExternal = content?.externalLink?.url ?? null;
+    const externalHrefs = [...mainHtml.matchAll(/href="([^"]*)"/g)]
+      .map((m) => m[1])
+      .filter((href) => !href.startsWith('/') && !href.startsWith('mailto:'));
+
+    if (allowedExternal) {
+      const approvedCount = externalHrefs.filter(
+        (href) => href === allowedExternal,
+      ).length;
+      if (approvedCount !== 1) {
+        add(
+          `route "${route.key}": expected exactly one main-content link to the approved external URL "${allowedExternal}", found ${approvedCount}`,
+        );
+      }
+      const unapproved = externalHrefs.filter(
+        (href) => href !== allowedExternal,
+      );
+      if (unapproved.length > 0) {
+        add(
+          `route "${route.key}": found unapproved external link(s) in main content: ${unapproved.join(', ')}`,
+        );
+      }
+    } else if (externalHrefs.length > 0) {
+      add(
+        `route "${route.key}": found external link(s) in main content but no externalLink is configured: ${externalHrefs.join(', ')}`,
+      );
+    }
+
+    // PF-060 logo-integration follow-up — proves, not just configures, that
+    // every case-study local asset (logo, and any future gallery image)
+    // actually survived the build: Vite copies public/ to dist/ verbatim,
+    // so the same root-relative path must resolve here too, not just under
+    // public/ (already checked pre-build by scripts/validate-routes.mjs).
+    const assetPaths = collectCaseStudyAssetPaths(content).filter(
+      (p) => typeof p === 'string' && p.startsWith('/') && !p.startsWith('//'),
+    );
+    for (const problem of findMissingCaseStudyAssets(
+      distRootPath,
+      assetPaths,
+    )) {
+      add(`route "${route.key}": ${problem} (checked under dist/)`);
     }
   }
 }

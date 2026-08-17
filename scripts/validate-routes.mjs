@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { routes } from '../src/config/routes.js';
 import { primaryNav } from '../src/config/navigation.js';
 import { site } from '../src/config/site.js';
@@ -15,8 +16,13 @@ import {
   isSafeExternalUrl,
 } from '../src/pages/link-safety.js';
 import { findWorkProjectRouteProblems } from './work-project-routes.mjs';
+import {
+  collectCaseStudyAssetPaths,
+  findMissingCaseStudyAssets,
+} from './case-study-assets.mjs';
 
 const projectRootUrl = new URL('../', import.meta.url);
+const publicRootUrl = new URL('../public/', import.meta.url);
 
 const APPROVED_PATHS = [
   '/',
@@ -301,6 +307,31 @@ function checkMarkers() {
 // Checked here (source skeleton, pre-build) and again in
 // verify-build-output.mjs (composed dist/ output) — same dual-layer
 // pattern already used for route content.
+// PF-060 logo-integration follow-up — a case-study route's `logo.src`/
+// `gallery.items[].src` are safe-path-validated by checkContentShape
+// already, but "syntactically safe" doesn't mean "the file actually
+// exists." A route referencing a local asset that was never committed (a
+// typo'd filename, a forgotten `git add`, a follow-up that adds the field
+// before the file lands) must fail loudly here, before it can silently
+// ship a broken <img> in production.
+function checkCaseStudyAssetsExist() {
+  const publicRootPath = fileURLToPath(publicRootUrl);
+  for (const route of routes) {
+    if (route.template !== 'case-study') continue;
+    const content = contentByKey[route.content];
+    if (!content) continue; // already reported by checkRegistries
+    const assetPaths = collectCaseStudyAssetPaths(content).filter((p) =>
+      isSafeInternalPath(p),
+    ); // unsafe paths are already reported by checkContentShape
+    for (const problem of findMissingCaseStudyAssets(
+      publicRootPath,
+      assetPaths,
+    )) {
+      add(`route "${route.key}": ${problem} (checked under public/)`);
+    }
+  }
+}
+
 function checkSkipLinkTarget() {
   for (const route of routes) {
     const abs = resolveEntryPath(projectRootUrl, route.entry);
@@ -327,6 +358,7 @@ checkApprovedRoutes();
 checkPhysicalFilesExist();
 checkNoUnexpectedFiles();
 checkMarkers();
+checkCaseStudyAssetsExist();
 checkSkipLinkTarget();
 
 if (problems.length > 0) {

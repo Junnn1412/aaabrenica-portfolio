@@ -1,4 +1,7 @@
-import { isSafeInternalPath } from './link-safety.js';
+import {
+  isSafeInternalPath,
+  isSafeCaseStudyExternalUrl,
+} from './link-safety.js';
 import {
   TRUST_ICONS,
   CAPABILITY_ICONS,
@@ -541,6 +544,155 @@ function checkNotFoundContent(content, problems) {
   }
 }
 
+// PF-060 helpers below, used only by the 'case-study' template branch. Each
+// named top-level section is entirely optional — absent is always valid,
+// never an error — matching §10.4's "where applicable" framing. When a
+// section object IS present, its own required sub-fields become required.
+// goals/discovery are deliberately not separate fields here: once FES's
+// real copy was curated, neither had a real caller of its own (their
+// content lives as prose inside problem/role instead), and keeping unused
+// fields would itself be the kind of speculative generalization CLAUDE.md
+// says to avoid.
+
+function checkRequiredStringList(value, fieldName, problems) {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    value.some((v) => typeof v !== 'string' || v.length === 0)
+  ) {
+    problems.push(
+      `"${fieldName}" must be a non-empty array of non-empty strings`,
+    );
+  }
+}
+
+function checkOptionalStringList(value, fieldName, problems) {
+  if (value == null) return;
+  checkRequiredStringList(value, fieldName, problems);
+}
+
+// Absent -> no error, section omitted at render time. Present -> must be an
+// object, and its shape is fully checked by the caller-supplied checkShape.
+function checkOptionalObject(value, fieldName, problems, checkShape) {
+  if (value == null) return;
+  if (typeof value !== 'object') {
+    problems.push(`"${fieldName}", when present, must be an object`);
+    return;
+  }
+  checkShape(value, problems);
+}
+
+function checkCaseStudyContent(route, content, problems) {
+  const c = content;
+
+  if (c.backLink == null) {
+    problems.push('"backLink" is required for a case-study page');
+  } else {
+    checkLink(c.backLink, 'backLink', problems);
+    if (c.backLink.path !== '/work/') {
+      problems.push('"backLink.path" must be exactly "/work/"');
+    }
+  }
+
+  checkOptionalObject(c.logo, 'logo', problems, (logo, problems) => {
+    checkBarePath(logo.src, 'logo.src', problems);
+    if ('alt' in logo && logo.alt != null && typeof logo.alt !== 'string') {
+      problems.push('"logo.alt", when present, must be a string');
+    }
+  });
+
+  checkOptionalObject(c.client, 'client', problems, (client, problems) =>
+    checkRequiredStringList(client.body, 'client.body', problems),
+  );
+
+  checkOptionalObject(c.problem, 'problem', problems, (problem, problems) =>
+    checkRequiredStringList(problem.body, 'problem.body', problems),
+  );
+
+  checkOptionalObject(c.role, 'role', problems, (role, problems) => {
+    checkRequiredStringList(role.body, 'role.body', problems);
+    checkRequiredStringList(
+      role.responsibilities,
+      'role.responsibilities',
+      problems,
+    );
+  });
+
+  checkOptionalObject(
+    c.solution,
+    'solution',
+    problems,
+    (solution, problems) => {
+      checkRequiredStringList(solution.body, 'solution.body', problems);
+      checkOptionalStringList(solution.features, 'solution.features', problems);
+    },
+  );
+
+  checkOptionalObject(
+    c.technologyStack,
+    'technologyStack',
+    problems,
+    (stack, problems) =>
+      checkRequiredStringList(stack.items, 'technologyStack.items', problems),
+  );
+
+  checkOptionalObject(
+    c.decisions,
+    'decisions',
+    problems,
+    (decisions, problems) =>
+      checkRequiredStringList(decisions.items, 'decisions.items', problems),
+  );
+
+  checkOptionalObject(c.outcomes, 'outcomes', problems, (outcomes, problems) =>
+    checkRequiredStringList(outcomes.items, 'outcomes.items', problems),
+  );
+
+  checkOptionalObject(c.gallery, 'gallery', problems, (gallery, problems) => {
+    if (!Array.isArray(gallery.items) || gallery.items.length === 0) {
+      problems.push(
+        '"gallery.items" must be a non-empty array when "gallery" is present',
+      );
+      return;
+    }
+    gallery.items.forEach((item, i) => {
+      checkBarePath(item?.src, `gallery.items[${i}].src`, problems);
+      checkNonEmptyString(item?.alt, `gallery.items[${i}].alt`, problems);
+      if (!Number.isInteger(item?.width) || item.width <= 0) {
+        problems.push(`"gallery.items[${i}].width" must be a positive integer`);
+      }
+      if (!Number.isInteger(item?.height) || item.height <= 0) {
+        problems.push(
+          `"gallery.items[${i}].height" must be a positive integer`,
+        );
+      }
+      if (
+        'caption' in (item ?? {}) &&
+        item.caption != null &&
+        (typeof item.caption !== 'string' || item.caption.length === 0)
+      ) {
+        problems.push(
+          `"gallery.items[${i}].caption", when present, must be a non-empty string`,
+        );
+      }
+    });
+  });
+
+  checkOptionalObject(
+    c.externalLink,
+    'externalLink',
+    problems,
+    (link, problems) => {
+      checkNonEmptyString(link.label, 'externalLink.label', problems);
+      if (!isSafeCaseStudyExternalUrl(link.url, route.content)) {
+        problems.push(
+          '"externalLink.url" must be an approved https URL for this case study',
+        );
+      }
+    },
+  );
+}
+
 // Single-route content shape + literal link safety — used by both
 // src/pages/render.js (fail-fast, route-specific) and
 // scripts/validate-routes.mjs (collect-all, project-wide).
@@ -567,14 +719,7 @@ export function validateContent(route, content) {
   }
 
   if (route.template === 'case-study') {
-    if (content.backLink == null) {
-      problems.push('"backLink" is required for a case-study page');
-    } else {
-      checkLink(content.backLink, 'backLink', problems);
-      if (content.backLink.path !== '/work/') {
-        problems.push('"backLink.path" must be exactly "/work/"');
-      }
-    }
+    checkCaseStudyContent(route, content, problems);
   }
 
   if (route.template === 'home') {

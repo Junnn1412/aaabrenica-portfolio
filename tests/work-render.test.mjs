@@ -92,11 +92,12 @@ test('work: every project-card link matches a real, registered case-study route'
   assert.deepEqual(new Set(links), registeredCaseStudyPaths);
 });
 
-// PF-060: FES Challenger's card now carries its own category (sourced from
-// fes-challenger.js's `card` export — see
-// tests/case-study-render.test.mjs's consistency check), so it's no longer
-// the "no category" specimen. eBarangay remains the only card with none
-// (PF-062 still blocked).
+// PF-060/PF-061: FES Challenger's and Business Workflow System's cards now
+// carry their own category/summary/tags, each sourced from that project's
+// own `card` export (see tests/fes-challenger-render.test.mjs's and
+// tests/business-workflow-system-render.test.mjs's consistency checks), so
+// neither is the "no category" specimen anymore. eBarangay remains the
+// only card with none (PF-062 still blocked/untouched).
 test("work: category badge present on FES Challenger's and Business Workflow System's cards, absent on eBarangay's", () => {
   const main = workMain();
   const blocks = cardBlocks(main);
@@ -106,9 +107,45 @@ test("work: category badge present on FES Challenger's and Business Workflow Sys
   );
   assert.match(
     blocks[1],
-    /<span class="project-card__category tag">Government\/business workflow system<\/span>/,
+    /<span class="project-card__category tag">Internal Workflow System<\/span>/,
   );
   assert.doesNotMatch(blocks[2], /project-card__category/);
+});
+
+test("work: summary and tags present on FES Challenger's and Business Workflow System's cards, absent on eBarangay's", () => {
+  const main = workMain();
+  const blocks = cardBlocks(main);
+  assert.match(blocks[0], /project-card__summary/);
+  assert.match(blocks[0], /project-card__tags/);
+  assert.match(blocks[1], /project-card__summary/);
+  assert.match(blocks[1], /project-card__tags/);
+  assert.doesNotMatch(blocks[2], /project-card__summary/);
+  assert.doesNotMatch(blocks[2], /project-card__tags/);
+});
+
+// PF-061 — the prohibited-wording guard also applies to the Work index's
+// rendered output, since Business Workflow System's card is composed here.
+test('work: no prohibited identifying wording appears anywhere in the rendered Work index', () => {
+  const main = workMain();
+  for (const pattern of [
+    /\bgovernment\b/i,
+    /\bagenc(?:y|ies)\b/i,
+    /\baccreditation\b/i,
+    /\bregional\b/i,
+    /\bcontract\b/i,
+    /\bdepartment\b/i,
+    /\bsector\b/i,
+    /\bindustry\b/i,
+    /\bprogram\b/i,
+    /\boffice\b/i,
+    /\blocation\b/i,
+  ]) {
+    assert.doesNotMatch(
+      main,
+      pattern,
+      `prohibited term ${pattern} found in the rendered Work index`,
+    );
+  }
 });
 
 test('work: all three cards use an empty .media-frame (no fabricated screenshot)', () => {

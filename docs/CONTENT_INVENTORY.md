@@ -106,12 +106,67 @@ the logo was supplied and integrated in that follow-up — no screenshot has
 been supplied, reviewed, or added. `content.gallery` remains entirely
 absent from `fes-challenger.js`, and the case-study template renders no
 Gallery section, no empty frame, and no "coming soon" placeholder as a
-result — confirmed unchanged by `tests/case-study-render.test.mjs`'s
-gallery-absence assertions.
+result — confirmed unchanged by `tests/fes-challenger-render.test.mjs`'s
+gallery-absence assertion.
 
-## Anonymized workflow-system case study (PF-061)
+## Business Workflow System (PF-061)
 
-Not started. `docs/INITIAL_IMPLEMENTATION_TASKS.md`: "Blocked by confidentiality review."
+Fully anonymized per AAA's explicit publication constraints. No
+organization, agency, department, sector, industry, program, office,
+location, real internal system name, or acronym appears anywhere in the
+published content. No live/staging URL, no logo, no screenshots.
+
+### Facts
+
+| Fact                                                                                                                                                                                                                            | Status                                                                      | Provenance                     | Published where                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------- |
+| Client name / organization identity                                                                                                                                                                                             | **Unsuitable — must never be published**                                    | Explicitly withheld by AAA     | Never published; case study explicitly states organizational details are withheld |
+| Public title "Business Workflow System"                                                                                                                                                                                         | Publishable                                                                 | AAA-confirmed                  | Title, H1, Home/Work cards                                                        |
+| Business context: internal system for a multi-stage application, review, examination, document, approval workflow                                                                                                               | Publishable                                                                 | AAA-supplied fact              | Client & Business Context section                                                 |
+| Problem: fragmented records, manual coordination, limited status visibility, multiple participant roles                                                                                                                         | Publishable                                                                 | AAA-supplied fact              | The Challenge section                                                             |
+| AAA's role: full-stack developer (requirements, frontend, backend, database, defects, testing, deployment)                                                                                                                      | Publishable                                                                 | AAA-supplied fact              | My Role section                                                                   |
+| 9 verified capabilities (application/registration, document review, examination management, role-based review, dashboards, map-based site-inspection records, QR admission/verification, email notifications, activity history) | Publishable                                                                 | AAA-supplied fact              | What I Built section, published in full as the features list                      |
+| Verified technology stack (Angular, Angular Material, TypeScript, ASP.NET Core Web API, C#, Microsoft SQL Server, Dapper, Leaflet, REST APIs)                                                                                   | Publishable                                                                 | AAA-supplied fact              | Technology Stack section, shown once as tags                                      |
+| 6 verified technical decisions                                                                                                                                                                                                  | Publishable, 4 of 6 curated (see below)                                     | AAA-supplied fact              | Key Decisions section                                                             |
+| 5 approved qualitative outcomes                                                                                                                                                                                                 | Publishable, qualitative only — no metrics                                  | AAA-supplied fact              | Outcomes section                                                                  |
+| Timeline, team size                                                                                                                                                                                                             | **Omitted by instruction** — not published even if known                    | AAA-supplied instruction       | Not published                                                                     |
+| Numeric metrics, adoption figures, cost savings, delivery dates                                                                                                                                                                 | **Unsuitable — must never be published**                                    | Explicitly disallowed by AAA   | Never published                                                                   |
+| Live/staging URL                                                                                                                                                                                                                | **Unsuitable — must never be published**                                    | Explicitly disallowed by AAA   | No `externalLink` configured                                                      |
+| Logo                                                                                                                                                                                                                            | **Missing** — none approved                                                 | N/A                            | No `logo` configured                                                              |
+| Screenshots                                                                                                                                                                                                                     | **Missing** — deferred to a later, separate sanitization-and-approval round | AAA-supplied instruction       | No `gallery` configured                                                           |
+| Home/Work card category "Internal Workflow System"                                                                                                                                                                              | Provisional, AAA-approved                                                   | Directly derived, AAA-reviewed | `business-workflow-system.js`'s `card.category`                                   |
+| Home/Work card summary                                                                                                                                                                                                          | Provisional, AAA-approved                                                   | Directly derived, AAA-reviewed | `business-workflow-system.js`'s `card.summary`                                    |
+| Home/Work card tags (`Angular`, `ASP.NET Core`)                                                                                                                                                                                 | Provisional, AAA-approved                                                   | Directly derived, AAA-reviewed | `business-workflow-system.js`'s `card.tags`                                       |
+
+### Curation: 6 verified decisions → 4 published
+
+The manifest supplied 6 verified technical decisions. 2 were intentionally
+excluded from the published Key Decisions section to stay within AAA's
+4-item cap and avoid restating a fact already published elsewhere:
+
+1. "Role- and permission-based access across different workflow stages" — **not published as a decision.** Represented once, under What I Built, as the feature "Role- and permission-based review stages."
+2. "Reusable Leaflet mapping with filtering, marker highlighting, and responsive viewport handling" — **not published as a decision.** Represented once, under What I Built, as the feature "Site-inspection records with map-based visualization."
+
+Published as Key Decisions (verbatim intent, one wording correction applied
+by AAA — see below):
+
+1. Reusable frontend components and shared services
+2. Stored procedures and paginated API queries — **corrected wording**: published as "organize data access and handle large result sets in manageable pages," not the originally proposed "for structured, efficient data access" (an unverified performance-efficiency claim AAA explicitly rejected).
+3. Token-based authentication, refresh-token handling, and guarded routes
+4. Structured development/staging/production promotion process
+
+### Absolute redaction list (enforced by `tests/business-workflow-system-render.test.mjs`'s prohibited-wording guard, and by `tests/home-render.test.mjs`/`tests/work-render.test.mjs`'s equivalent checks on the composed Home/Work pages)
+
+Never publish: organization/agency/department/program/sector/industry/office/location names; the system's real internal name or acronym; government identifiers or terminology that could identify the organization; real user/applicant/project/contract/office/regional/operational data; internal URLs, domains, environment names, server names, database names, table/stored-procedure names, IP addresses, or credentials; exact record counts, confidential metrics, dates, budgets, or delivery timelines; screenshots until separately sanitized and approved.
+
+The automated guard checks for: `government`, `agency`/`agencies`, `accreditation`, `regional`, `contract`, `department`, `sector`, `industry`, `program`, `office`, `location` (word-bounded, case-insensitive) against the real rendered case-study output, the content module itself, and the Home/Work card fields. Organizational acronyms and real names cannot be guarded programmatically (unknown by construction) — enforced by AAA's fact-approval step itself never having introduced one.
+
+## eBarangay (PF-062)
+
+**Deferred — kept exactly as the existing foundation placeholder, no
+changes.** AAA confirmed eBarangay is in the planning/design stage only
+(nothing built yet) and explicitly chose to keep the current placeholder
+rather than publish an "in development" entry. `docs/INITIAL_IMPLEMENTATION_TASKS.md`: "Blocked by verified current project state and assets" — unchanged.
 
 ## eBarangay (PF-062)
 

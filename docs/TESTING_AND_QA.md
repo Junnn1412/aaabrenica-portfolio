@@ -310,6 +310,49 @@ fes-challenger-logo.png`, verified 140×137px PNG with alpha — see
   - Heading hierarchy semantic correctness (beyond the visual read already
     confirmed above)
 
+- (PF-061) Business Workflow System case study — **desktop and mobile
+  browser review passed** (AAA, 2026-08-18). `npm run verify` passes. Fully
+  anonymized: no organization, agency, department, sector, industry,
+  program, office, location, real internal system name, or acronym
+  anywhere in the published content — an automated word-list guard
+  (`tests/business-workflow-system-render.test.mjs`, plus matching checks
+  in `tests/home-render.test.mjs`/`tests/work-render.test.mjs`) proves the
+  prohibited terms are absent from the real rendered output, the content
+  module, and the Home/Work card fields. Confirmed in the browser:
+  - The fully anonymized presentation reads coherently
+  - No organization, sector, government identifier, internal acronym,
+    logo, gallery, external link, placeholder, or empty media frame
+    appears
+  - All approved case-study sections render cleanly; long lists remain
+    readable
+  - Technology tags wrap correctly on mobile
+  - No visible horizontal overflow
+  - Section hierarchy, dividers, Back to Work, closing CTA, and footer are
+    visually consistent with PF-060
+  - The omission of visual assets appears intentional, not broken
+  - Desktop and mobile presentation passed
+
+  Still **not yet performed** and not assumed to pass by extension of the
+  above — desktop/mobile screenshots confirm rendering at those two widths
+  only, not the following:
+  - Full six-width sweep (320/375/768/1024/1440/1920px) — only desktop and
+    mobile were reviewed
+  - Keyboard-only pass: back-to-Work link and closing CTA reachable and
+    operable (no external link exists on this route), visible focus
+    throughout, no trap
+  - Forced-colors mode
+  - `prefers-reduced-motion`
+  - Sanitized screenshot/gallery review — still deferred; no files
+    supplied
+  - Complete 11-route regression sweep — including a separate confirmation
+    that the Home/Work card displays "Internal Workflow System," tags
+    Angular and ASP.NET Core, and that the retired "Government/business
+    workflow system" text is absent at both routes; not yet confirmed
+    independently of the case-study page review above
+  - Read every published sentence for tone/accuracy against
+    `docs/CONTENT_INVENTORY.md`'s approved curation (content sign-off,
+    distinct from the visual review just completed)
+
 These are out of scope for PF-012 by design — see the task's explicit scope
 boundaries (no browser automation, visual regression, end-to-end tests,
 accessibility auditing tools, or Lighthouse automation).

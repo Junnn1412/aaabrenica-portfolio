@@ -1,17 +1,19 @@
 // PF-052 — real Version 1 Work-index content. Provenance for every string
-// is recorded in the plan approved for this task: the three project items'
-// heading/category/featured values are approved reuse of home.js's own
-// already-approved projects.items fields (same order — FES Challenger
-// featured, Business Workflow System with its verbatim category, then
-// eBarangay), not new copy. The page-level title/description/heading/
-// intro/section header/CTA strings are approved-as-provisional copy for
-// this task, pending final production-content sign-off. No screenshot,
-// outcome, technology, or result claim is made anywhere for Business
-// Workflow System or eBarangay — neither is approved yet (PF-061/062 still
-// blocked).
+// is recorded in the plan approved for this task: the project items'
+// heading/featured values are approved reuse of home.js's own
+// already-approved projects.items fields, not new copy. The page-level
+// title/description/heading/intro/section header/CTA strings are
+// approved-as-provisional copy for this task, pending final
+// production-content sign-off. No screenshot, outcome, technology, or
+// result claim is made anywhere for eBarangay — it remains an untouched
+// foundation placeholder (PF-062 still blocked).
 // PF-060 — the FES Challenger project item spreads fes-challenger.js's own
 // `card` export instead of retyping category/summary/tags a second time.
+// PF-061 — Business Workflow System now does the same, replacing the prior
+// literal "Government/business workflow system" category (prohibited
+// wording, superseded by the fully anonymized case study).
 import fesChallenger from './fes-challenger.js';
+import businessWorkflowSystem from './business-workflow-system.js';
 
 export default {
   title: 'Work',
@@ -33,8 +35,8 @@ export default {
       },
       {
         heading: 'Business Workflow System',
-        category: 'Government/business workflow system',
         link: '/work/business-workflow-system/',
+        ...businessWorkflowSystem.card,
       },
       {
         heading: 'eBarangay',

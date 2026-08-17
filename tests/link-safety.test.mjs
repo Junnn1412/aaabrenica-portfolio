@@ -4,6 +4,7 @@ import {
   isSafeInternalPath,
   isSafeEmail,
   isSafeExternalUrl,
+  isSafeCaseStudyExternalUrl,
 } from '../src/pages/link-safety.js';
 
 test('accepts a plain internal path', () => {
@@ -90,4 +91,62 @@ test('isSafeExternalUrl rejects malformed and non-string input', () => {
   assert.equal(isSafeExternalUrl('not a url', 'github'), false);
   assert.equal(isSafeExternalUrl(null, 'github'), false);
   assert.equal(isSafeExternalUrl('https://github.com', 'unknown-group'), false);
+});
+
+// PF-060 — keyed by route.content (a code-side closed map), not a
+// content-supplied hostGroup, so a content edit alone can never grant
+// itself a new allowed host.
+test('isSafeCaseStudyExternalUrl accepts the approved FES Challenger host', () => {
+  assert.equal(
+    isSafeCaseStudyExternalUrl(
+      'https://feschallenger.com/',
+      'work-fes-challenger',
+    ),
+    true,
+  );
+  assert.equal(
+    isSafeCaseStudyExternalUrl(
+      'https://www.feschallenger.com/',
+      'work-fes-challenger',
+    ),
+    true,
+  );
+});
+
+test('isSafeCaseStudyExternalUrl rejects a non-HTTPS protocol', () => {
+  assert.equal(
+    isSafeCaseStudyExternalUrl(
+      'http://feschallenger.com/',
+      'work-fes-challenger',
+    ),
+    false,
+  );
+});
+
+test('isSafeCaseStudyExternalUrl rejects a wrong or unrelated host', () => {
+  assert.equal(
+    isSafeCaseStudyExternalUrl(
+      'https://evil.example.com/',
+      'work-fes-challenger',
+    ),
+    false,
+  );
+});
+
+test('isSafeCaseStudyExternalUrl rejects any URL for an unregistered content key', () => {
+  assert.equal(
+    isSafeCaseStudyExternalUrl(
+      'https://feschallenger.com/',
+      'work-future-project',
+    ),
+    false,
+  );
+});
+
+test('isSafeCaseStudyExternalUrl rejects malformed and non-string input', () => {
+  assert.equal(
+    isSafeCaseStudyExternalUrl('not a url', 'work-fes-challenger'),
+    false,
+  );
+  assert.equal(isSafeCaseStudyExternalUrl(null, 'work-fes-challenger'), false);
 });

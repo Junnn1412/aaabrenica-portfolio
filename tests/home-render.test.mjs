@@ -111,15 +111,29 @@ test('home: project cards satisfy the shared list/pairing contract with all 3 re
     3,
     'expected all 3 real project cards to use an empty .media-frame',
   );
-  // FES Challenger and eBarangay have no approved category phrase; only
-  // Business Workflow System does (PF-033 precedent).
+  // PF-060: FES Challenger's card now carries a category/summary/tags,
+  // sourced from fes-challenger.js's own `card` export (see
+  // tests/case-study-render.test.mjs's consistency check). Business
+  // Workflow System still carries its verbatim category only; eBarangay
+  // still has no approved category/summary/tags of its own (PF-062 still
+  // blocked).
   const categoryCount = [
     ...main.matchAll(/class="project-card__category tag"/g),
   ].length;
   assert.equal(
     categoryCount,
+    2,
+    'expected exactly two project cards with a category tag (FES Challenger, Business Workflow System)',
+  );
+  assert.equal(
+    [...main.matchAll(/class="project-card__summary"/g)].length,
     1,
-    'expected exactly one project card with a category tag',
+    'expected exactly one project card with a summary (FES Challenger)',
+  );
+  assert.equal(
+    [...main.matchAll(/class="project-card__tags"/g)].length,
+    1,
+    'expected exactly one project card with tags (FES Challenger)',
   );
   // PF-052 accessibility correction: project cards sit directly under this
   // section's own <h2>, so their headings must be <h3>, not the

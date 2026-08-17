@@ -92,10 +92,18 @@ test('work: every project-card link matches a real, registered case-study route'
   assert.deepEqual(new Set(links), registeredCaseStudyPaths);
 });
 
-test("work: category badge present only on Business Workflow System's card", () => {
+// PF-060: FES Challenger's card now carries its own category (sourced from
+// fes-challenger.js's `card` export — see
+// tests/case-study-render.test.mjs's consistency check), so it's no longer
+// the "no category" specimen. eBarangay remains the only card with none
+// (PF-062 still blocked).
+test("work: category badge present on FES Challenger's and Business Workflow System's cards, absent on eBarangay's", () => {
   const main = workMain();
   const blocks = cardBlocks(main);
-  assert.doesNotMatch(blocks[0], /project-card__category/);
+  assert.match(
+    blocks[0],
+    /<span class="project-card__category tag">Marine Services Corporate Website<\/span>/,
+  );
   assert.match(
     blocks[1],
     /<span class="project-card__category tag">Government\/business workflow system<\/span>/,

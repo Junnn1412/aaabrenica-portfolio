@@ -1,0 +1,64 @@
+// PF-060 — case-study page-specific overrides: the hero heading/logo row,
+// the technology-stack tag row, and the gallery grid. The plain bulleted
+// prose lists (My Role, Key Decisions, Outcomes) intentionally need no
+// override here — elements/_body-copy.scss's generic ul/li reading-width
+// rules are the correct, desired treatment for running-text lists, unlike
+// the card grids elsewhere in this project.
+.case-study-hero__heading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+// Decorative only (content.logo.alt is empty by default — see
+// docs/DESIGN_SYSTEM.md's "Case study page (PF-060)" section) — the visible
+// <h1> stays the real accessible identity.
+.case-study-hero__logo {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+
+// Mirrors .project-card__tags' declarations for the same "short technology
+// label" shape without depending on that component's class — keeps the two
+// components decoupled.
+.case-study-tech-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+// Same generic-list leak this project has proactively reset on every other
+// <ul>-based grid since PF-032/033 — elements/_body-copy.scss's
+// `ul, ol { max-width: var(--width-reading); }` and
+// `li { margin-bottom: var(--space-2); }` apply unopposed to any property a
+// higher-specificity class doesn't itself declare.
+.case-study-gallery {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: none;
+  gap: var(--gap-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (width >= 36em) {
+  .case-study-gallery {
+    grid-template-columns: repeat(auto-fit, minmax(21rem, 1fr));
+  }
+}
+
+.case-study-gallery__item {
+  margin: 0;
+}
+
+.case-study-gallery__item figure {
+  margin: 0;
+}
+
+.case-study-gallery__item figcaption {
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}

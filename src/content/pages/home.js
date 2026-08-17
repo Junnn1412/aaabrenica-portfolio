@@ -6,6 +6,11 @@
 // content sign-off (capability-card descriptions, section eyebrows/
 // headings, the About paragraph, and a few link labels — all flagged there,
 // not here, to avoid a second, driftable copy of the same classification).
+// PF-060 — the FES Challenger project item spreads fes-challenger.js's own
+// `card` export instead of retyping category/summary/tags a second time, so
+// this file can't silently drift from the case study it links to.
+import fesChallenger from './work/fes-challenger.js';
+
 export default {
   title: 'Practical Software Solutions for Growing Businesses',
   description:
@@ -103,6 +108,7 @@ export default {
         featured: true,
         heading: 'FES Challenger',
         link: '/work/fes-challenger/',
+        ...fesChallenger.card,
       },
       {
         category: 'Government/business workflow system',

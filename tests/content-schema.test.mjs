@@ -403,6 +403,204 @@ test('case-study template requires backLink pointing exactly at /work/', () => {
   assert.deepEqual(validateContent(route, correct), []);
 });
 
+// PF-060 — every named case-study section is independently optional: absent
+// is always valid, present gets its own shape fully checked.
+function validCaseStudyContent() {
+  return {
+    title: 'Case Study',
+    heading: 'Case Study',
+    paragraphs: ['ok'],
+    backLink: { label: 'Back to Work', path: '/work/' },
+  };
+}
+
+test('case-study: a minimal content object (only base fields + backLink) produces no problems', () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+  assert.deepEqual(validateContent(route, validCaseStudyContent()), []);
+});
+
+test('case-study: logo is validated only when present', () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+  const withBadLogo = {
+    ...validCaseStudyContent(),
+    logo: { src: 'not-safe', alt: 'ok' },
+  };
+  assert.ok(
+    validateContent(route, withBadLogo).some((p) => p.includes('"logo.src"')),
+  );
+
+  const withGoodLogo = {
+    ...validCaseStudyContent(),
+    logo: { src: '/images/case-studies/example/logo.png', alt: '' },
+  };
+  assert.deepEqual(validateContent(route, withGoodLogo), []);
+});
+
+test('case-study: client/problem/decisions/outcomes/technologyStack all require a non-empty string list when present', () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+  for (const field of ['decisions', 'outcomes', 'technologyStack']) {
+    const bad = { ...validCaseStudyContent(), [field]: { items: [] } };
+    const problems = validateContent(route, bad);
+    assert.ok(
+      problems.some((p) => p.includes(`"${field}.items"`)),
+      `expected a problem for empty ${field}.items`,
+    );
+  }
+  for (const field of ['client', 'problem']) {
+    const bad = { ...validCaseStudyContent(), [field]: { body: [] } };
+    const problems = validateContent(route, bad);
+    assert.ok(
+      problems.some((p) => p.includes(`"${field}.body"`)),
+      `expected a problem for empty ${field}.body`,
+    );
+  }
+});
+
+test('case-study: role requires both body and responsibilities when present', () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+  const missingResponsibilities = {
+    ...validCaseStudyContent(),
+    role: { body: ['ok'] },
+  };
+  const problems = validateContent(route, missingResponsibilities);
+  assert.ok(problems.some((p) => p.includes('"role.responsibilities"')));
+
+  const valid = {
+    ...validCaseStudyContent(),
+    role: { body: ['ok'], responsibilities: ['ok'] },
+  };
+  assert.deepEqual(validateContent(route, valid), []);
+});
+
+test('case-study: solution.features is optional, but solution.body is required when solution is present', () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+  const withoutFeatures = {
+    ...validCaseStudyContent(),
+    solution: { body: ['ok'] },
+  };
+  assert.deepEqual(validateContent(route, withoutFeatures), []);
+
+  const missingBody = { ...validCaseStudyContent(), solution: {} };
+  assert.ok(
+    validateContent(route, missingBody).some((p) =>
+      p.includes('"solution.body"'),
+    ),
+  );
+});
+
+test('case-study: gallery requires a non-empty items array, each with a safe src, non-empty alt, and positive integer width/height', () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+
+  const emptyGallery = { ...validCaseStudyContent(), gallery: { items: [] } };
+  assert.ok(
+    validateContent(route, emptyGallery).some((p) =>
+      p.includes('"gallery.items"'),
+    ),
+  );
+
+  const badItem = {
+    ...validCaseStudyContent(),
+    gallery: {
+      items: [{ src: '//evil.com', alt: '', width: -1, height: 0 }],
+    },
+  };
+  const problems = validateContent(route, badItem);
+  assert.ok(problems.some((p) => p.includes('gallery.items[0].src')));
+  assert.ok(problems.some((p) => p.includes('gallery.items[0].alt')));
+  assert.ok(problems.some((p) => p.includes('gallery.items[0].width')));
+  assert.ok(problems.some((p) => p.includes('gallery.items[0].height')));
+
+  const goodItem = {
+    ...validCaseStudyContent(),
+    gallery: {
+      items: [
+        {
+          src: '/images/case-studies/example/one.webp',
+          alt: 'A screenshot',
+          width: 800,
+          height: 450,
+        },
+      ],
+    },
+  };
+  assert.deepEqual(validateContent(route, goodItem), []);
+});
+
+test("case-study: externalLink requires a label and a URL approved for that route's content key", () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+
+  const wrongHost = {
+    ...validCaseStudyContent(),
+    externalLink: { label: 'Visit', url: 'https://evil.example.com/' },
+  };
+  assert.ok(
+    validateContent(route, wrongHost).some((p) =>
+      p.includes('"externalLink.url"'),
+    ),
+  );
+
+  const notHttps = {
+    ...validCaseStudyContent(),
+    externalLink: { label: 'Visit', url: 'http://feschallenger.com/' },
+  };
+  assert.ok(
+    validateContent(route, notHttps).some((p) =>
+      p.includes('"externalLink.url"'),
+    ),
+  );
+
+  const valid = {
+    ...validCaseStudyContent(),
+    externalLink: { label: 'Visit', url: 'https://feschallenger.com/' },
+  };
+  assert.deepEqual(validateContent(route, valid), []);
+});
+
+test('case-study: an unregistered content key has no approved external host, so any URL is rejected', () => {
+  const route = {
+    key: 'work-future-project',
+    template: 'case-study',
+    content: 'work-future-project',
+  };
+  const content = {
+    ...validCaseStudyContent(),
+    externalLink: { label: 'Visit', url: 'https://future-project.example/' },
+  };
+  assert.ok(
+    validateContent(route, content).some((p) =>
+      p.includes('"externalLink.url"'),
+    ),
+  );
+});
+
 // PF-050 — a minimal but complete valid 'solutions' content fixture,
 // matching the shape src/content/pages/solutions.js uses for real.
 function validSolutionsContent() {

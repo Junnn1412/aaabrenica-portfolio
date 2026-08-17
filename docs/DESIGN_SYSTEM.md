@@ -1873,3 +1873,109 @@ corrected during planning, before implementation began.
   engagement-lede paraphrase) are now proposed as production copy, carried
   over verbatim — still pending final production-content sign-off, per
   "Homepage (PF-041)" above.
+
+## Case study page (PF-060)
+
+The first real case study (FES Challenger) extends the previously-minimal
+`case-study` template/schema. See `docs/DECISION_LOG.md`'s PF-060 entry for
+the full decision record and `docs/CONTENT_INVENTORY.md` for the evidence
+audit; this section documents the resulting contract.
+
+**Schema — ten independently optional named sections**
+(`src/pages/content-schema.js`'s `checkCaseStudyContent()`), on top of the
+unchanged universal base fields and the required `backLink`:
+
+```
+content.logo             optional  { src, alt? }
+content.client           optional  { body: string[] }
+content.problem          optional  { body: string[] }
+content.role             optional  { body: string[], responsibilities: string[] }
+content.solution         optional  { body: string[], features?: string[] }
+content.technologyStack  optional  { items: string[] }
+content.decisions        optional  { items: string[] }
+content.outcomes         optional  { items: string[] }
+content.gallery          optional  { items: [{ src, alt, width, height, caption? }], non-empty when present }
+content.externalLink     optional  { label, url }
+content.cta              already universal/optional — reused as-is
+```
+
+Absent is always valid — the template omits that section entirely, never
+an empty heading, frame, or "coming soon" placeholder. A section object
+present with a malformed shape is a validation error. `goals` and
+`discovery` are deliberately not separate fields: once FES's real copy was
+curated, neither had a real caller of its own (their content lives as
+prose inside `problem`/`role`) — matching this project's established
+"don't generalize ahead of a real, demonstrated need" precedent
+(PF-032/033/034).
+
+**Template** (`src/pages/templates/case-study.js`): one
+`<section class="page-section"><div class="container">` per present named
+field, each headed by the shared `renderSectionHeader()` (`<h2>`) — the
+same per-section-container shape `solutions.js`/`work.js` already
+establish, now joined by `case-study` in both `tests/render.test.mjs`'s
+`PER_SECTION_CONTAINER_TEMPLATES` and
+`scripts/verify-build-output.mjs`'s matching check. Unlike those three
+routes, a case-study route legitimately renders **zero** sections when no
+content is approved yet (Business Workflow System/eBarangay's current
+placeholder state) — `verify-build-output.mjs`'s "at least one section"
+check is gated behind `route.template !== 'case-study'` for exactly this
+reason. The closing CTA renders at `headingLevel: 2`, the same top-level-
+sibling-section pattern `work.js`/`process.js` already use.
+
+**External link — closed per-content-key host allowlist, region-scoped
+enforcement.** `src/pages/link-safety.js`'s `isSafeCaseStudyExternalUrl(url,
+contentKey)` checks against a private `CASE_STUDY_EXTERNAL_HOSTS` map keyed
+by `route.content` (never a content-supplied value), the same
+single-purpose-per-field pattern `isSafeExternalUrl`'s `github`/`linkedin`
+groups already establish. The invariant that only the one approved URL may
+appear is scoped to `<main>` only, not the whole composed document — the
+shared footer legitimately links to GitHub/LinkedIn on every route,
+including case studies. Unit tests get this for free from `render.js`'s
+already-separate `{ header, main, footer }` return shape;
+`scripts/verify-build-output.mjs` reuses its existing `extractRegion(html,
+'main')` helper (the same one the `contact` route's region-scoped checks
+already use) against the real content module's `externalLink.url`, so the
+check is generic across any case-study route, not FES-specific.
+
+**Logo — decorative by default.** `content.logo.alt` defaults to `''` at
+the template level; the visible `<h1>` stays the real accessible identity,
+matching AAA's own stated preference for FES ("prefer keeping the visible
+text heading and using the logo decoratively"). A future case study that
+needs the logo to _replace_ visible text identity somewhere would set a
+real `alt` on that specific `<img>` — not a schema change.
+
+**Gallery/media semantics.** `gallery.items[]`: `src` a safe root-relative
+path (recommended convention: `public/images/case-studies/<slug>/
+<descriptive-name>.webp`, manually pre-optimized — no new image-processing
+dependency), `alt` required non-empty (content quality is a manual Gate E
+review item, not something a shape check can verify), `width`/`height`
+required positive integers rendered as native `<img width height>`
+attributes (prevents layout shift), every image `loading="lazy"` (the
+gallery always sits near the end of a long page, below the fold), `caption`
+optional. Rendered as `<ul class="case-study-gallery">` — a mobile-first
+`1fr` default, `auto-fit`/`minmax(21rem, 1fr)` above `36em` (identical
+pattern to `.project-cards`), with the same proactive `max-width: none;
+margin: 0;` reset this project now always applies to `<ul>`-based grids
+from the first draft (`src/styles/pages/_case-study.scss`,
+`tests/case-study-layout.test.mjs`). Only real, reviewed, sanitized
+screenshots are acceptable evidence — no placeholder, empty frame, or
+AI-generated/reconstructed imagery ever stands in for a missing one; when
+`gallery` is absent, the whole section (heading included) is omitted.
+
+**Technology stack — a plain tag row, not a `<ul>`/`<li>` list.**
+`.case-study-tech-stack` mirrors `.project-card__tags`'s existing
+declarations (`display: flex; flex-wrap: wrap; gap: var(--space-2);`)
+without depending on that component's class, for the same "short technology
+label" shape already established there — a second component reusing the
+identical pattern rather than inventing a new one.
+
+**Content curation, not a per-fact dump.** The requirements doc's §10.4
+case-study section list is explicitly "where applicable" — this project
+reads that as license to curate, not an obligation to publish every fact
+in AAA's evidence manifest as its own list item. FES's real content assigns
+each verified fact to exactly one section (see `docs/DECISION_LOG.md`'s
+PF-060 entry and `docs/CONTENT_INVENTORY.md`'s curated-vs-full mapping for
+the specific consolidations made). Every visible string is provisional —
+AAA-reviewed and corrected before implementation, still subject to the
+PF-064 final polish pass, the same status every other dedicated page's
+copy carries.

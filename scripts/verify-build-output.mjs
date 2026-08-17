@@ -58,18 +58,19 @@ for (const route of routes) {
   // composed output must still show it immediately inside <main> — proves
   // the invariant end-to-end regardless of which layer produced it.
   //
-  // PF-041/PF-050: home and solutions are the two per-section-container
-  // exceptions, anticipated by PF-040's own decision-log entry — instead of
-  // one container wrapping the whole main, each top-level <section> owns
-  // its own inner .container, so later full-bleed sections never fight a
-  // page-level wrapper. `home`'s main opens directly with `.hero`; every
-  // other top-level section on either route carries `.page-section` (an
-  // optional leading `id="..."` attribute — solutions' anchored sections
-  // only — doesn't change that match). `solutions` additionally opens with
-  // one bare intro `<div class="container">` (heading + jump nav) before
-  // its first section — not itself a section, so it's checked separately
-  // here rather than folded into the per-section count.
-  if (route.key === 'home' || route.key === 'solutions') {
+  // PF-041/PF-050/PF-051: home, solutions, and process are the three
+  // per-section-container exceptions, anticipated by PF-040's own
+  // decision-log entry — instead of one container wrapping the whole main,
+  // each top-level <section> owns its own inner .container, so later
+  // full-bleed sections never fight a page-level wrapper. `home`'s main
+  // opens directly with `.hero`; every other top-level section on any of
+  // the three routes carries `.page-section` (an optional leading
+  // `id="..."` attribute — solutions' anchored sections only — doesn't
+  // change that match). `solutions`/`process` additionally open with one
+  // bare intro `<div class="container">` (heading, plus solutions' jump
+  // nav) before their first section — not itself a section, so it's
+  // checked separately here rather than folded into the per-section count.
+  if (['home', 'solutions', 'process'].includes(route.key)) {
     const opensCorrectly =
       route.key === 'home'
         ? /<main id="main-content" tabindex="-1">\s*<section class="hero">/.test(

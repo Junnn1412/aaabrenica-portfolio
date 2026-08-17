@@ -1682,6 +1682,128 @@ exactly, category shown only on Business Workflow System's card, empty
 `tests/home-render.test.mjs`'s existing capability-card and project-card
 structural tests each gained the corresponding H3/zero-H4 assertion.
 
+## Supporting pages: About, Contact, Privacy, 404 (PF-053/054/055)
+
+All four routes, content stubs, and template/schema wiring already existed
+end-to-end on the generic `standard` template with placeholder copy before
+this milestone — this was a content-and-shape task, not a scaffolding task.
+
+**About (PF-053): `standard` gains one new universal optional field,
+`content.cta`, not a dedicated template.** The approved fact set (~5 years
+experience, frontend/backend/database/deployment, direct end-to-end
+involvement, business-problem-first approach) is thin — no structured
+multi-section content is approved for this milestone — so a dedicated
+`about` template would be over-engineering. `content.cta` follows the exact
+precedent `content.link` already set in `validateContent()`: validated
+unconditionally, not gated by `route.template`, reusing the existing
+`checkCtaShape()` helper and `renderCta()` component at `headingLevel: 2` (a
+sibling of the page's own `<h1>`, matching Process's closing-CTA
+precedent — `standard.js` has no `<h2>` section header of its own for the
+CTA to nest under). `about.js`'s real paragraphs restate the approved facts
+in wording distinct from `home.js`'s existing About-preview sentence, per
+`DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md` §8.3's "must not repeat
+identical long-form content" — enforced by a dedicated regression test
+comparing the two paragraph arrays directly, not just checked at review
+time.
+
+**Contact (PF-054): a dedicated `contact` template
+(`src/pages/templates/contact.js`), because its defining content is
+site-sourced, not content-sourced.** The three contact destinations
+(email/GitHub/LinkedIn) are read directly from `site` inside
+`renderContactMethods(site)`, mirroring `footer.js`'s existing
+`renderContactLink`/`renderSocialLink` pattern exactly — same
+`isSafeEmail`/`isSafeExternalUrl` gating, same conditional-rendering
+contract (an unsafe value is omitted entirely, never rendered escaped-but-
+present). This keeps `src/config/site.js` the single source of truth for
+these three values; `contact.js`'s own content only carries the universal
+base fields (`title`/`heading`/`paragraphs`), so no new schema branch was
+needed. New markup contract: an `<h2 class="contact-methods__heading">Ways
+to Reach Me</h2>` followed by `<ul class="contact-methods">`, one
+`<li class="contact-methods__item">` per available method, all inside the
+page's single `.container` (no `.page-section` wrapper — `contact` is not
+one of the per-section-container templates).
+
+**Why not `.trust-list` for Contact's method list.** `.trust-list` always
+pairs an icon + heading + one trailing action link — a different shape from
+"N independent clickable destinations," each itself the interactive
+element. Reusing it would have forced an artificial icon/heading wrapper
+around what is really just a link. A new, narrowly-scoped
+`src/styles/pages/_contact.scss` was added instead — the one genuinely new
+structural hook this milestone required:
+
+```scss
+.contact-methods {
+  list-style: none;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.contact-methods__item {
+  margin-bottom: 0;
+}
+```
+
+Resets the same generic `ul`/`li` prose rules
+(`elements/_body-copy.scss`'s `~68ch` max-width and `li` bottom margin) that
+every prior list-based component (`.process-steps`, `.trust-list`,
+`.engagement-options`) has needed the identical fix for. Proven via the
+resolved-cascade method (`tests/contact-page-layout.test.mjs`,
+`tests/helpers/cascade-resolver.mjs`), with a deliberate-failure pass run
+(reset temporarily removed, all three tests failed with the actually-
+inherited values, then restored) before being accepted.
+
+**Privacy (PF-054): content-only, still `template: 'standard'`.** Every
+sentence in `privacy.js` is phrased as an implementation-specific statement
+about what the current site code verifiably does — no analytics/tracking
+code exists anywhere in `src/`; no nonessential cookies are set; no contact
+form exists (Contact links directly to email/GitHub/LinkedIn); fonts are
+self-hosted `.woff2` files under `public/fonts/`, never requested from
+Google Fonts. Deliberately excludes any hosting/server-log, Cloudflare-
+processing, data-retention, or legal-compliance claim, since none of that
+is configured or verified (`site.baseUrl` is still `null`; Cloudflare Pages
+connects in PF-072). `description` stays omitted, preserving the existing
+`site.defaultDescription`-fallback contract unmodified.
+
+**404 (PF-055): a dedicated `not-found` template
+(`src/pages/templates/not-found.js`), not a `standard.links` array
+extension.** `standard` is meant to stay thin — About just gained one
+optional field, and a second, differently-shaped optional-link mechanism
+(`links` alongside the existing singular `link`) would push it the wrong
+direction. `checkNotFoundContent()` in `content-schema.js` uses
+`checkExactArray(content.links, 'links', 3, problems)` — a deliberately
+fixed-count rule, since Home/Work/Contact is a curated navigational set, not
+a growing collection like Work's `projects.items`. Markup:
+`<ul class="not-found__links">`, one `<li class="not-found__link-item">`
+containing one `<a class="not-found__link">` per recovery link. **Follow-up
+(PF-055 visual-review correction, `docs/DECISION_LOG.md`):** AAA's browser
+review found the initial default `ul`/`li` presentation (bulleted,
+indented) read as unfinished, so `src/styles/pages/_not-found.scss` was
+added — the same page-specific-reset pattern `_contact.scss` established —
+presenting the three links as a responsive `flex-wrap` group of
+button-like chips reusing `.btn--secondary`'s already contrast-verified
+border/text tokens. No search box, no `<meta http-equiv="refresh">`, no
+client-side redirect. `navKey: null`'s existing zero-`aria-current` policy
+(`docs/SOURCE_ARCHITECTURE.md`) applies unchanged — this task confirmed it
+still holds, it did not need new enforcement.
+
+**Real contact values (`src/config/site.js`) and the build-output check
+they broke.** `contactEmail`/`social.github`/`social.linkedin` moved from
+`null` placeholders to AAA's verified real values. This immediately broke
+`scripts/verify-build-output.mjs`'s PF-011-era check, which asserted
+`mailto:`/`github.com`/`linkedin.com` never appear anywhere in composed
+output. The replacement is two region-scoped invariants, not one
+whole-document count — extracting the `<footer>...</footer>` substring per
+route and asserting each of the three links appears exactly once inside it,
+plus, on the `contact` route specifically, extracting `<main>...</main>`
+and asserting the same three links appear exactly once inside it too. A
+naive single whole-document "exactly once" check would have been wrong for
+`contact`, which legitimately renders each link twice (once in its own
+`.contact-methods` list, once in the shared footer) — this was caught and
+corrected during planning, before implementation began.
+
 ## Accessibility rationale summary
 
 - Every text/background pairing whose use is documented above is
@@ -1718,8 +1840,12 @@ structural tests each gained the corresponding H3/zero-H4 assertion.
   narrower static subset would meaningfully reduce payload once real usage
   is measured.
 - **Icon renderer** (PF-021) — deferred until a real composed partial needs
-  to generate icon markup dynamically; revisit when PF-031 (nav icons) or
-  PF-053 (social links) introduces that first real call site.
+  to generate icon markup dynamically; anticipated to debut at PF-031 (nav
+  icons) or PF-053 (social links), but PF-053/054's Contact page ended up
+  following `footer.js`'s existing plain-text-link pattern for Email/
+  GitHub/LinkedIn (no icon, matching the footer's own established contract)
+  rather than introducing icon markup — still deferred until a real
+  composed partial actually needs it.
 - **`.btn--ghost`'s lack of a border** (PF-021) — currently relies on text
   contrast alone, like a plain link; revisit if a future use case needs it
   to read as a bounded shape rather than a text action.

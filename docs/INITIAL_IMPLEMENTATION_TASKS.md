@@ -291,6 +291,21 @@ Use sanitized real screenshots inside original browser/device compositions. Deco
 
 Every case study must distinguish verified outcomes from qualitative improvements and must not invent metrics.
 
+### PF-064 V1 content and visual polish pass
+
+**Status:** Blocked by final content and asset approval across all pages
+
+Review and finalize every Version 1 page after its structural implementation is complete, once real case-study content (PF-060–063) and any remaining page facts are approved. Scope:
+
+- **Final copy sign-off** — replace remaining provisional copy (About, Contact, Solutions, Process, Work, and any others still marked provisional in `docs/DECISION_LOG.md`) with AAA-approved final copy.
+- **Visual hierarchy** — confirm heading weight/size, section rhythm, and emphasis read correctly page-to-page, not just within each page in isolation.
+- **Spacing and rhythm** — confirm consistent vertical rhythm and section spacing across all pages, including any drift introduced by pages implemented at different times.
+- **Page-specific presentation** — correct any narrow, page-scoped visual gaps found only during real browser review (the kind of correction PF-055's 404 recovery links already required after their initial default-list presentation read as unfinished) rather than leaving them as known issues.
+- **Real asset integration** — incorporate any assets that become available after structural implementation (photograph, résumé, case-study screenshots) once approved.
+- **Cross-page consistency** — a final pass confirming consistent typography, component usage, and tone across the whole site before Version 1 quality assurance and deployment (M7) begin.
+
+Not yet started; not to be marked complete until every item above has been explicitly reviewed and confirmed by AAA.
+
 ## 10. M7 — Quality, deployment, and launch
 
 ### PF-070 Complete SEO and social assets

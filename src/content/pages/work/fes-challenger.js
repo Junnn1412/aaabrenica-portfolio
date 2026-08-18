@@ -5,13 +5,18 @@
 // it fits best — the full uncurated fact list (all 11 responsibilities,
 // every manifest decision, etc.) is kept in docs/CONTENT_INVENTORY.md for
 // traceability. No numeric or business-performance outcome is claimed
-// anywhere — none is verified. `gallery` is intentionally absent: no
-// reviewed screenshots have been supplied yet (see docs/CONTENT_INVENTORY.md).
+// anywhere — none is verified.
 // `logo` was added in the PF-060 logo-integration follow-up: AAA confirmed
 // the file at public/images/case-studies/fes-challenger/fes-challenger-logo.png
 // as the approved asset (140x137px PNG, verified — see docs/CONTENT_INVENTORY.md).
 // alt is deliberately empty: the visible "FES Challenger" heading already
 // carries the identity; the logo is decorative alongside it.
+// `gallery` was added in PF-063: 4 of 7 captured production-site screenshots
+// were selected after individual inspection (see docs/CONTENT_INVENTORY.md
+// for the full audit, including the 3 declined files and why). Delivered as
+// PNG, unresized — no WebP encoder was available locally without installing
+// a package, so the source format/dimensions were kept as-is per AAA's
+// explicit fallback instruction.
 export default {
   title: 'FES Challenger',
   description:
@@ -27,6 +32,38 @@ export default {
   externalLink: {
     label: 'Visit the FES Challenger website',
     url: 'https://feschallenger.com/',
+  },
+  gallery: {
+    items: [
+      {
+        src: '/images/case-studies/fes-challenger/gallery/homepage-hero-desktop.png',
+        alt: 'FES Challenger homepage hero section with a marine salvage vessel photo and headline',
+        width: 719,
+        height: 443,
+        caption: 'Homepage',
+      },
+      {
+        src: '/images/case-studies/fes-challenger/gallery/services-page-desktop.png',
+        alt: 'FES Challenger Services page showing marine salvage and underwater service categories',
+        width: 716,
+        height: 448,
+        caption: 'Services',
+      },
+      {
+        src: '/images/case-studies/fes-challenger/gallery/projects-page-desktop.png',
+        alt: 'FES Challenger Projects page showing completed marine salvage project cards',
+        width: 718,
+        height: 447,
+        caption: 'Projects',
+      },
+      {
+        src: '/images/case-studies/fes-challenger/gallery/homepage-mobile.png',
+        alt: 'FES Challenger homepage on a mobile viewport, showing the responsive hero and navigation menu',
+        width: 544,
+        height: 689,
+        caption: 'Mobile view',
+      },
+    ],
   },
   client: {
     body: [

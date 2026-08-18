@@ -10,13 +10,15 @@ import fesChallengerContent from '../src/content/pages/work/fes-challenger.js';
 import homeContent from '../src/content/pages/home.js';
 import workContent from '../src/content/pages/work/index.js';
 import { expectCtaPanels } from './helpers/component-markup.mjs';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 function fesMain() {
   const route = routes.find((r) => r.key === 'work-fes-challenger');
   return renderRoute(route).main;
 }
 
-test('FES Challenger: exactly one <h1>, 7 curated section headings, and the closing CTA as <h2>, never <h3>', () => {
+test('FES Challenger: exactly one <h1>, 8 curated section headings (7 content + Gallery), and the closing CTA as <h2>, never <h3>', () => {
   const main = fesMain();
   assert.equal([...main.matchAll(/<h1[ >]/g)].length, 1);
   const sectionH2s = [
@@ -30,6 +32,7 @@ test('FES Challenger: exactly one <h1>, 7 curated section headings, and the clos
     'Technology Stack',
     'Key Decisions',
     'Outcomes',
+    'Project Gallery',
   ]);
   assert.equal(
     [...main.matchAll(/<h2 class="cta__heading">/g)].length,
@@ -39,10 +42,112 @@ test('FES Challenger: exactly one <h1>, 7 curated section headings, and the clos
   assert.equal([...main.matchAll(/<h3 class="cta__heading">/g)].length, 0);
 });
 
-test('FES Challenger: no gallery renders (no reviewed screenshots exist yet)', () => {
+// PF-063 — 4 of 7 captured production-site screenshots were selected after
+// individual review (see docs/CONTENT_INVENTORY.md for the full audit).
+const RAW_CAPTURE_FILENAMES = [
+  'hero-banner.png',
+  'services-page.png',
+  'services-section.png',
+  'projects-page.png',
+  'projects-section1.png',
+  'projects-section2.png',
+  'fes-home-mobile.png',
+];
+
+test('FES Challenger: the gallery renders exactly the 4 approved images, in the approved order, with real paths/alt/caption/dimensions', () => {
   const main = fesMain();
-  assert.doesNotMatch(main, /Project Gallery/);
-  assert.doesNotMatch(main, /case-study-gallery/);
+  assert.match(
+    main,
+    /<h2 class="section-header__heading">Project Gallery<\/h2>/,
+  );
+  const items = [
+    ...main.matchAll(/<li class="case-study-gallery__item">[\s\S]*?<\/li>/g),
+  ].map((m) => m[0]);
+  assert.equal(items.length, 4, 'expected exactly 4 gallery items');
+
+  const expected = [
+    {
+      src: '/images/case-studies/fes-challenger/gallery/homepage-hero-desktop.png',
+      alt: 'FES Challenger homepage hero section with a marine salvage vessel photo and headline',
+      width: 719,
+      height: 443,
+      caption: 'Homepage',
+    },
+    {
+      src: '/images/case-studies/fes-challenger/gallery/services-page-desktop.png',
+      alt: 'FES Challenger Services page showing marine salvage and underwater service categories',
+      width: 716,
+      height: 448,
+      caption: 'Services',
+    },
+    {
+      src: '/images/case-studies/fes-challenger/gallery/projects-page-desktop.png',
+      alt: 'FES Challenger Projects page showing completed marine salvage project cards',
+      width: 718,
+      height: 447,
+      caption: 'Projects',
+    },
+    {
+      src: '/images/case-studies/fes-challenger/gallery/homepage-mobile.png',
+      alt: 'FES Challenger homepage on a mobile viewport, showing the responsive hero and navigation menu',
+      width: 544,
+      height: 689,
+      caption: 'Mobile view',
+    },
+  ];
+
+  items.forEach((item, i) => {
+    const e = expected[i];
+    assert.match(
+      item,
+      new RegExp(
+        `<img src="${e.src.replace(/\//g, '\\/')}" alt="${e.alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}" width="${e.width}" height="${e.height}" loading="lazy">`,
+      ),
+      `gallery item ${i + 1} (${e.caption}) markup did not match expected src/alt/width/height`,
+    );
+    assert.match(
+      item,
+      new RegExp(`<figcaption>${e.caption}<\\/figcaption>`),
+      `gallery item ${i + 1} caption mismatch`,
+    );
+  });
+});
+
+test('FES Challenger: none of the 7 raw capture filenames survive in the rendered output', () => {
+  const main = fesMain();
+  for (const filename of RAW_CAPTURE_FILENAMES) {
+    assert.doesNotMatch(
+      main,
+      new RegExp(filename.replace('.', '\\.')),
+      `raw capture filename "${filename}" must not appear in rendered output`,
+    );
+  }
+});
+
+// PF-063 — Vite copies public/ to dist/ verbatim, so proving the raw
+// captures are absent from the real public/ source directory (the single
+// place that determines build output) is equivalent to, and cheaper than,
+// re-running a build just to inspect dist/. scripts/case-study-assets.mjs
+// already proves the 4 *configured* gallery files exist under public/ and
+// dist/ during npm run verify — this test additionally proves the 3
+// *declined* + the 4 *pre-rename* raw filenames no longer exist anywhere
+// under the real asset directory at all.
+test('FES Challenger: none of the 7 raw capture files remain on disk under public/', () => {
+  const assetDir = fileURLToPath(
+    new URL('../public/images/case-studies/fes-challenger/', import.meta.url),
+  );
+  for (const filename of RAW_CAPTURE_FILENAMES) {
+    assert.equal(
+      fs.existsSync(assetDir + filename),
+      false,
+      `raw capture file "${filename}" must not remain under public/`,
+    );
+  }
+  assert.equal(
+    fs.existsSync(assetDir + 'fes-challenger-logo.png'),
+    true,
+    'the approved logo must remain unchanged',
+  );
 });
 
 // PF-060 logo-integration follow-up — the approved logo is now configured.

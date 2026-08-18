@@ -277,9 +277,27 @@ fes-challenger-logo.png`, verified 140×137px PNG with alpha — see
   - No horizontal overflow on mobile
   - All case-study sections, lists, technology tags, the closing CTA, and
     the footer render cleanly
-  - The Gallery section is cleanly absent — no placeholder, no empty frame
   - Responsive desktop and mobile presentation passed
   - Home's and Work's FES card appearance remains visually consistent
+
+  **(PF-063) Gallery — desktop and mobile browser review passed** (AAA,
+  2026-08-18). Confirmed in the browser:
+  - All four approved screenshots render in the correct order: Homepage,
+    Services, Projects, Mobile view
+  - The three landscape screenshots are consistently framed, with no
+    unexpected cropping, stretching, or distortion
+  - The portrait mobile screenshot preserves its aspect ratio and is not
+    stretched or cropped
+  - Captions are correctly associated with their images and remain readable
+  - The gallery grid stacks cleanly on mobile, with no broken images and no
+    horizontal overflow
+  - Gallery spacing and its relationship to Back to Work, the closing CTA,
+    and the surrounding sections are visually clean
+  - The existing logo and all earlier case-study content remain unchanged
+
+  Noted, not a defect or blocker: the empty area beside the portrait mobile
+  screenshot in the desktop grid layout is acceptable for V1 — recorded as
+  a possible PF-064 visual-polish consideration only.
 
   Still **not yet performed** and not assumed to pass by extension of the
   above — desktop/mobile screenshots confirm rendering at those two widths
@@ -290,9 +308,11 @@ fes-challenger-logo.png`, verified 140×137px PNG with alpha — see
   - `prefers-reduced-motion`
   - Full 11-route regression sweep (only the case-study page and its
     immediate Home/Work card context were reviewed, not all 11 routes)
-  - Screenshots/gallery integration — still **Missing**; no files have been
-    supplied, so this remains open per `docs/CONTENT_INVENTORY.md`'s
-    screenshot intake workflow
+  - (PF-063) Gallery: the complete six-width sweep beyond the reviewed
+    desktop/mobile views, keyboard-only verification, forced-colors,
+    `prefers-reduced-motion`, and `loading="lazy"` behavior specifically
+    confirmed through browser network/devtools observation (not yet
+    performed for the gallery images)
   - Read every published sentence against the curated copy AAA approved
     (`docs/CONTENT_INVENTORY.md`) for tone/accuracy — confirm nothing reads
     as a business-performance claim, a team-size statement, or an "I was

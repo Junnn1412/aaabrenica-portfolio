@@ -16,6 +16,7 @@ import { renderProcessSteps } from '../src/components/process-steps.js';
 import { renderTrustList } from '../src/components/trust-list.js';
 import { renderEngagementOptions } from '../src/components/engagement-options.js';
 import { renderCta } from '../src/components/cta.js';
+import { escapeHtml } from '../src/pages/escape.js';
 import {
   expectSingleList,
   expectItemsHaveListParent,
@@ -224,6 +225,33 @@ test('home: trust list satisfies the shared list/action/icon contract', () => {
     linkHref: '/about/',
     linkText: 'Learn About My Approach',
   });
+});
+
+// About profile-card task — regression guard proving the homepage About
+// preview was left completely untouched by that task (explicitly out of
+// its scope): exact eyebrow/heading/paragraph/link text, still sourced
+// from home.js's own `about` field, not from about.js's new profileCard.
+test("home: the About preview section is untouched — exact eyebrow, heading, paragraph, and link text from home.js's own content, no profile-card markup leaked in", () => {
+  const main = homeMain();
+  assert.match(main, /<span class="section-header__eyebrow">About<\/span>/);
+  const escapedHeading = escapeHtml(homeContent.about.heading).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    '\\$&',
+  );
+  assert.match(
+    main,
+    new RegExp(`<h2 class="section-header__heading">${escapedHeading}</h2>`),
+  );
+  for (const paragraph of homeContent.about.paragraphs) {
+    assert.ok(
+      main.includes(escapeHtml(paragraph)),
+      'expected the exact existing About preview paragraph text to be present, unmodified',
+    );
+  }
+  assert.match(main, /<a href="\/about\/">Read My Full Story<\/a>/);
+  assert.doesNotMatch(main, /about-card/);
+  assert.doesNotMatch(main, /about-layout/);
+  assert.doesNotMatch(main, /profileCard/i);
 });
 
 test('home: engagement options satisfy the shared list/non-interactive contract', () => {

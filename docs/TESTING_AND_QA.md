@@ -167,31 +167,24 @@ milestone automates them:
     introduced; jump-nav navigation is native anchor scrolling only)
   - 200% zoom — jump-nav chips wrap without overlap or clipping, and the
     sticky-header anchor offset still clears each section heading
-- (PF-051) Process page — **pending AAA's browser review.** `npm run verify`
-  passes (320/320 automated tests, lint, format, build, `html-validate`),
-  but the following manual checks have not yet been performed and are not
-  assumed to pass by extension of the automated suite:
-  - Responsive review at 320/375/768/1024/1440/1920px, with particular
-    attention to the 768px breakpoint (`spacing.$bp-md`) where each stage's
-    facts switch from a single stacked column to a 2-column term/detail
-    grid — confirm the term column is readable, not cramped, right at that
-    width, and the detail column isn't excessively wide at 1920px
-  - Read all 7 stages plus Working Together for tone/accuracy — every fact
-    sentence is provisional copy pending content sign-off, **especially**
-    the revised Support-stage language, meta description, and intro
-    sentence, which should read as an agreed/scoped arrangement rather than
-    automatic or indefinite
-  - Keyboard-only pass: skip link → nav → closing CTA button → footer, one
-    stop per interactive element, visible focus throughout, no trap
-  - Forced-colors mode: the stage number badges keep a visible boundary
-    once their fill is dropped
-  - `prefers-reduced-motion` — nothing to disable (no motion introduced)
-  - 200% zoom — stage facts wrap normally with no clipping or overlap, at
-    both the stacked and grid layouts
-  - Confirm the closing CTA looks visually identical to the homepage's and
-    Solutions page's own closing CTA despite now rendering as `<h2>`
-    instead of `<h3>` — expected to be identical, since `.cta__heading`'s
-    `font-size` did not change, but not yet confirmed in a real browser
+- (PF-051) Process page — **desktop, mobile, and tablet visual review
+  passed**, including the 768px breakpoint (`spacing.$bp-md`) where each
+  stage's facts switch from a single stacked column to a 2-column term/detail
+  grid — the term column reads clearly and the detail column isn't
+  excessively wide at 1920px. **Correction (PF-064, 2026-08-18):** this
+  review was completed by AAA during PF-051 itself, before PF-051 was
+  merged; this entry incorrectly stood as "pending AAA's browser review" in
+  the interim and is corrected here to reflect what was already true, not a
+  new review performed now. All 7 stages, Working Together, the meta
+  description, and the closing CTA were also read for tone/accuracy and
+  approved as final V1 copy during the PF-064 checkpoint (`docs/DECISION_LOG.md`).
+  Still **not yet performed** and not assumed to pass by extension of the
+  above, per PF-064's revised scope (these remain PF-071's job, not
+  PF-064's):
+  - Keyboard-only pass: skip link → nav → closing CTA button → footer
+  - Forced-colors mode: the stage number badges keep a visible boundary once their fill is dropped
+  - `prefers-reduced-motion`
+  - 200% zoom
 - (PF-052) Work index, plus a corrected homepage — **desktop, tablet, and
   mobile visual review passed** (AAA, 2026-08-18). `npm run verify` passes
   (355/355 automated tests, lint, format, build, `html-validate`).
@@ -372,6 +365,331 @@ fes-challenger-logo.png`, verified 140×137px PNG with alpha — see
   - Read every published sentence for tone/accuracy against
     `docs/CONTENT_INVENTORY.md`'s approved curation (content sign-off,
     distinct from the visual review just completed)
+
+- (PF-064) V1 content and visual polish pass — **implementation complete;
+  awaiting AAA's browser confirmation before PF-064 can be marked Complete**
+  in `docs/INITIAL_IMPLEMENTATION_TASKS.md`. `npm run verify` passes.
+  Final-copy sign-off is **complete**: AAA reviewed the exact current copy
+  for Home, Solutions, Process, Work, Contact, FES Challenger, and Business
+  Workflow System (a dedicated checkpoint, referenced in
+  `docs/DECISION_LOG.md`'s PF-064 entry) and approved all of it as final V1
+  copy, with one correction (Home's hero paragraph — see below). This
+  **supersedes** the still-open "content sign-off" / "tone and accuracy"
+  bullets in the FES Challenger and Business Workflow System entries above —
+  both are now approved final, not pending.
+
+  Implemented and covered by focused automated tests:
+  - eBarangay's dev-facing placeholder replaced with a neutral, fact-free
+    holding message — no logo, gallery, external link, or narrative
+    section renders (guarded by `tests/ebarangay-render.test.mjs`)
+  - `site.defaultDescription` replaced (Privacy's fallback meta description)
+  - Solutions gained 2 new `evidence` links (Corporate Websites, WordPress
+    Development → FES Challenger), alongside the existing Workflow &
+    Process Solutions → Business Workflow System link (guarded by
+    `tests/solutions-render.test.mjs`)
+  - Home's hero paragraph corrected: "...deployment, and ongoing support"
+    → "...deployment, and agreed post-launch support," for consistency
+    with Process's own approved rule that support is agreed and scoped per
+    project
+
+  **Still required before PF-064 can close** — exactly four items, per the
+  approved plan's right-sized scope (not a full sitewide re-review):
+  1. eBarangay's new holding page, at desktop and mobile — never reviewed in this state
+  2. The 2 new Solutions evidence links render and navigate correctly
+  3. Privacy's new fallback meta description, confirmed through page source
+  4. Home's corrected hero paragraph reads correctly (low-risk single-word-phrase change)
+
+  **Explicitly not required for PF-064 closure** — deferred to PF-071
+  sitewide, not per-page blockers here: keyboard-only testing,
+  forced-colors mode, `prefers-reduced-motion`, Lighthouse/accessibility
+  auditing, performance auditing, and the full 11-route/6-width regression
+  sweep. This applies retroactively to every "still not yet performed"
+  bullet above that names one of these — none of them blocks PF-064; they
+  remain tracked here as PF-071's starting checklist.
+
+- Header/navigation visual polish — **implementation complete; AAA
+  confirmed the corrected desktop rendering (no clipping, no horizontal
+  overflow) and the mobile hamburger/X behavior in the browser after round
+  3's fix.** Several items in the checklist below remain unconfirmed (see
+  the per-item status) — this task does not close PF-064 or any broader
+  visual-polish milestone; see `docs/DECISION_LOG.md`'s dated entries for
+  the full rationale. `npm run verify` passes.
+
+  **Round 1 — AAA's first browser review found two release-blocking
+  defects:**
+  1. **Desktop horizontal overflow** — the desktop non-wrapping layout was
+     keyed to a 768px breakpoint that the row's real content (padded nav
+     links + brand mark + CTA) no longer fit inside once shrink/wrap were
+     both disabled. Moved to 1024px (`spacing.$bp-lg`).
+  2. **Mobile navigation was already expanded on a fresh page load** —
+     `nav-toggle.js`'s initial render never set `nav.hidden` (only
+     `dispatch()` did, which the initial render didn't go through). Fixed;
+     covered by a new hand-rolled DOM-mock test suite
+     (`tests/nav-toggle.test.mjs`) that exercises the real wiring code, not
+     just the already-correct pure state functions. **Confirmed by AAA as
+     fixed in round 2's review, along with the icon-only toggle redesign
+     below — neither is revisited by round 2.**
+
+  **Also implemented in round 1, per AAA's approval:** the mobile toggle's
+  visible "Menu"/"Close" text and Lucide icon swap were replaced with an
+  icon-only, pure-CSS hamburger/X control, driven entirely by the same
+  `aria-expanded` attribute the toggle already sets, with a dynamically
+  synchronized `aria-label` ("Open navigation"/"Close navigation") as its
+  one real accessible name (`tests/site-header-menu-icon.test.mjs`,
+  `tests/header.test.mjs`). **AAA confirmed this looks correct in round
+  2's review.**
+
+  **Round 2 — AAA's second browser review found the desktop overflow
+  defect was NOT actually fixed at 1024px**: the brand logo clipped past
+  the left viewport edge, "Start a Project" clipped at the right edge, and
+  the header's own border-bottom fell short of the right edge. Re-audited
+  the full geometry (box-sizing, absence of any header wrapper, no
+  `.container` cascade interaction — all confirmed clean and now proven by
+  tests, not just asserted) and found no _second_ geometry defect: the
+  symptom is the expected appearance of a still-too-wide row once the
+  browser scrolls to reveal the off-screen CTA. Round 1's fixed-overhead
+  math was exact, but its text-width floor (400px) undershot real
+  rendering. Moved the breakpoint again, this time to `spacing.$bp-xl`
+  (1280px), backed by a recalibrated, explicitly wider text-width floor
+  (700px) that correctly predicts 1024px as insufficient (matching what
+  AAA saw) while showing 1280px+ with genuine, growing margin (150px+ at
+  1280px, 1000px+ at 1920px). Full derivation in `docs/DECISION_LOG.md`.
+
+  **Round 3 — AAA's third browser review supplied real resolved-geometry
+  measurements at 1440px** (`documentElement.scrollWidth` 1513 vs.
+  `clientWidth` 1440; `.site-nav` resolved to `width: 544` with
+  `flex-shrink: 0`; the CTA's right edge resolved to `1512.9375`) proving
+  the overflow was never a viewport-width problem at all: `.site-nav`
+  itself safely ended at 1395.2px, well inside 1440px, but its own `<ul>`
+  content extended 117.7px past `.site-nav`'s own right edge — a fixed,
+  breakpoint-independent shortfall present at every desktop width rounds 1
+  and 2 tested, which is exactly why moving the breakpoint three times
+  never fixed anything. **Root cause: `.site-nav ul` never reset
+  `max-width`, so `elements/_body-copy.scss`'s generic `ul, ol { max-width:
+var(--width-reading); }` (68ch ≈ 544px at 16px Inter — matching AAA's
+  544px measurement almost exactly) silently capped it**, even though
+  `.site-nav ul`'s own selector has higher specificity — the cascade
+  resolves per property, and `.site-nav ul` had no competing `max-width`
+  declaration to win with. Every other list-shaped component in this
+  codebase already resets `max-width: none` against this same generic
+  rule; `.site-nav ul` was the one that never got it, since its original
+  PF-031 build. Fixed with one line (`max-width: none;` added to
+  `.site-nav ul`); **no breakpoint was touched** — `spacing.$bp-xl`
+  (1280px) is unchanged from round 2, per AAA's explicit instruction.
+  `tests/site-header-overflow.test.mjs`'s estimated text-width-budget
+  assertions (which never had any way to catch an inner element capped
+  smaller than its own content) were removed entirely and replaced with
+  tests of the actual cascade relationship: the generic rule's existence
+  and specificity, `.site-nav ul`'s explicit override, and a check that
+  68ch is genuinely narrower than the real measured content width. Full
+  derivation in `docs/DECISION_LOG.md`.
+
+  Focused automated tests also still cover, unchanged since round 1: the
+  brand link's single accessible name/keyboard stop
+  (`tests/header.test.mjs`); the header-scoped underline removal and
+  active-route border indicator resolved against the real compiled cascade
+  (`tests/site-nav-active-state.test.mjs`); `.site-brand__mark`'s bounded
+  dimensions; the desktop no-wrap/no-shrink architecture, re-verified at
+  the corrected breakpoint (`tests/site-nav-layout.test.mjs`); the
+  brand-mark asset-existence guard (`tests/asset-existence.test.mjs`).
+  Six deliberate-failure passes total have now been run and fully restored
+  across the three rounds — see `docs/DECISION_LOG.md` for detail.
+
+  **The temporary placeholder logo is now integrated.** AAA placed the real
+  file at `public/images/brand/aaa-placeholder-logo.png`; its bytes were
+  inspected directly (not assumed from the extension) — valid PNG,
+  231×140px, 1.65:1 aspect ratio, 8-bit RGBA (real alpha transparency), not
+  interlaced, 8,853 bytes, byte-identical between `public/` and the built
+  `dist/` output. `site.brandMark` now points at it (`src/config/site.js`)
+  and the header renders it decoratively inside the same link as the
+  visible "AAA Portfolio" text — proven end to end against the real
+  production config by a new focused test in `tests/header.test.mjs`. **This
+  image remains a temporary placeholder only** — it is explicitly not the
+  final SBTech PH / Silver Bullet Tech identity, and was not cropped,
+  redrawn, recolored, resized, optimized, or upscaled in any way (confirmed
+  by direct byte comparison between the source file and the build output).
+  Because the source lockup is wide (1.65:1) against `.site-brand__mark`'s
+  bounded slot (`height: 2.25rem; max-width: 3rem;`), the mark's visible
+  contribution at navbar size is modest — `object-fit: contain` keeps it
+  undistorted rather than stretching it to fill the slot, which is the
+  correct, accepted trade-off for a temporary asset AAA has already
+  approved under these exact bounds. Swapping in the final SBTech PH emblem
+  later remains a one-line config change with no markup or CSS
+  restructuring required.
+
+  **Required before this task can be considered browser-confirmed** —
+  supersedes the pre-fix checklist this replaces; items 1–3 target the two
+  newly-fixed defects specifically, the rest repeat and extend the original
+  round now that the layout has changed:
+  1. **✅ Confirmed by AAA.** Desktop overflow, at 1280, 1440, and 1920px
+     (the desktop composition now activates at 1280px/`spacing.$bp-xl`): no
+     horizontal document scrollbar; `.site-nav`'s own box now visibly
+     contains its entire `<ul>`, every nav link, and the CTA — "Start a
+     Project" fully visible, not clipped at either edge; brand lockup fully
+     visible; no nav label cropped; no forced wrapping. Spot-check just
+     below 1280px (e.g. 1024–1200px) confirming the mobile-stacked form is
+     folded into this same confirmation.
+  2. **✅ Confirmed by AAA.** Mobile initial load: navigation starts closed
+     (not expanded).
+  3. **✅ Confirmed by AAA.** Icon-only toggle: hamburger/X behavior is
+     correct — first activation opens and morphs to an X, second closes and
+     reverts to hamburger lines, no visible "Menu"/"Close" word.
+     Screen-reader announcement of "Open navigation"/"Close navigation" was
+     not explicitly re-confirmed in this round and remains open.
+  4. Desktop, tablet, and mobile: the brand lockup (placeholder mark +
+     "AAA Portfolio" text) renders correctly, with no distortion and no
+     overflow of its bounded slot; confirm the mark's real, modest visual
+     contribution at navbar size reads as acceptable for a temporary asset;
+     is one keyboard stop; href targets `/`
+  5. Desktop nav: the base underline is gone; the current route shows the
+     bottom-border indicator (not a default underline), with no layout
+     shift when switching which link is active
+  6. Desktop nav: hover shows a subtle, restrained surface change only, no
+     movement/elevation; padding gives a comfortable click/hover target
+     without wrap at any supported width from 1024px up
+  7. Keyboard focus is clearly visible on every nav link, the brand link,
+     the toggle, and the CTA, with no trap
+  8. Forced-colors mode: the active-route border-bottom and the toggle's
+     hamburger/X lines both remain visible and distinct (the lines have an
+     explicit `CanvasText` override; the active-route border and toggle
+     boundary are expected to auto-recolor per the `.project-card`
+     focus-ring precedent) — none yet confirmed in an actual forced-colors
+     session
+  9. `prefers-reduced-motion`: the hamburger-to-X transformation happens as
+     an immediate state swap, with no visible rotation animation
+  10. No browser console errors on any of the 11 routes
+
+  Once AAA completes the checks above, this follow-up's confirmation status
+  should be updated here and in `docs/DECISION_LOG.md`'s corresponding
+  entry — the same two-step pattern PF-060's logo used.
+
+- Footer redesign — **implementation complete; AAA completed the desktop
+  and mobile browser review and approved the presentation.** Several
+  checklist items remain unconfirmed (see the per-item status below) —
+  this task does not close PF-064 or any broader visual-polish milestone;
+  see `docs/DECISION_LOG.md`'s dated entry for the full rationale.
+  `npm run verify` passes.
+
+  Restructured into three columns (Brand, Quick Links, Connect) plus a
+  bottom row (copyright, Privacy). No profile photo; no new footer copy —
+  the brand column is mark + "AAA Portfolio" only. GitHub/LinkedIn are now
+  icon-only, using the official Simple Icons brand marks (fetched live,
+  MIT License, v16.28.0 — full source recorded in
+  `src/components/social-icons.js` and `docs/DECISION_LOG.md`); Email is
+  icon-only using the existing Lucide `Mail` icon. Focused automated tests
+  cover: exactly one Brand/Quick-Links/Connect group each
+  (`tests/footer.test.mjs`); Quick Links contains exactly the real 6
+  `primaryNav` destinations, Privacy never duplicated into it; Connect
+  contains exactly Email/GitHub/LinkedIn when configured, with no visible
+  text and exactly one accessible name (`aria-label`) per icon link; safe
+  email/URL filtering unchanged (invalid/null values still render
+  nothing); the `max-width: none` cascade reset proactively applied to
+  both new footer lists against the same generic `ul, ol` leak already
+  found on `.site-nav ul` (`tests/site-footer-layout.test.mjs`); desktop
+  3-column grid / mobile single-column stack; touch-target sizing,
+  pointer-gated no-movement hover, and the absence of any new
+  reduced-motion/forced-colors override (relies on the existing global
+  rules). Two deliberate-failure passes were run and fully restored — see
+  `docs/DECISION_LOG.md` for detail. Automated tests establish the CSS
+  invariants only — they do not by themselves prove no horizontal overflow
+  or correct rendering in a real browser; that confirmation is AAA's to
+  perform below.
+
+  **Browser-confirmation status:**
+  1. **✅ Confirmed by AAA.** Desktop (≥768px): three columns render in the
+     Brand / Quick Links / Connect order, clear and balanced; Quick Links'
+     2-column list is fully legible; Connect's three icon-only controls are
+     recognizable and appropriately restrained.
+  2. **✅ Confirmed by AAA.** Mobile: columns stack in the order Brand →
+     Quick Links → Connect → bottom row; Quick Links' 2-column list remains
+     readable; no visible clipping or horizontal overflow.
+  3. Icon-only Connect links: hovering (fine-pointer only) shows a subtle
+     surface-color change, no movement; a screen reader announces "Email",
+     "GitHub", "LinkedIn" (not a generic "link" or duplicated name);
+     keyboard focus is clearly visible on all three, tabbing through in
+     order with no trap. **Not yet confirmed** — keyboard-only review is
+     still pending.
+  4. Touch targets: on a touch device or narrow viewport, each Connect icon
+     is comfortably tappable, not visually cramped against its neighbors.
+     **Not yet independently confirmed.**
+  5. **✅ Confirmed by AAA.** Bottom row: copyright and Privacy are both
+     legible but visually subordinate to the columns above; Privacy
+     appears once, not duplicated inside Quick Links.
+  6. Forced-colors mode: the Connect icons and their link boundaries remain
+     visible and distinct. **Not yet confirmed** — no forced-colors session
+     performed.
+  7. `prefers-reduced-motion`: no motion is introduced by this footer
+     beyond the existing color-transition hover. **Not yet confirmed.**
+  8. No browser console errors on any of the 11 routes; the footer renders
+     identically (content-wise) on every route. **Not yet confirmed** —
+     full-route sweep still pending.
+  9. **✅ Confirmed by AAA.** The temporary placeholder brand mark's
+     presentation in the footer remains modest but acceptable until the
+     final SBTech PH / Silver Bullet Tech asset is ready.
+
+  Items 3, 4, 6, 7, and 8 remain open. Once AAA completes those checks,
+  this task's confirmation status should be updated here and in
+  `docs/DECISION_LOG.md`'s corresponding entry — the same two-step pattern
+  PF-060's logo and the header/nav polish task both used.
+
+- About page profile card — **implementation complete; awaiting AAA's
+  browser confirmation.** This task does not close PF-064 or any broader
+  visual-polish milestone; see `docs/DECISION_LOG.md`'s dated entry for
+  the full rationale, including the rejected first portrait candidate and
+  the approved replacement's real inspected properties. `npm run verify`
+  passes.
+
+  About moved to a dedicated `template: 'about'` (Privacy stays on
+  `standard`, completely unaffected). Desktop (≥1024px, matching
+  `.hero__inner`'s own breakpoint): biography content and a new profile
+  card form a two-column composition, biography first in DOM/reading/focus
+  order at every width — no CSS `order` property involved. The card:
+  portrait (real photo, `.media-frame--portrait`, 4:5 crop via
+  `object-fit: cover`, no distortion), name "AAA", role "Full-Stack
+  Software Developer", a statement reused verbatim from the page's own
+  already-approved meta description, three AAA-approved highlight facts,
+  one CTA to Contact, and a single static, restrained corner-accent border
+  — no social icons, no résumé link. Focused automated tests cover: exactly
+  one `<h1>`, no second heading introduced by the card's name/role;
+  `profileCard` absent renders identically to the pre-existing
+  `standard.js` output (the core regression guard); the real approved copy
+  renders exactly, including that the rejected "every project" phrasing
+  never appears; portrait asset-existence pre-build (`public/`) and
+  post-build (`dist/`); compiled-CSS proofs for the two-column breakpoint,
+  no `order` property anywhere, the corner accent's single-bracket/
+  no-glow/no-transition/real-border shape, and the homepage About preview
+  left completely untouched. One deliberate-failure pass was run and fully
+  restored — see `docs/DECISION_LOG.md` for detail.
+
+  **Required before this task can be considered browser-confirmed:**
+  1. Desktop (≥1024px): biography and card form a balanced, readable
+     two-column composition; the card doesn't visually overpower the
+     biography text
+  2. Portrait: the 4:5 crop reads correctly (face/subject well-framed, no
+     awkward crop of the real photo); the corner accent is visible but
+     clearly subordinate to the portrait, not competing with it
+  3. Mobile/tablet (320/375/768px): biography and card stack naturally,
+     card follows biography, no horizontal overflow
+  4. Keyboard-only: logical tab order (biography has no interactive
+     elements → card's CTA → existing closing CTA → footer), visible focus
+     throughout, no trap
+  5. Screen reader: exactly one `<h1>` announced for the page; the card's
+     name/role do not announce as headings; the portrait announces "Portrait
+     of AAA," not silently skipped
+  6. 200% browser zoom: content reflows to the single-column stack cleanly,
+     no clipped/overlapping text
+  7. Forced-colors mode: the card's border and the corner accent both
+     remain visible and distinct — not yet confirmed in an actual
+     forced-colors session
+  8. `prefers-reduced-motion`: no motion is introduced by the card (the
+     corner accent is static by construction)
+  9. No browser console errors on any of the 11 routes; the homepage About
+     preview section is visually unchanged
+
+  Once AAA completes the checks above, this task's confirmation status
+  should be updated here and in `docs/DECISION_LOG.md`'s corresponding
+  entry — the same two-step pattern PF-060's logo and the header/nav polish
+  task both used.
 
 These are out of scope for PF-012 by design — see the task's explicit scope
 boundaries (no browser automation, visual regression, end-to-end tests,

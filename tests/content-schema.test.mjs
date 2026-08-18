@@ -1129,3 +1129,135 @@ test('refactor safety: home template project-item checks are unchanged after the
     ),
   );
 });
+
+// About profile-card task — 'about' template. profileCard is entirely
+// optional (absent renders no card, matching site.brandMark/case-study
+// logo's own "absent renders nothing" pattern); when present, its
+// highlights are a fixed, curated 3-item set and its portrait is required.
+function validAboutContent() {
+  return {
+    title: 'About',
+    heading: 'About',
+    paragraphs: ['Body copy.'],
+  };
+}
+
+function validProfileCard() {
+  return {
+    name: 'AAA',
+    role: 'Full-Stack Software Developer',
+    statement: 'Statement.',
+    highlights: ['One', 'Two', 'Three'],
+    cta: { label: 'Go', path: '/contact/' },
+    portrait: {
+      src: '/images/profile/aaa-portrait.jpg',
+      alt: 'Portrait of AAA',
+      width: 1665,
+      height: 1464,
+    },
+  };
+}
+
+test('valid about content with no profileCard produces no problems', () => {
+  const route = { key: 'about', template: 'about' };
+  assert.deepEqual(validateContent(route, validAboutContent()), []);
+});
+
+test('valid about content with a complete profileCard produces no problems', () => {
+  const route = { key: 'about', template: 'about' };
+  const content = { ...validAboutContent(), profileCard: validProfileCard() };
+  assert.deepEqual(validateContent(route, content), []);
+});
+
+test('profileCard with fewer than 3 highlights is reported', () => {
+  const route = { key: 'about', template: 'about' };
+  const card = validProfileCard();
+  card.highlights = card.highlights.slice(0, 2);
+  const problems = validateContent(route, {
+    ...validAboutContent(),
+    profileCard: card,
+  });
+  assert.ok(problems.some((p) => p.includes('"profileCard.highlights"')));
+});
+
+test('profileCard with more than 3 highlights is reported', () => {
+  const route = { key: 'about', template: 'about' };
+  const card = validProfileCard();
+  card.highlights = [...card.highlights, 'Four'];
+  const problems = validateContent(route, {
+    ...validAboutContent(),
+    profileCard: card,
+  });
+  assert.ok(problems.some((p) => p.includes('"profileCard.highlights"')));
+});
+
+test('profileCard missing name/role/statement is reported', () => {
+  const route = { key: 'about', template: 'about' };
+  const card = validProfileCard();
+  delete card.name;
+  delete card.role;
+  delete card.statement;
+  const problems = validateContent(route, {
+    ...validAboutContent(),
+    profileCard: card,
+  });
+  assert.ok(problems.some((p) => p.includes('"profileCard.name"')));
+  assert.ok(problems.some((p) => p.includes('"profileCard.role"')));
+  assert.ok(problems.some((p) => p.includes('"profileCard.statement"')));
+});
+
+test('profileCard with an unsafe cta path is reported', () => {
+  const route = { key: 'about', template: 'about' };
+  const card = validProfileCard();
+  card.cta = { label: 'Go', path: '//evil.com' };
+  const problems = validateContent(route, {
+    ...validAboutContent(),
+    profileCard: card,
+  });
+  assert.ok(problems.some((p) => p.includes('"profileCard.cta.path"')));
+});
+
+test('profileCard missing portrait entirely is reported — a card with no image is not a valid state', () => {
+  const route = { key: 'about', template: 'about' };
+  const card = validProfileCard();
+  delete card.portrait;
+  const problems = validateContent(route, {
+    ...validAboutContent(),
+    profileCard: card,
+  });
+  assert.ok(
+    problems.some((p) => p.includes('"profileCard.portrait" is required')),
+  );
+});
+
+test('profileCard.portrait with an unsafe src, missing alt, or non-integer dimensions is reported', () => {
+  const route = { key: 'about', template: 'about' };
+
+  const unsafeSrc = validProfileCard();
+  unsafeSrc.portrait.src = '//evil.com/x.jpg';
+  assert.ok(
+    validateContent(route, {
+      ...validAboutContent(),
+      profileCard: unsafeSrc,
+    }).some((p) => p.includes('"profileCard.portrait.src"')),
+  );
+
+  const missingAlt = validProfileCard();
+  delete missingAlt.portrait.alt;
+  assert.ok(
+    validateContent(route, {
+      ...validAboutContent(),
+      profileCard: missingAlt,
+    }).some((p) => p.includes('"profileCard.portrait.alt"')),
+  );
+
+  const badDimensions = validProfileCard();
+  badDimensions.portrait.width = 0;
+  badDimensions.portrait.height = -1;
+  const problems = validateContent(route, {
+    ...validAboutContent(),
+    profileCard: badDimensions,
+  });
+  assert.ok(problems.some((p) => p.includes('"profileCard.portrait.width"')));
+  assert.ok(problems.some((p) => p.includes('"profileCard.portrait.height"')));
+});

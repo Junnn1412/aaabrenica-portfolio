@@ -9,6 +9,8 @@
 // - No résumé link, no contact form — both deferred by explicit product
 //   decision; resumePath stays null in site.js and no form markup exists
 //   anywhere in this template.
+// - PF-064 — the intro sentence approved by AAA as final V1 copy, no longer
+//   provisional.
 export default {
   title: 'Contact',
   description:

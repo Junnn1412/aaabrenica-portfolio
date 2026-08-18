@@ -20,6 +20,13 @@ Status values used throughout:
 
 ## FES Challenger (PF-060)
 
+**PF-064 (2026-08-18):** all narrative copy below approved by AAA as final
+V1 copy (no longer provisional), via a dedicated checkpoint recorded in
+`docs/DECISION_LOG.md`. Also added: `evidence` links from the Solutions
+page's "Corporate Websites" and "WordPress Development" sections to this
+case study — `src/content/pages/solutions.js`, guarded by
+`tests/solutions-render.test.mjs`.
+
 ### Facts
 
 | Fact                                                                                                                                                                                  | Status                                      | Provenance                                                       | Published where                                                                                                                                                                                                                            |
@@ -159,6 +166,13 @@ both the real `public/` directory and the rendered case-study output by
 
 ## Business Workflow System (PF-061)
 
+**PF-064 (2026-08-18):** all narrative copy below approved by AAA as final
+V1 copy (no longer provisional), via a dedicated checkpoint recorded in
+`docs/DECISION_LOG.md`. Note: a PF-064 checkpoint summary mistakenly
+described the Outcomes section as having 4 items — the table below and the
+real content file both correctly have 5; this was a summary-writing error,
+not a content defect, and nothing here was changed as a result.
+
 Fully anonymized per AAA's explicit publication constraints. No
 organization, agency, department, sector, industry, program, office,
 location, real internal system name, or acronym appears anywhere in the
@@ -209,13 +223,33 @@ Never publish: organization/agency/department/program/sector/industry/office/loc
 
 The automated guard checks for: `government`, `agency`/`agencies`, `accreditation`, `regional`, `contract`, `department`, `sector`, `industry`, `program`, `office`, `location` (word-bounded, case-insensitive) against the real rendered case-study output, the content module itself, and the Home/Work card fields. Organizational acronyms and real names cannot be guarded programmatically (unknown by construction) — enforced by AAA's fact-approval step itself never having introduced one.
 
-## eBarangay (PF-062)
+## eBarangay (PF-062 — deferred; PF-064 holding-page exception)
 
-**Deferred — kept exactly as the existing foundation placeholder, no
-changes.** AAA confirmed eBarangay is in the planning/design stage only
-(nothing built yet) and explicitly chose to keep the current placeholder
-rather than publish an "in development" entry. `docs/INITIAL_IMPLEMENTATION_TASKS.md`: "Blocked by verified current project state and assets" — unchanged.
+**PF-062 itself remains deferred and incomplete.** AAA confirmed eBarangay
+is in the planning/design stage only (nothing built yet).
+`docs/INITIAL_IMPLEMENTATION_TASKS.md`: "Blocked by verified current
+project state and assets" — unchanged; never marked complete by PF-064.
 
-## eBarangay (PF-062)
+**PF-064 V1 exception (2026-08-18):** the route's dev-facing PF-011
+placeholder text — literally "Foundation placeholder... Final content is
+defined in a later task," publicly live and linked from both Home and the
+Work index — was replaced with a neutral, fact-free holding message. This
+is a **presentation-only fix**, not case-study content:
 
-Not started. `docs/INITIAL_IMPLEMENTATION_TASKS.md`: "Blocked by verified current project state and assets."
+| Field         | Status                                  | Content                                                                                                                    |
+| ------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `title`       | Unchanged                               | `eBarangay`                                                                                                                |
+| `description` | **Publishable — approved holding copy** | "This case study is currently in development and will be published once it reaches a shareable stage."                     |
+| `heading`     | Unchanged                               | `eBarangay`                                                                                                                |
+| `paragraphs`  | **Publishable — approved holding copy** | "This case study is still in development and isn't ready to share yet. In the meantime, take a look at my other projects." |
+| `backLink`    | Unchanged                               | "Back to Work" → `/work/`                                                                                                  |
+
+No project fact appears anywhere in this copy — no stack, no feature, no
+completion claim. Guarded by `tests/ebarangay-render.test.mjs`, which
+proves the rendered page carries no case-study narrative section (no
+`client`/`problem`/`role`/`solution`/`technologyStack`/`decisions`/`outcomes`
+heading, no logo, no gallery, no external link), so PF-062 can't silently
+gain fabricated content later without a deliberate, reviewed
+implementation. Still **Missing**: logo, screenshots, verified stack,
+features, role, decisions, outcomes, repository/live URL — none approved,
+none published.

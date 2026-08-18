@@ -1,0 +1,143 @@
+@use '../settings/spacing';
+
+// About profile-card task — mirrors components/_hero.scss's own
+// stacked-at-mobile/row-at-desktop flex pattern exactly (same `width >=
+// 64em` breakpoint, same flex-basis-split technique) rather than inventing
+// a second two-column mechanism. Source order is biography then card, at
+// every width — no `order` property anywhere in this file, so DOM order,
+// reading order, and focus order all agree with the visual order.
+.about-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+@media (width >= 64em) {
+  .about-layout--with-card {
+    flex-direction: row;
+    align-items: start;
+    gap: var(--space-9);
+  }
+
+  .about-layout--with-card .about-layout__content {
+    flex: 1 1 58%;
+  }
+
+  .about-layout--with-card .about-card {
+    flex: 1 1 42%;
+  }
+}
+
+// Dark premium surface, reusing .capability-card's dimensional recipe
+// (padding/radius) without its bold accent-fill background — a neutral
+// surface, consistent with the rest of this theme rather than a second
+// visual language.
+.about-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  align-self: start;
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-1);
+}
+
+.about-card__portrait {
+  position: relative;
+}
+
+// Restrained "technical/circuit" accent — a single corner bracket, not a
+// full frame or multiple branches. A generated box (::after) is never
+// exposed to the accessibility tree at all, the same guarantee every
+// other decorative ::before/::after layer in this project already relies
+// on (e.g. .capability-card's own ::before pattern layer) — no aria-hidden
+// needed or possible to add to a pseudo-element. A real `border` (not
+// box-shadow/gradient) so forced-colors mode recolors it to the system
+// highlight automatically, the same reasoning already established for
+// .project-card's focus ring and the active nav-route indicator. Static —
+// no transition, no animation; site-wide motion is a separate, later
+// polish pass, not this task's.
+.about-card__portrait::after {
+  content: '';
+  position: absolute;
+  right: calc(-1 * var(--space-3));
+  bottom: calc(-1 * var(--space-3));
+  width: var(--space-7);
+  height: var(--space-7);
+  border-right: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  border-radius: 0 0 var(--radius-sm) 0;
+  pointer-events: none;
+}
+
+.about-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+// elements/_body-copy.scss's generic `p { margin: 0 0 var(--space-4); }`
+// would otherwise add unwanted bottom margin on top of .about-card__body's
+// own `gap` — the same fix shape already used for
+// .site-footer__meta/.site-footer__privacy.
+.about-card__name,
+.about-card__role,
+.about-card__statement {
+  margin: 0;
+}
+
+.about-card__name {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  font-weight: 600;
+}
+
+.about-card__role {
+  color: var(--color-accent-text);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-label);
+  text-transform: uppercase;
+}
+
+.about-card__statement {
+  color: var(--color-text-secondary);
+}
+
+// The card is narrower than elements/_body-copy.scss's generic
+// `ul, ol { max-width: var(--width-reading); }` (68ch, ~544px) at every
+// supported width — .about-card itself is capped by its own
+// `flex: 1 1 42%` share of a container whose own max-width is
+// `--container-max` (80rem), so this list can never actually reach 68ch
+// wide regardless of whether max-width is reset here. Only `margin`,
+// `padding`, and `list-style` genuinely affect this element (the same
+// generic rule sets all three), so only those are reset — no `max-width`
+// override is added or tested, since the leak this project has twice
+// found elsewhere (.site-nav ul, this same generic rule) cannot occur on
+// an element that's already narrower than the cap for an unrelated,
+// structural reason.
+.about-card__highlights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+// elements/_body-copy.scss's generic `li { margin-bottom: var(--space-2); }`
+// would otherwise add extra bottom margin on top of the flex `gap` above,
+// unevenly spacing every item but the last — the same reasoning as
+// .capability-card's own equivalent reset.
+.about-card__highlights li {
+  margin: 0;
+}
+
+.about-card__cta {
+  align-self: start;
+  margin-top: var(--space-2);
+}

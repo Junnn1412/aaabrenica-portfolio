@@ -1,7 +1,12 @@
 export const site = {
   siteName: 'AAA Portfolio',
+  // PF-064 — replaced the pre-launch "foundation preview" placeholder with
+  // the approved final positioning statement, reused verbatim from
+  // DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md §3.1 rather than invented.
+  // Only Privacy currently relies on this fallback (every other route sets
+  // its own content.description).
   defaultDescription:
-    "AAA's professional developer portfolio — foundation preview.",
+    'Practical, end-to-end software solutions for growing businesses — delivered with the structure of a development company and the direct collaboration of an independent developer.',
   // Named in PF-031's own scope and DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md
   // §8.1 as "the highlighted navigation action" — reuses the existing
   // /contact/ route, not a new one.
@@ -20,4 +25,28 @@ export const site = {
   },
   // Verified real value (PF-054) — passes isSafeEmail.
   contactEmail: 'website@aaabrenica.site',
+  // Header/nav visual-polish task, logo-integration follow-up — the
+  // replaceable header brand-mark slot, now occupied by AAA's temporary
+  // legacy placeholder image, placed directly in the repository at
+  // public/images/brand/aaa-placeholder-logo.png. Inspected directly from
+  // the real file bytes, not assumed from the extension: valid PNG,
+  // 231x140px (1.65:1 aspect ratio — a wide horizontal lockup with
+  // embedded "AAA III" text baked into the image), 8-bit RGBA (color type
+  // 6 — real alpha transparency), not interlaced, 8,853 bytes.
+  // `renderBrandMark()` (src/components/partials/header.js) always renders
+  // this decoratively (`alt=""`, hardcoded there, not read from this
+  // object) — the same pattern already used for the FES Challenger
+  // case-study logo (PF-060): "AAA Portfolio" (the visible text rendered
+  // alongside it) remains the one real accessible name. width/height are
+  // the real inspected intrinsic dimensions, never guessed, so the browser
+  // reserves the correct aspect ratio before the image loads. This is
+  // explicitly NOT the final SBTech PH / Silver Bullet Tech identity —
+  // swapping in that emblem later is the same one-line change to this
+  // object, no markup or CSS restructuring required — that's the point of
+  // this slot.
+  brandMark: {
+    src: '/images/brand/aaa-placeholder-logo.png',
+    width: 231,
+    height: 140,
+  },
 };

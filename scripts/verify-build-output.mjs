@@ -11,6 +11,7 @@ import {
   collectCaseStudyAssetPaths,
   findMissingCaseStudyAssets,
 } from './case-study-assets.mjs';
+import { findMissingAssets } from './asset-existence.mjs';
 
 const distRootUrl = new URL('../dist/', import.meta.url);
 const distRootPath = fileURLToPath(distRootUrl);
@@ -201,12 +202,22 @@ for (const route of routes) {
     );
   }
 
+  // Footer redesign — the footer's own contact links now carry
+  // class="site-footer__connect-link" before href and aria-label="..." after
+  // it (icon-only Connect controls), unlike contact.js's plain
+  // <a href="...">Label</a> in <main> (checked separately below,
+  // unchanged) — `[^>]*` after href tolerates that trailing attribute, the
+  // same pattern this file's own nav aria-label check above already
+  // established for the same reason (PF-031).
   const footerHtml = extractRegion(html, 'footer');
   for (const { href, label } of CONTACT_LINKS) {
     if (
       countMatches(
         footerHtml,
-        new RegExp(`<a href="${escapeRegExp(href)}">`, 'g'),
+        new RegExp(
+          `<a class="site-footer__connect-link" href="${escapeRegExp(href)}"[^>]*>`,
+          'g',
+        ),
       ) !== 1
     ) {
       add(`route "${route.key}": expected exactly one footer ${label} link`);
@@ -330,7 +341,35 @@ function checkExactDistContents() {
   }
 }
 
+// Header/nav visual-polish task — mirrors checkBrandMarkAssetExists() in
+// scripts/validate-routes.mjs, checked against dist/ instead of public/.
+// site.brandMark stays null until a real asset file is confirmed (see
+// docs/DECISION_LOG.md), so this is a no-op today.
+function checkBrandMarkAssetInDist() {
+  if (!site.brandMark?.src) return;
+  for (const problem of findMissingAssets(distRootPath, [site.brandMark.src])) {
+    add(`site.brandMark: ${problem} (checked under dist/)`);
+  }
+}
+
+// About profile-card task — mirrors checkAboutPortraitAssetExists() in
+// scripts/validate-routes.mjs, checked against dist/ instead of public/.
+function checkAboutPortraitAssetInDist() {
+  const route = routes.find((r) => r.template === 'about');
+  if (!route) return;
+  const content = contentByKey[route.content];
+  const src = content?.profileCard?.portrait?.src;
+  if (!src) return;
+  for (const problem of findMissingAssets(distRootPath, [src])) {
+    add(
+      `route "${route.key}": profileCard.portrait: ${problem} (checked under dist/)`,
+    );
+  }
+}
+
 checkExactDistContents();
+checkBrandMarkAssetInDist();
+checkAboutPortraitAssetInDist();
 
 if (problems.length > 0) {
   console.error(`[verify-build-output] ${problems.length} problem(s) found:\n`);

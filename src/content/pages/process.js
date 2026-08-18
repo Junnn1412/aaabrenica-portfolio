@@ -13,6 +13,11 @@
 // No timelines, prices, guarantees, packages, or SLAs appear anywhere below
 // — Support's facts describe an agreed, project-scoped arrangement, not an
 // indefinite or automatic service.
+// PF-064 — approved by AAA as final V1 copy, no longer provisional. Also
+// confirmed: this page's own desktop/mobile/tablet browser review (including
+// the 768px two-column facts layout) was already completed during PF-051 —
+// docs/TESTING_AND_QA.md's stale "pending" note for that review is corrected
+// in this same change.
 export default {
   title: 'Process',
   description:

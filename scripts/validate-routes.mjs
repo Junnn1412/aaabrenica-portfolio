@@ -16,6 +16,7 @@ import {
   isSafeExternalUrl,
 } from '../src/pages/link-safety.js';
 import { findWorkProjectRouteProblems } from './work-project-routes.mjs';
+import { findMissingAssets } from './asset-existence.mjs';
 import {
   collectCaseStudyAssetPaths,
   findMissingCaseStudyAssets,
@@ -332,6 +333,53 @@ function checkCaseStudyAssetsExist() {
   }
 }
 
+// Header/nav visual-polish task — `site.brandMark` is optional and stays
+// `null` until a real asset file is confirmed on disk (see
+// docs/DECISION_LOG.md); when set, its `src` must resolve under public/,
+// exactly like a case study's logo/gallery, using the same generic
+// existence-check helper (not a case-study-named import — the header brand
+// mark isn't a case study).
+function checkBrandMarkAssetExists() {
+  if (!site.brandMark?.src) return;
+  const publicRootPath = fileURLToPath(publicRootUrl);
+  if (!isSafeInternalPath(site.brandMark.src)) {
+    add(
+      `site.brandMark.src must be a safe internal path, got "${site.brandMark.src}"`,
+    );
+    return;
+  }
+  for (const problem of findMissingAssets(publicRootPath, [
+    site.brandMark.src,
+  ])) {
+    add(`site.brandMark: ${problem} (checked under public/)`);
+  }
+}
+
+// About profile-card task — `content.profileCard.portrait.src` is optional
+// (schema-absent renders no card) but when present must resolve under
+// public/, the same generic existence-check helper used for the header
+// brand mark and case-study logo/gallery — not a case-study-named import,
+// since a profile portrait isn't a case study either.
+function checkAboutPortraitAssetExists() {
+  const publicRootPath = fileURLToPath(publicRootUrl);
+  const route = routes.find((r) => r.template === 'about');
+  if (!route) return;
+  const content = contentByKey[route.content];
+  const src = content?.profileCard?.portrait?.src;
+  if (!src) return;
+  if (!isSafeInternalPath(src)) {
+    add(
+      `route "${route.key}": profileCard.portrait.src must be a safe internal path, got "${src}"`,
+    );
+    return;
+  }
+  for (const problem of findMissingAssets(publicRootPath, [src])) {
+    add(
+      `route "${route.key}": profileCard.portrait: ${problem} (checked under public/)`,
+    );
+  }
+}
+
 function checkSkipLinkTarget() {
   for (const route of routes) {
     const abs = resolveEntryPath(projectRootUrl, route.entry);
@@ -359,6 +407,8 @@ checkPhysicalFilesExist();
 checkNoUnexpectedFiles();
 checkMarkers();
 checkCaseStudyAssetsExist();
+checkBrandMarkAssetExists();
+checkAboutPortraitAssetExists();
 checkSkipLinkTarget();
 
 if (problems.length > 0) {

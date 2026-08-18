@@ -12,6 +12,11 @@
 // PF-061 — Business Workflow System now does the same. Its card also
 // replaces the prior literal "Government/business workflow system" category
 // (prohibited wording, superseded by the fully anonymized case study).
+// PF-064 — approved by AAA as final V1 copy, no longer provisional. One
+// wording correction applied: the hero paragraph's closing phrase changed
+// from "ongoing support" to "agreed post-launch support," to stay
+// consistent with Process's own approved rule that support is agreed and
+// scoped per project, not automatic or indefinite.
 import fesChallenger from './work/fes-challenger.js';
 import businessWorkflowSystem from './work/business-workflow-system.js';
 
@@ -21,7 +26,7 @@ export default {
     'AAA helps organizations identify inefficient, repetitive, or difficult processes and turn them into practical websites, workflow solutions, internal systems, and custom software.',
   heading: 'Turn Business Challenges Into Practical Software Solutions.',
   paragraphs: [
-    'I help growing businesses improve their operations through websites, internal systems, workflow solutions, and custom software—from requirements gathering and planning to development, deployment, and ongoing support.',
+    'I help growing businesses improve their operations through websites, internal systems, workflow solutions, and custom software—from requirements gathering and planning to development, deployment, and agreed post-launch support.',
   ],
   hero: {
     primaryCta: { label: 'Discuss Your Project', path: '/contact/' },

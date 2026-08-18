@@ -73,22 +73,55 @@ test('solutions: jump nav has exactly 6 links, set-equal to the 6 section ids on
   );
 });
 
-test('solutions: exactly one evidence link, inside Workflow & Process Solutions, pointing at Business Workflow System', () => {
+// PF-064 — Corporate Websites and WordPress Development gained evidence
+// links to the now-complete FES Challenger case study, alongside Workflow &
+// Process Solutions' existing link to Business Workflow System. Custom
+// Business Systems, Existing-System Improvements, and Support & Maintenance
+// still have no matching case study and must keep omitting the element
+// entirely, not render it empty.
+test('solutions: exactly 3 evidence links, each in its matching section, pointing at the right case study', () => {
   const main = solutionsMain();
   const evidenceLinks = [
     ...main.matchAll(/<p class="solution-section__evidence">/g),
   ].length;
   assert.equal(
     evidenceLinks,
-    1,
-    'expected exactly one evidence element sitewide — the other 5 sections must omit it entirely, not render it empty',
+    3,
+    'expected exactly 3 evidence elements sitewide — the other 3 sections must omit it entirely, not render it empty',
   );
 
-  const section = extractSectionById(main, 'workflow-process-solutions');
+  const workflowSection = extractSectionById(
+    main,
+    'workflow-process-solutions',
+  );
   assert.match(
-    section,
+    workflowSection,
     /<p class="solution-section__evidence"><a href="\/work\/business-workflow-system\/">Related project: Business Workflow System<\/a><\/p>/,
   );
+
+  const corporateSection = extractSectionById(main, 'corporate-websites');
+  assert.match(
+    corporateSection,
+    /<p class="solution-section__evidence"><a href="\/work\/fes-challenger\/">Related project: FES Challenger<\/a><\/p>/,
+  );
+
+  const wordpressSection = extractSectionById(main, 'wordpress-development');
+  assert.match(
+    wordpressSection,
+    /<p class="solution-section__evidence"><a href="\/work\/fes-challenger\/">Related project: FES Challenger<\/a><\/p>/,
+  );
+
+  for (const id of [
+    'custom-business-systems',
+    'existing-system-improvements',
+    'support-maintenance',
+  ]) {
+    assert.doesNotMatch(
+      extractSectionById(main, id),
+      /solution-section__evidence/,
+      `expected section "${id}" to omit the evidence element entirely`,
+    );
+  }
 });
 
 test("solutions: exactly 6 per-section action links, each matching the content module's own cta label/path", () => {

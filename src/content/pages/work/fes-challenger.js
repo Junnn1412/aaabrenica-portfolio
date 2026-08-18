@@ -17,6 +17,8 @@
 // PNG, unresized — no WebP encoder was available locally without installing
 // a package, so the source format/dimensions were kept as-is per AAA's
 // explicit fallback instruction.
+// PF-064 — all narrative copy approved by AAA as final V1 copy, no longer
+// provisional; facts preserved exactly, not rewritten for stylistic variety.
 export default {
   title: 'FES Challenger',
   description:

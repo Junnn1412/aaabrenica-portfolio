@@ -1,15 +1,26 @@
-// PF-060 logo-integration follow-up — pure, side-effect-free (besides the
-// fs.existsSync read) asset-existence helpers shared by
-// scripts/validate-routes.mjs (pre-flight, checked against public/) and
-// scripts/verify-build-output.mjs (post-build, checked against dist/ —
-// Vite copies public/ to dist/ verbatim, so the same relative asset path
-// must resolve in both places). A separate tiny module, not inline in
-// either script, for the same reason scripts/work-project-routes.mjs is
-// separate: both scripts run their full check sequence (including a
-// possible process.exit(1)) unconditionally on import, so this module has
-// no top-level side effects and is safe to import directly from tests.
-import fs from 'node:fs';
-import path from 'node:path';
+// PF-060 logo-integration follow-up — pure, side-effect-free case-study
+// asset helpers shared by scripts/validate-routes.mjs (pre-flight, checked
+// against public/) and scripts/verify-build-output.mjs (post-build, checked
+// against dist/ — Vite copies public/ to dist/ verbatim, so the same
+// relative asset path must resolve in both places). A separate tiny
+// module, not inline in either script, for the same reason
+// scripts/work-project-routes.mjs is separate: both scripts run their full
+// check sequence (including a possible process.exit(1)) unconditionally on
+// import, so this module has no top-level side effects and is safe to
+// import directly from tests.
+//
+// Header/nav visual-polish task — `findMissingCaseStudyAssets` is now a
+// re-export of the generic `findMissingAssets` in
+// scripts/asset-existence.mjs, extracted there once a genuinely non-
+// case-study caller (the site-wide header brand mark) needed the exact
+// same root-relative-path-existence logic. Every existing import of
+// `findMissingCaseStudyAssets` from this module keeps working unchanged —
+// this is a re-export, not a behavior change. `collectCaseStudyAssetPaths`
+// stays here: it's genuinely case-study-shape-specific (reads
+// `content.logo`/`content.gallery`), not generic.
+import { findMissingAssets } from './asset-existence.mjs';
+
+export { findMissingAssets as findMissingCaseStudyAssets };
 
 // A case study's only two possible local-asset fields today: `logo.src`
 // and each `gallery.items[].src`. Returns an empty array when neither is
@@ -24,30 +35,4 @@ export function collectCaseStudyAssetPaths(content) {
     }
   }
   return paths;
-}
-
-// Resolves each root-relative asset path (e.g. "/images/case-studies/
-// fes-challenger/logo.png") against `rootDir` and reports any that don't
-// exist on disk, or that would resolve outside `rootDir` entirely (a
-// defensive check — content-schema.js's isSafeInternalPath only rejects
-// "//"-prefixed and non-"/"-prefixed values, not an embedded "../" that
-// could otherwise walk a filesystem check above the intended root).
-export function findMissingCaseStudyAssets(rootDir, assetPaths) {
-  const resolvedRoot = path.resolve(rootDir);
-  const problems = [];
-  for (const assetPath of assetPaths) {
-    const abs = path.resolve(rootDir, `.${assetPath}`);
-    const withinRoot =
-      abs === resolvedRoot || abs.startsWith(resolvedRoot + path.sep);
-    if (!withinRoot) {
-      problems.push(
-        `asset path "${assetPath}" resolves outside the expected root directory`,
-      );
-      continue;
-    }
-    if (!fs.existsSync(abs)) {
-      problems.push(`referenced asset does not exist on disk: ${assetPath}`);
-    }
-  }
-  return problems;
 }

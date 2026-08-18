@@ -12,6 +12,8 @@
 // PF-061 — Business Workflow System now does the same, replacing the prior
 // literal "Government/business workflow system" category (prohibited
 // wording, superseded by the fully anonymized case study).
+// PF-064 — page-level title/description/heading/intro/CTA copy approved by
+// AAA as final V1 copy, no longer provisional.
 import fesChallenger from './fes-challenger.js';
 import businessWorkflowSystem from './business-workflow-system.js';
 

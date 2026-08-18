@@ -573,6 +573,136 @@ nowrap` (removing wrapping as an escape valve entirely, rather than
    a modest additional safety margin — secondary to the structural fix,
    not a substitute for it. Guarded by `tests/site-nav-layout.test.mjs`.
 
+## Header/navigation visual polish
+
+A focused follow-up to PF-064 redesigned the header/nav's visual language.
+Nav routes/labels/order and `nav-toggle-state.js`'s pure state logic are
+exactly as PF-031 built them; `nav-toggle.js`'s DOM wiring and the desktop
+breakpoint were both corrected in a second, defect-fix round (below) after
+AAA's first browser review — see `docs/DECISION_LOG.md`'s dated entries for
+the full rationale and all deliberate-failure passes across both rounds;
+this section covers the resulting component contract.
+
+**Brand mark — a replaceable, optional slot.** `site.brandMark`
+(`src/config/site.js`) follows the same "absent renders nothing" pattern as
+`site.resumePath`: `null` today, so `header.js`'s `renderBrandMark()` renders
+nothing and the brand link shows `"AAA Portfolio"` alone. When set, the mark
+renders as a purely decorative `<img alt="">` inside the same single
+`<a class="site-header__brand" href="/">` as the visible text — one keyboard
+stop, one accessible name, never two. `.site-brand__mark`
+(`_site-header.scss`) fixes the slot's visual bounds independent of the
+source image's real proportions — `height: 2.25rem; width: auto;
+max-width: 3rem; object-fit: contain;` — so a future asset with a different
+aspect ratio (a temporary legacy placeholder today, eventually the final
+SBTech PH / Silver Bullet Tech emblem) can occupy the same slot with a
+one-line config change, no markup or CSS change required. The temporary
+placeholder's actual file is not yet in the repository — see
+`docs/TESTING_AND_QA.md`.
+
+**Active-route indicator — reserved space, not layout shift.** `.site-nav
+a:not(.btn)` reserves a transparent `border-bottom: var(--focus-ring-width)
+solid transparent` on **every** link, not only the active one; `.site-nav
+a[aria-current='page']` then sets `border-bottom-color: var(--color-accent)`
+plus `font-weight: 600` and `color: var(--color-accent-text)`. Reserving the
+same space on every link means the active link never occupies a taller box
+than an inactive one — switching which link is active causes zero layout
+shift. `--color-accent` (not `--color-accent-text`) is used for the border
+specifically because this design system's own token documentation already
+scopes `--color-accent` to "large text, icons, borders, focus ring," and a
+border is exactly that role. A real `border` property, not `box-shadow`, was
+chosen so forced-colors mode auto-recolors it to the system highlight color
+with no separate override — the same reasoning already established for
+`.project-card`'s focus ring. Conveying the active state through
+border+weight+color together (not color alone) satisfies the
+color-cannot-be-the-only-signal requirement. `text-decoration: none` is
+scoped to `.site-header__brand` and `.site-nav a:not(.btn)` only —
+`elements/_links.scss`'s global underline rule is untouched everywhere else.
+
+**Desktop link padding.** `.site-nav a:not(.btn)` gained `padding-inline` at
+every width and `padding-block: var(--space-2)` at the desktop breakpoint
+(replacing a prior `padding-block: 0`), giving every link real hover/active
+surface and a larger click/touch target without materially growing the
+header height. The existing anti-wrap architecture
+(`.site-nav`/`.site-nav ul`/`.site-nav li { flex-shrink: 0; }`, `flex-flow:
+row nowrap`, from the PF-031 defect fix above) was re-verified against the
+added padding — but this same padding was also part of what pushed the
+desktop breakpoint's minimum content width past 768px, requiring the
+breakpoint correction described below. `tests/site-nav-layout.test.mjs`
+still passes unchanged; the breakpoint it runs against changed.
+
+### Defect-fix round: desktop overflow and mobile initial-open state
+
+AAA's first browser review of the above found two release-blocking
+defects, both fixed — full width-derivation math and root-cause tracing in
+`docs/DECISION_LOG.md`'s dated entry; this is the resulting contract.
+
+**Desktop breakpoint moved from `$bp-md` (768px) to `$bp-lg` (1024px).**
+The nowrap/no-shrink desktop layout (`header`'s `flex-wrap: nowrap` +
+sticky, and `.site-nav`'s `flex-shrink: 0` block) structurally could not
+fit its own content at 768px once the link padding above and the brand
+mark slot were both added — verified from real compiled token values in
+`tests/site-header-overflow.test.mjs`, which computes the row's exact
+fixed non-text overhead at a given viewport width and asserts it leaves
+real headroom at 1024px, and did not at 768px. `$bp-lg` is an existing
+token, not a new one. Three places had to move together and must stay in
+sync: `_site-header.scss`'s `header` block, `_site-nav.scss`'s desktop
+block, and `nav-toggle.js`'s hardcoded `window.matchMedia('(min-width:
+64em)')` (JS cannot reference a Sass variable directly, so this is a
+manually-kept-in-sync literal, documented at the call site). Desktop sticky
+positioning is unchanged in behavior — it now simply begins at 1024px
+alongside the rest of the layout it was always bundled with.
+
+**`nav-toggle.js`'s initial render now actually collapses the nav on
+mobile.** The bug: `initNavToggle()`'s first render called `applyDom()`
+directly, but `applyDom()` never touched `nav.hidden` — only `dispatch()`
+did, which the initial render never went through. `nav-toggle-state.js`'s
+pure `deriveNavState`/`toDom` functions were already correct and already
+fully tested; the untested gap was entirely in this DOM-wiring file. Fixed
+by explicitly syncing `nav.hidden` from `applyDom()`'s own return value on
+the initial render, the same way `dispatch()` already does after every
+later state change. `tests/nav-toggle.test.mjs` (new) hand-rolls a minimal
+`document`/`window` mock — no DOM library is installed — to exercise the
+real wiring: fresh mobile/desktop loads, toggle activation, and a
+desktop↔mobile resize round-trip.
+
+**Mobile toggle redesign — icon-only, no visible "Menu"/"Close" text.**
+Replaces the previous Lucide `Menu`/`X` icon swap with three plain
+`<span class="site-header__menu-bar">` lines inside one
+`aria-hidden="true"` wrapper, styled entirely in `_site-header.scss` — no
+external icon dependency. The button's one real accessible name is now a
+dynamically synchronized `aria-label` (`"Open navigation"` /
+`"Close navigation"`), set by the same `applyDom()` function that already
+syncs `aria-expanded`. The bars morph into an X purely via a
+`[aria-expanded='true']` attribute-selector rule (the outer bars rotate
+±45deg, the middle bar fades to `opacity: 0`) — driven by the identical
+attribute `nav-toggle.js` sets, so there is exactly one canonical source of
+truth for both the accessible state and the icon's visual state, unlike
+the removed icon-swap approach, which tracked `openIcon.hidden`/
+`closeIcon.hidden` as separate JS state. Removing the header's Lucide
+usage doesn't orphan `src/components/icon.js` — it now has three other
+real call sites (`capability-card.js`, `trust-list.js`, `solutions.js`).
+Reduced motion needs no new rule: the bars' `transition` is already
+covered by the existing global `@media (prefers-reduced-motion: reduce)`
+rule in `generic/_document.scss`. Forced-colors mode gets an explicit
+`@media (forced-colors: active) { .site-header__menu-bar { background-color:
+CanvasText; } }` override, since the bars use `background-color:
+currentcolor` (not a `border`/`outline` property like the button's own
+boundary or the active-route indicator), so default forced-colors
+visibility isn't guaranteed the same way for them.
+
+**Asset-existence validation, generalized correctly.** The brand-mark slot
+needed the same "does this public/-relative path exist on disk" check
+`scripts/case-study-assets.mjs` already provided for case-study
+`logo`/`gallery` fields — but importing a case-study-named module for an
+unrelated content shape would have been a semantic mismatch. The generic
+half of that logic (`findMissingAssets`) was extracted into a new
+`scripts/asset-existence.mjs`; `case-study-assets.mjs` now re-exports it as
+`findMissingCaseStudyAssets` for full backward compatibility, keeping only
+`collectCaseStudyAssetPaths` (genuinely case-study-shape-specific) for
+itself. `scripts/validate-routes.mjs`/`scripts/verify-build-output.mjs` each
+call the generic helper directly for `site.brandMark`, checked against
+`public/` and `dist/` respectively.
+
 ## Capability cards (PF-032)
 
 `.capability-card` (`src/styles/components/_capability-card.scss`) is
@@ -1979,3 +2109,153 @@ the specific consolidations made). Every visible string is provisional —
 AAA-reviewed and corrected before implementation, still subject to the
 PF-064 final polish pass, the same status every other dedicated page's
 copy carries.
+
+## Footer redesign
+
+A focused follow-up to the header/nav polish restructured the footer from a
+single flat block into three labeled columns — Brand, Quick Links, Connect
+— plus a bottom row (copyright, Privacy). Full rationale in
+`docs/DECISION_LOG.md`'s dated entry; this section covers the resulting
+component contract.
+
+**Layout — no `.container` wrapper, matching the header exactly.**
+`.site-footer__columns` is a single-column CSS Grid at mobile/tablet
+(Brand → Quick Links → Connect in document order, for free from source
+order) and a 3-column grid from `spacing.$bp-md` (768px). `footer` itself
+stays full-bleed with `padding-inline: var(--gutter)` directly on the
+element — the same architecture the three-round header overflow
+investigation proved correct for `header`, reused rather than introducing
+a second footer-only pattern.
+
+**Real `<h2>` headings, reusing the eyebrow recipe.** "Quick Links" and
+"Connect" are genuine `<h2>` elements, not styled `<p>`/`<span>` text —
+confirmed safe first: every test that counts `<h2>`s across this codebase
+scopes its check to `renderRoute(route).main` specifically (`main` and
+`footer` are separate strings this architecture already returns
+separately), so footer headings never touch those assertions. Visual
+treatment reuses `objects/_section-header.scss`'s `.section-header__eyebrow`
+recipe verbatim (`text-transform: uppercase`, `letter-spacing:
+var(--letter-spacing-label)`, `color: var(--color-accent-text)`,
+`font-size: var(--font-size-label)`) rather than inventing a new heading
+style — proven identical via a compiled-CSS test comparing both rules
+directly, not just visually similar.
+
+**Preventing the same `max-width` leak proactively.** The header/nav
+overflow defect's round 3 found `.site-nav ul` silently capped at 68ch by
+`elements/_body-copy.scss`'s generic `ul, ol { max-width:
+var(--width-reading); }` rule. Both new footer lists
+(`.site-footer__nav ul`, `.site-footer__links`) reset `max-width: none`
+unconditionally from the start, alongside `margin`/`padding`/`list-style`
+(all also set by that same generic rule) — the identical fix shape already
+established by `.project-cards`/`.capability-cards`/`.trust-list`/
+`.process-steps`/`.engagement-options`/`.site-nav ul`. The generic
+`p { margin: 0 0 var(--space-4); }` rule was also found leaking into the
+bottom row's two paragraphs (asymmetric bottom margin inside an
+`align-items: center` flex row) and reset via
+`.site-footer__meta, .site-footer__privacy { margin: 0; }`.
+
+**Icon-only Connect links — two different icon renderers, deliberately not
+merged.** Email uses the existing Lucide `Mail` icon via `icon.js`'s
+`renderIcon()` (stroke-based, `stroke="currentColor" fill="none"`).
+GitHub/LinkedIn use a new, separate `src/components/social-icons.js` —
+Simple Icons' official monochrome brand marks (MIT License, `simple-icons`
+v16.28.0, fetched live 2026-08-18; exact source URLs recorded in that
+file's own header comment), single filled `<path>` per mark
+(`fill="currentColor"`). These are structurally different icon shapes
+(multi-shape stroke outlines vs. one filled path) and Lucide itself
+doesn't ship brand/logo icons at all — `renderSocialIcon()` is a closed
+two-entry map that throws on an unknown key, the same fail-loud precedent
+`icon.js`'s own allowlists already establish. Both renderers always emit
+`aria-hidden="true"` on the icon; the parent `<a>`'s `aria-label` ("Email",
+"GitHub", "LinkedIn") is the one real accessible name — the icon never
+carries its own name, matching the pattern already established for the
+header/case-study logos.
+
+`.site-footer__connect-link` sizes each control to
+`min-width`/`min-height: var(--touch-target-min)` (44px, an existing
+token) with `border-radius: var(--radius-full)`. Hover is pointer-gated
+(`@media (hover: hover) and (pointer: fine)`) and restrained —
+`background-color: var(--color-surface-2)` only, no transform/movement,
+matching the header's icon-only menu toggle's own "quieter than the
+primary CTA" treatment rather than `.btn`'s lift. Focus-visible, forced-
+colors, and reduced-motion all need zero new CSS: the existing global
+`:focus-visible` rule, the link's real `color` property, and the existing
+global `@media (prefers-reduced-motion: reduce)` rule already cover a
+control whose only animated property is a color transition.
+
+**Résumé unchanged.** `site.resumePath` stays `null` and continues to
+render nothing when absent, exactly as before — its eventual placement
+(icon vs. text, inside or outside Connect) is deferred to whenever a real
+résumé asset is actually approved, not decided now for content that
+doesn't exist yet.
+
+## About page profile card
+
+A focused follow-up to the footer redesign gave the About page a premium
+two-column composition — existing biography content plus a new profile
+card (portrait, identity, restrained facts, one CTA). Full rationale,
+portrait provenance, and approved copy in `docs/DECISION_LOG.md`'s dated
+entry; this section covers the resulting component contract.
+
+**Dedicated `about` template, not a `standard.js` field.** `standard.js`
+stays exactly as it was — generic, shared by Privacy — because a profile
+card is single-purpose and Privacy will never need one. `src/pages/templates/about.js`
+duplicates (not imports) `standard.js`'s heading/paragraph/CTA rendering
+rather than sharing it, since the two are expected to diverge further.
+
+**Two-column layout reuses `.hero__inner`'s exact pattern.** `.about-layout`
+is a single-column flex stack by default; `.about-layout--with-card`
+(added only when a real card is present) switches to `flex-direction: row`
+at `width >= 64em` — the identical breakpoint `.hero__inner` already uses,
+not a new one. Biography content is always first in source order, the card
+always second — the split is `flex: 1 1 58%` / `flex: 1 1 42%`, and no
+rule anywhere uses the CSS `order` property, so visual order, DOM order,
+reading order, and focus order are always identical by construction.
+
+**Card surface — neutral, not `.capability-card`'s bold accent-fill.**
+`.about-card` reuses `.capability-card`'s dimensional recipe (`padding:
+var(--space-6); border-radius: var(--radius-lg);`) but with a plain
+`--color-surface-1` background and `--color-border` border — a dark,
+premium, neutral surface consistent with the rest of this theme, not a
+second visual language. `.about-card__name`/`role`/`statement` are styled
+`<p>` tags, not headings: they restate the page's own subject (already
+announced by `<h1>About</h1>`), so a second near-top-level heading would
+only pollute the real hierarchy. `.about-card__role` reuses
+`.section-header__eyebrow`'s exact uppercase/letter-spaced/accent-colored
+recipe, proven identical via a compiled-CSS test comparing both rules
+directly.
+
+**Portrait — `.media-frame`'s first real production caller.** `.media-frame`
+(PF-021) had zero real callers anywhere in `src/` until this task —
+only the dev showcase referenced it. The About portrait is genuinely the
+first real use, proving the abstraction the same way PF-032/PF-060 did for
+capability cards/case studies. The real supplied photo is ~1.14:1
+(landscape-ish, not 4:5), so a new `.media-frame--portrait { aspect-ratio:
+4/5; }` variant safely center-crops it via the base component's existing
+`object-fit: cover` — no distortion, a modest, visually safe trim given
+the photo's generous background margin around its centered subject.
+
+**Corner accent — one L-shaped border bracket, restrained and static.**
+`.about-card__portrait::after` (a generated pseudo-element, never exposed
+to the accessibility tree — no `aria-hidden` needed or possible to add to
+it) draws two 2px `border-right`/`border-bottom` sides in `--color-accent`
+at the portrait frame's bottom-right corner. A real `border` property, not
+`box-shadow`/gradient, so forced-colors mode auto-recolors it the same way
+already established for `.project-card`'s focus ring and the active
+nav-route indicator. No transition or animation — static, per this task's
+explicit scope boundary; site-wide motion remains a separate, later pass.
+
+**Generic-cascade resets applied only where they genuinely matter.**
+`.about-card__highlights` gets no `max-width: none` reset: `.about-card`
+is structurally capped to 42% of an 80rem container (~538px), already
+under `elements/_body-copy.scss`'s generic 68ch (~544px) `ul, ol` cap
+before subtracting any padding — the leak already found twice elsewhere in
+this project (`.site-nav ul`, the same generic rule) cannot occur here for
+a real structural reason, not by luck, so no reset or test was manufactured
+for it. `margin`/`padding`/`list-style` (the list and its `li` items) and
+`margin` (the name/role/statement paragraphs) genuinely do affect the
+rendered result and are reset, the same fix shape already used for
+`.site-footer__meta`/`.site-footer__privacy`.
+
+**Homepage About preview untouched**, confirmed by a dedicated regression
+test — this task's scope was the About page only.

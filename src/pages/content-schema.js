@@ -544,6 +544,64 @@ function checkNotFoundContent(content, problems) {
   }
 }
 
+// About profile-card task, used only by the 'about' template branch.
+// `profileCard` is entirely optional — schema-absent renders no card,
+// matching the same "absent renders nothing" pattern as `site.brandMark`
+// and case-study `logo`/`gallery` — but when present, its `portrait` is
+// required (a card with no image would contradict its own stated purpose,
+// see docs/DECISION_LOG.md). `highlights` is a fixed, curated 3-item set
+// (checkExactArray), the same "exactly N curated items" shape home.js's
+// own trust/problems sections already use — this is a single-caller
+// field, not growth-safe like checkWorkContent's project list.
+function checkAboutContent(content, problems) {
+  checkOptionalObject(
+    content.profileCard,
+    'profileCard',
+    problems,
+    (card, problems) => {
+      checkNonEmptyString(card?.name, 'profileCard.name', problems);
+      checkNonEmptyString(card?.role, 'profileCard.role', problems);
+      checkNonEmptyString(card?.statement, 'profileCard.statement', problems);
+      if (
+        checkExactArray(card?.highlights, 'profileCard.highlights', 3, problems)
+      ) {
+        card.highlights.forEach((item, i) =>
+          checkNonEmptyString(item, `profileCard.highlights[${i}]`, problems),
+        );
+      }
+      checkLink(card?.cta, 'profileCard.cta', problems);
+      if (card?.portrait == null || typeof card.portrait !== 'object') {
+        problems.push(
+          '"profileCard.portrait" is required when "profileCard" is present',
+        );
+      } else {
+        checkBarePath(card.portrait.src, 'profileCard.portrait.src', problems);
+        checkNonEmptyString(
+          card.portrait.alt,
+          'profileCard.portrait.alt',
+          problems,
+        );
+        if (
+          !Number.isInteger(card.portrait.width) ||
+          card.portrait.width <= 0
+        ) {
+          problems.push(
+            '"profileCard.portrait.width" must be a positive integer',
+          );
+        }
+        if (
+          !Number.isInteger(card.portrait.height) ||
+          card.portrait.height <= 0
+        ) {
+          problems.push(
+            '"profileCard.portrait.height" must be a positive integer',
+          );
+        }
+      }
+    },
+  );
+}
+
 // PF-060 helpers below, used only by the 'case-study' template branch. Each
 // named top-level section is entirely optional — absent is always valid,
 // never an error — matching §10.4's "where applicable" framing. When a
@@ -740,6 +798,10 @@ export function validateContent(route, content) {
 
   if (route.template === 'not-found') {
     checkNotFoundContent(content, problems);
+  }
+
+  if (route.template === 'about') {
+    checkAboutContent(content, problems);
   }
 
   return problems;

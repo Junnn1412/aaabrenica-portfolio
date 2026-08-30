@@ -16,10 +16,11 @@ import {
   isSafeExternalUrl,
 } from '../src/pages/link-safety.js';
 import { findWorkProjectRouteProblems } from './work-project-routes.mjs';
+import { findSiteProfileProblems } from './site-profile-validation.mjs';
 import {
-  collectCaseStudyAssetPaths,
-  findMissingCaseStudyAssets,
-} from './case-study-assets.mjs';
+  collectRegisteredAssetEntries,
+  findRegisteredAssetProblems,
+} from './registered-assets.mjs';
 
 const projectRootUrl = new URL('../', import.meta.url);
 const publicRootUrl = new URL('../public/', import.meta.url);
@@ -113,6 +114,12 @@ function checkSiteConfig() {
   // PF-003/PF-053-gated — so its shape is enforced unconditionally, same
   // pattern as primaryNav below.
   if (
+    typeof site.primaryCta?.key !== 'string' ||
+    site.primaryCta.key.length === 0
+  ) {
+    add('site.primaryCta.key must be a non-empty string');
+  }
+  if (
     typeof site.primaryCta?.label !== 'string' ||
     site.primaryCta.label.length === 0
   ) {
@@ -147,8 +154,31 @@ function checkSiteConfig() {
       'site.social.linkedin, when set, must be an HTTPS linkedin.com/www.linkedin.com URL',
     );
   }
+  if (
+    site.social?.facebook != null &&
+    !isSafeExternalUrl(site.social.facebook, 'facebook')
+  ) {
+    add(
+      'site.social.facebook, when set, must be an HTTPS facebook.com/www.facebook.com URL',
+    );
+  }
   if (site.contactEmail != null && !isSafeEmail(site.contactEmail)) {
     add('site.contactEmail, when set, must be a valid email address');
+  }
+  if (typeof site.contactForm?.enabled !== 'boolean') {
+    add('site.contactForm.enabled must be a boolean');
+  }
+  if (site.contactForm?.action !== '/api/contact') {
+    add('site.contactForm.action must be exactly "/api/contact"');
+  }
+  if (site.brandMark?.src != null && !isSafeInternalPath(site.brandMark.src)) {
+    add(
+      `site.brandMark.src must be a safe internal path, got "${site.brandMark.src}"`,
+    );
+  }
+
+  for (const problem of findSiteProfileProblems(site.profile)) {
+    add(problem);
   }
 }
 
@@ -180,12 +210,20 @@ function checkNavigation() {
   for (const route of routes) {
     if (
       route.navKey != null &&
-      !primaryNav.some((i) => i.key === route.navKey)
+      !primaryNav.some((i) => i.key === route.navKey) &&
+      site.primaryCta?.key !== route.navKey
     ) {
       add(
-        `route "${route.key}": navKey "${route.navKey}" has no matching navigation item`,
+        `route "${route.key}": navKey "${route.navKey}" has no matching navigation item or primary CTA`,
       );
     }
+  }
+
+  const ctaRoutes = routes.filter(
+    (route) => route.navKey === site.primaryCta?.key,
+  );
+  if (!ctaRoutes.some((route) => route.path === site.primaryCta?.path)) {
+    add('site.primaryCta key/path must match a registered route nav target');
   }
 }
 
@@ -314,21 +352,15 @@ function checkMarkers() {
 // typo'd filename, a forgotten `git add`, a follow-up that adds the field
 // before the file lands) must fail loudly here, before it can silently
 // ship a broken <img> in production.
-function checkCaseStudyAssetsExist() {
+function checkRegisteredAssetsExist() {
   const publicRootPath = fileURLToPath(publicRootUrl);
-  for (const route of routes) {
-    if (route.template !== 'case-study') continue;
-    const content = contentByKey[route.content];
-    if (!content) continue; // already reported by checkRegistries
-    const assetPaths = collectCaseStudyAssetPaths(content).filter((p) =>
-      isSafeInternalPath(p),
-    ); // unsafe paths are already reported by checkContentShape
-    for (const problem of findMissingCaseStudyAssets(
-      publicRootPath,
-      assetPaths,
-    )) {
-      add(`route "${route.key}": ${problem} (checked under public/)`);
-    }
+  const entries = collectRegisteredAssetEntries({
+    routes,
+    contentByKey,
+    site,
+  }).filter((entry) => isSafeInternalPath(entry.assetPath));
+  for (const problem of findRegisteredAssetProblems(publicRootPath, entries)) {
+    add(`asset registry: ${problem} (checked under public/)`);
   }
 }
 
@@ -358,7 +390,7 @@ checkApprovedRoutes();
 checkPhysicalFilesExist();
 checkNoUnexpectedFiles();
 checkMarkers();
-checkCaseStudyAssetsExist();
+checkRegisteredAssetsExist();
 checkSkipLinkTarget();
 
 if (problems.length > 0) {

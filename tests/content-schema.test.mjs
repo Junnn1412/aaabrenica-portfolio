@@ -4,6 +4,7 @@ import {
   validateContent,
   PROCESS_STAGE_NAMES,
 } from '../src/pages/content-schema.js';
+import contactContent from '../src/content/pages/contact.js';
 
 test('valid standard content produces no problems', () => {
   const route = { key: 'about', template: 'standard' };
@@ -93,18 +94,21 @@ test('cta with an unsafe action path is reported', () => {
   assert.ok(problems.some((p) => p.includes('"cta.action.path"')));
 });
 
-// PF-054 — the 'contact' template is deliberately schema-identical to
-// 'standard' (its contact-methods list is sourced from site.js, not
-// content), so this confirms "no new required content shape" is true, not
-// merely assumed.
-test('the contact template requires only the base fields, same as standard', () => {
+// The disabled form source is validated before operational enablement so its
+// approved labels, help, messages, and field contract cannot be incomplete.
+test('the contact template requires its complete form content contract', () => {
   const route = { key: 'contact', template: 'contact' };
-  const content = {
+  const incomplete = {
     title: 'Contact',
     heading: 'Contact',
     paragraphs: ['ok'],
   };
-  assert.deepEqual(validateContent(route, content), []);
+  assert.ok(
+    validateContent(route, incomplete).some((problem) =>
+      problem.includes('"form"'),
+    ),
+  );
+  assert.deepEqual(validateContent(route, contactContent), []);
 });
 
 // PF-055 — the 'not-found' template requires exactly 3 well-formed links
@@ -240,13 +244,29 @@ function validHomeContent() {
       eyebrow: 'Eyebrow',
       heading: 'Heading',
       items: [
-        { featured: true, heading: 'One', link: '/work/fes-challenger/' },
         {
+          featured: true,
+          isVisible: true,
+          heading: 'One',
+          link: '/work/fes-challenger/',
+          presentation: { kind: 'text-only' },
+        },
+        {
+          isVisible: false,
           category: 'Cat',
           heading: 'Two',
           link: '/work/business-workflow-system/',
+          presentation: { kind: 'text-only' },
         },
-        { heading: 'Three', link: '/work/ebarangay/' },
+        {
+          isVisible: false,
+          heading: 'Three',
+          link: '/work/ebarangay/',
+          presentation: {
+            kind: 'deferred',
+            label: 'Case study in development',
+          },
+        },
       ],
       link: { label: 'Explore All Work', path: '/work/' },
     },
@@ -270,7 +290,9 @@ function validHomeContent() {
       eyebrow: 'Eyebrow',
       heading: 'Heading',
       paragraphs: ['Paragraph.'],
-      link: { label: 'Read My Full Story', path: '/about/' },
+      profileCard: {
+        action: { label: 'Read My Full Story', path: '/about/' },
+      },
     },
     cta: {
       heading: 'Heading',
@@ -423,7 +445,7 @@ test('case-study: a minimal content object (only base fields + backLink) produce
   assert.deepEqual(validateContent(route, validCaseStudyContent()), []);
 });
 
-test('case-study: logo is validated only when present', () => {
+test('case-study: logo is optional but requires a safe path and positive intrinsic dimensions when present', () => {
   const route = {
     key: 'work-fes-challenger',
     template: 'case-study',
@@ -439,9 +461,71 @@ test('case-study: logo is validated only when present', () => {
 
   const withGoodLogo = {
     ...validCaseStudyContent(),
-    logo: { src: '/images/case-studies/example/logo.png', alt: '' },
+    logo: {
+      src: '/images/case-studies/example/logo.png',
+      alt: '',
+      width: 140,
+      height: 137,
+    },
   };
   assert.deepEqual(validateContent(route, withGoodLogo), []);
+
+  for (const malformedLogo of [
+    { src: '/images/logo.png', alt: '' },
+    { src: '/images/logo.png', alt: '', width: 0, height: 137 },
+    { src: '/images/logo.png', alt: '', width: 140, height: 1.5 },
+  ]) {
+    const problems = validateContent(route, {
+      ...validCaseStudyContent(),
+      logo: malformedLogo,
+    });
+    assert.ok(
+      problems.some(
+        (problem) =>
+          problem.includes('"logo.width"') || problem.includes('"logo.height"'),
+      ),
+    );
+  }
+});
+
+test('case-study: heroMedia is optional and closed to a safe factual image descriptor', () => {
+  const route = {
+    key: 'work-fes-challenger',
+    template: 'case-study',
+    content: 'work-fes-challenger',
+  };
+  const validMedia = {
+    src: '/images/case-studies/example/hero.png',
+    alt: 'Screenshot of the example homepage',
+    width: 1440,
+    height: 810,
+  };
+  assert.deepEqual(
+    validateContent(route, {
+      ...validCaseStudyContent(),
+      heroMedia: validMedia,
+    }),
+    [],
+  );
+
+  for (const heroMedia of [
+    'not-an-object',
+    [],
+    { ...validMedia, src: '//evil.example/hero.png' },
+    { ...validMedia, alt: '' },
+    { ...validMedia, width: 0 },
+    { ...validMedia, height: 1.5 },
+    { ...validMedia, caption: 'Unsupported' },
+  ]) {
+    const problems = validateContent(route, {
+      ...validCaseStudyContent(),
+      heroMedia,
+    });
+    assert.ok(
+      problems.some((problem) => problem.includes('heroMedia')),
+      `expected malformed heroMedia to fail: ${JSON.stringify(heroMedia)}`,
+    );
+  }
 });
 
 test('case-study: client/problem/decisions/outcomes/technologyStack all require a non-empty string list when present', () => {
@@ -972,15 +1056,27 @@ function validWorkContent() {
       items: [
         {
           featured: true,
+          isVisible: true,
           heading: 'FES Challenger',
           link: '/work/fes-challenger/',
+          presentation: { kind: 'text-only' },
         },
         {
+          isVisible: false,
           heading: 'Business Workflow System',
           category: 'Internal Workflow System',
           link: '/work/business-workflow-system/',
+          presentation: { kind: 'text-only' },
         },
-        { heading: 'eBarangay', link: '/work/ebarangay/' },
+        {
+          isVisible: false,
+          heading: 'eBarangay',
+          link: '/work/ebarangay/',
+          presentation: {
+            kind: 'deferred',
+            label: 'Case study in development',
+          },
+        },
       ],
     },
     cta: {
@@ -994,6 +1090,109 @@ function validWorkContent() {
 test('valid work content produces no problems', () => {
   const route = { key: 'work', template: 'work' };
   assert.deepEqual(validateContent(route, validWorkContent()), []);
+});
+
+test('project cards require the closed image, carousel, text-only, or deferred presentation contract', () => {
+  const route = { key: 'work', template: 'work' };
+
+  const missing = validWorkContent();
+  delete missing.projects.items[0].presentation;
+  assert.ok(
+    validateContent(route, missing).some((problem) =>
+      problem.includes('projects.items[0].presentation'),
+    ),
+  );
+
+  const unknown = validWorkContent();
+  unknown.projects.items[0].presentation = { kind: 'placeholder' };
+  assert.ok(
+    validateContent(route, unknown).some((problem) =>
+      problem.includes('projects.items[0].presentation.kind'),
+    ),
+  );
+
+  const malformedImage = validWorkContent();
+  malformedImage.projects.items[0].presentation = {
+    kind: 'image',
+    src: '//unsafe.example/image.png',
+    alt: '',
+    width: 0,
+    height: 1.5,
+  };
+  const imageProblems = validateContent(route, malformedImage);
+  for (const field of ['src', 'alt', 'width', 'height']) {
+    assert.ok(
+      imageProblems.some((problem) =>
+        problem.includes(`projects.items[0].presentation.${field}`),
+      ),
+    );
+  }
+
+  const malformedTextOnly = validWorkContent();
+  malformedTextOnly.projects.items[0].presentation = {
+    kind: 'text-only',
+    src: '/unexpected.png',
+  };
+  assert.ok(
+    validateContent(route, malformedTextOnly).some((problem) =>
+      problem.includes('projects.items[0].presentation.src'),
+    ),
+  );
+
+  const validCarousel = validWorkContent();
+  validCarousel.projects.items[0].presentation = {
+    kind: 'carousel',
+    slides: [
+      { src: '/one.png', alt: 'One', width: 800, height: 450 },
+      { src: '/two.png', alt: 'Two', width: 800, height: 450 },
+      { src: '/three.png', alt: 'Three', width: 800, height: 450 },
+    ],
+  };
+  assert.deepEqual(validateContent(route, validCarousel), []);
+
+  const malformedCarousel = validWorkContent();
+  malformedCarousel.projects.items[0].presentation = {
+    kind: 'carousel',
+    slides: [
+      { src: '/one.png', alt: 'One', width: 800, height: 450 },
+      { src: '//unsafe.example/two.png', alt: '', width: 0, height: 1.5 },
+    ],
+  };
+  const carouselProblems = validateContent(route, malformedCarousel);
+  assert.ok(
+    carouselProblems.some((problem) =>
+      problem.includes('projects.items[0].presentation.slides'),
+    ),
+  );
+
+  const malformedCarouselSlide = validWorkContent();
+  malformedCarouselSlide.projects.items[0].presentation = {
+    kind: 'carousel',
+    slides: [
+      { src: '/one.png', alt: 'One', width: 800, height: 450 },
+      { src: '//unsafe.example/two.png', alt: '', width: 0, height: 1.5 },
+      { src: '/three.png', alt: 'Three', width: 800, height: 450 },
+    ],
+  };
+  const slideProblems = validateContent(route, malformedCarouselSlide);
+  for (const field of ['src', 'alt', 'width', 'height']) {
+    assert.ok(
+      slideProblems.some((problem) =>
+        problem.includes(`projects.items[0].presentation.slides[1].${field}`),
+      ),
+    );
+  }
+
+  const malformedDeferred = validWorkContent();
+  malformedDeferred.projects.items[2].presentation = {
+    kind: 'deferred',
+    label: '',
+  };
+  assert.ok(
+    validateContent(route, malformedDeferred).some((problem) =>
+      problem.includes('projects.items[2].presentation.label'),
+    ),
+  );
 });
 
 test('work template requires "projects"', () => {
@@ -1019,10 +1218,31 @@ test('work template requires a non-empty projects.items array (not a fixed count
   // real projects) must not be rejected for its length.
   const longer = validWorkContent();
   longer.projects.items.push({
+    isVisible: false,
     heading: 'A Fourth Project',
     link: '/work/a-fourth-project/',
+    presentation: { kind: 'text-only' },
   });
   assert.deepEqual(validateContent(route, longer), []);
+});
+
+test('project cards require an explicit boolean isVisible state', () => {
+  const route = { key: 'work', template: 'work' };
+  const missing = validWorkContent();
+  delete missing.projects.items[0].isVisible;
+  assert.ok(
+    validateContent(route, missing).some((problem) =>
+      problem.includes('projects.items[0].isVisible'),
+    ),
+  );
+
+  const malformed = validWorkContent();
+  malformed.projects.items[0].isVisible = 'yes';
+  assert.ok(
+    validateContent(route, malformed).some((problem) =>
+      problem.includes('projects.items[0].isVisible'),
+    ),
+  );
 });
 
 test('work template reports every missing required per-item field', () => {
@@ -1128,4 +1348,428 @@ test('refactor safety: home template project-item checks are unchanged after the
       ),
     ),
   );
+});
+
+function validFullProfileCard() {
+  return {
+    statement: 'Statement.',
+    highlights: ['One', 'Two', 'Three'],
+  };
+}
+
+function validExperienceEntry() {
+  return {
+    role: 'Role',
+    employer: 'Employer',
+    dates: {
+      start: { label: 'Jan 2020', datetime: '2020-01' },
+      end: { label: 'Present' },
+    },
+    summary: 'Summary.',
+    responsibilities: ['Responsibility.'],
+    technologies: ['Technology'],
+  };
+}
+
+function validAboutContent() {
+  return {
+    title: 'About',
+    heading: 'About',
+    paragraphs: ['Body copy.'],
+    technologyStack: {
+      heading: 'Core Technologies',
+      groups: [
+        { heading: 'Frontend', items: ['Angular', 'TypeScript'] },
+        { heading: 'Backend', items: ['ASP.NET Core'] },
+        { heading: 'Data', items: ['Microsoft SQL Server'] },
+        { heading: 'Delivery', items: ['Git'] },
+      ],
+    },
+    experience: {
+      eyebrow: 'Eyebrow',
+      heading: 'Experience',
+      lede: 'Experience introduction.',
+      entries: [validExperienceEntry()],
+    },
+    profileCard: validFullProfileCard(),
+  };
+}
+
+test('valid About content requires the complete full profile-card contract', () => {
+  const route = { key: 'about', template: 'about' };
+  assert.deepEqual(validateContent(route, validAboutContent()), []);
+
+  const missing = validAboutContent();
+  delete missing.profileCard;
+  assert.ok(
+    validateContent(route, missing).some((p) =>
+      p.includes('"profileCard" is required'),
+    ),
+  );
+});
+
+test('full profile card requires exactly three non-empty highlights', () => {
+  const route = { key: 'about', template: 'about' };
+  for (const highlights of [
+    ['One', 'Two'],
+    ['One', 'Two', 'Three', 'Four'],
+    ['One', '', 'Three'],
+  ]) {
+    const content = validAboutContent();
+    content.profileCard.highlights = highlights;
+    assert.ok(
+      validateContent(route, content).some((p) =>
+        p.includes('"profileCard.highlights'),
+      ),
+    );
+  }
+});
+
+test('full profile card requires its approved statement and rejects any internal action', () => {
+  const route = { key: 'about', template: 'about' };
+  const content = validAboutContent();
+  delete content.profileCard.statement;
+  content.profileCard.action = { label: 'Contact', path: '/contact/' };
+  const problems = validateContent(route, content);
+  assert.ok(problems.some((p) => p.includes('"profileCard.statement"')));
+  assert.ok(problems.some((p) => p.includes('"profileCard.action"')));
+});
+
+test('About technology stack requires its closed top-level shape and exact heading', () => {
+  const route = { key: 'about', template: 'about' };
+
+  const missing = validAboutContent();
+  delete missing.technologyStack;
+  assert.ok(
+    validateContent(route, missing).some((p) =>
+      p.includes('"technologyStack" is required'),
+    ),
+  );
+
+  const wrongHeading = validAboutContent();
+  wrongHeading.technologyStack.heading = 'Technology Stack';
+  assert.ok(
+    validateContent(route, wrongHeading).some((p) =>
+      p.includes('"technologyStack.heading" must be exactly'),
+    ),
+  );
+
+  const unknown = validAboutContent();
+  unknown.technologyStack.description = 'Not supported.';
+  assert.ok(
+    validateContent(route, unknown).some((p) =>
+      p.includes('"technologyStack.description" is not supported'),
+    ),
+  );
+});
+
+test('About technology stack requires exactly four closed group objects', () => {
+  const route = { key: 'about', template: 'about' };
+
+  for (const groups of [null, [], [{ heading: 'Only', items: ['One'] }]]) {
+    const content = validAboutContent();
+    content.technologyStack.groups = groups;
+    assert.ok(
+      validateContent(route, content).some((p) =>
+        p.includes('"technologyStack.groups" must be an array of exactly 4'),
+      ),
+    );
+  }
+
+  const malformed = validAboutContent();
+  malformed.technologyStack.groups[0] = 'Frontend';
+  assert.ok(
+    validateContent(route, malformed).some((p) =>
+      p.includes('"technologyStack.groups[0]" must be an object'),
+    ),
+  );
+
+  const unknown = validAboutContent();
+  unknown.technologyStack.groups[0].description = 'Not supported.';
+  assert.ok(
+    validateContent(route, unknown).some((p) =>
+      p.includes('"technologyStack.groups[0].description" is not supported'),
+    ),
+  );
+});
+
+test('About technology stack rejects empty, incorrectly typed, and duplicate group data', () => {
+  const route = { key: 'about', template: 'about' };
+
+  const emptyHeading = validAboutContent();
+  emptyHeading.technologyStack.groups[0].heading = '   ';
+  assert.ok(
+    validateContent(route, emptyHeading).some((p) =>
+      p.includes('"technologyStack.groups[0].heading"'),
+    ),
+  );
+
+  const duplicateHeading = validAboutContent();
+  duplicateHeading.technologyStack.groups[1].heading = ' frontend ';
+  assert.ok(
+    validateContent(route, duplicateHeading).some((p) =>
+      p.includes('duplicate group headings'),
+    ),
+  );
+
+  const emptyItems = validAboutContent();
+  emptyItems.technologyStack.groups[0].items = [];
+  assert.ok(
+    validateContent(route, emptyItems).some((p) =>
+      p.includes('"technologyStack.groups[0].items"'),
+    ),
+  );
+
+  const wrongItemsType = validAboutContent();
+  wrongItemsType.technologyStack.groups[0].items = 'Angular';
+  assert.ok(
+    validateContent(route, wrongItemsType).some((p) =>
+      p.includes('"technologyStack.groups[0].items"'),
+    ),
+  );
+});
+
+test('About technology stack rejects empty, incorrectly typed, and duplicate technologies across groups', () => {
+  const route = { key: 'about', template: 'about' };
+
+  for (const item of ['', '   ', null, 42]) {
+    const content = validAboutContent();
+    content.technologyStack.groups[0].items[0] = item;
+    assert.ok(
+      validateContent(route, content).some((p) =>
+        p.includes('"technologyStack.groups[0].items[0]"'),
+      ),
+    );
+  }
+
+  const duplicate = validAboutContent();
+  duplicate.technologyStack.groups[3].items.push(' angular ');
+  assert.ok(
+    validateContent(route, duplicate).some((p) =>
+      p.includes('duplicate technologies'),
+    ),
+  );
+});
+
+test('generic About stack validation does not hardcode production group or item copy', () => {
+  const route = { key: 'about', template: 'about' };
+  const content = validAboutContent();
+  content.technologyStack.groups = [
+    { heading: 'One', items: ['Alpha'] },
+    { heading: 'Two', items: ['Beta'] },
+    { heading: 'Three', items: ['Gamma'] },
+    { heading: 'Four', items: ['Delta'] },
+  ];
+  assert.deepEqual(validateContent(route, content), []);
+});
+
+test('About Experience requires a closed section object with non-empty header fields', () => {
+  const route = { key: 'about', template: 'about' };
+
+  for (const experience of [undefined, null, [], 'Experience']) {
+    const content = validAboutContent();
+    content.experience = experience;
+    assert.ok(
+      validateContent(route, content).some((problem) =>
+        problem.includes('"experience" is required'),
+      ),
+    );
+  }
+
+  for (const field of ['eyebrow', 'heading', 'lede']) {
+    const content = validAboutContent();
+    content.experience[field] = '   ';
+    assert.ok(
+      validateContent(route, content).some((problem) =>
+        problem.includes(`"experience.${field}"`),
+      ),
+    );
+  }
+
+  const unknown = validAboutContent();
+  unknown.experience.description = 'Unsupported.';
+  assert.ok(
+    validateContent(route, unknown).some((problem) =>
+      problem.includes('"experience.description" is not supported'),
+    ),
+  );
+});
+
+test('About Experience requires a non-empty array of closed entry objects', () => {
+  const route = { key: 'about', template: 'about' };
+
+  for (const entries of [undefined, null, [], 'entries']) {
+    const content = validAboutContent();
+    content.experience.entries = entries;
+    assert.ok(
+      validateContent(route, content).some((problem) =>
+        problem.includes('"experience.entries" must be a non-empty array'),
+      ),
+    );
+  }
+
+  const malformed = validAboutContent();
+  malformed.experience.entries = ['entry'];
+  assert.ok(
+    validateContent(route, malformed).some((problem) =>
+      problem.includes('"experience.entries[0]" must be an object'),
+    ),
+  );
+
+  for (const prohibitedField of ['logo', 'image', 'link', 'url']) {
+    const content = validAboutContent();
+    content.experience.entries[0][prohibitedField] = '/not-allowed';
+    assert.ok(
+      validateContent(route, content).some((problem) =>
+        problem.includes(
+          `"experience.entries[0].${prohibitedField}" is not supported`,
+        ),
+      ),
+    );
+  }
+});
+
+test('About Experience rejects missing, empty, and incorrectly typed entry strings and lists', () => {
+  const route = { key: 'about', template: 'about' };
+
+  for (const field of ['role', 'employer', 'summary']) {
+    for (const value of [undefined, '', '   ', null, 42]) {
+      const content = validAboutContent();
+      content.experience.entries[0][field] = value;
+      assert.ok(
+        validateContent(route, content).some((problem) =>
+          problem.includes(`"experience.entries[0].${field}"`),
+        ),
+      );
+    }
+  }
+
+  for (const field of ['responsibilities', 'technologies']) {
+    for (const value of [undefined, null, [], 'items']) {
+      const content = validAboutContent();
+      content.experience.entries[0][field] = value;
+      assert.ok(
+        validateContent(route, content).some((problem) =>
+          problem.includes(`"experience.entries[0].${field}"`),
+        ),
+      );
+    }
+
+    for (const value of ['', '   ', null, 42]) {
+      const content = validAboutContent();
+      content.experience.entries[0][field][0] = value;
+      assert.ok(
+        validateContent(route, content).some((problem) =>
+          problem.includes(`"experience.entries[0].${field}[0]"`),
+        ),
+      );
+    }
+  }
+});
+
+test('About Experience requires closed start/end date objects with valid labels and datetimes', () => {
+  const route = { key: 'about', template: 'about' };
+
+  for (const part of ['start', 'end']) {
+    const missing = validAboutContent();
+    delete missing.experience.entries[0].dates[part];
+    assert.ok(
+      validateContent(route, missing).some((problem) =>
+        problem.includes(`"experience.entries[0].dates.${part}"`),
+      ),
+    );
+
+    const emptyLabel = validAboutContent();
+    emptyLabel.experience.entries[0].dates[part].label = '   ';
+    assert.ok(
+      validateContent(route, emptyLabel).some((problem) =>
+        problem.includes(`"experience.entries[0].dates.${part}.label"`),
+      ),
+    );
+
+    const unknown = validAboutContent();
+    unknown.experience.entries[0].dates[part].url = '/not-allowed';
+    assert.ok(
+      validateContent(route, unknown).some((problem) =>
+        problem.includes(
+          `"experience.entries[0].dates.${part}.url" is not supported`,
+        ),
+      ),
+    );
+  }
+
+  for (const datetime of [undefined, '', '2024', '2024-13', 202404]) {
+    const content = validAboutContent();
+    content.experience.entries[0].dates.start.datetime = datetime;
+    assert.ok(
+      validateContent(route, content).some((problem) =>
+        problem.includes('"experience.entries[0].dates.start.datetime"'),
+      ),
+    );
+  }
+
+  const badDates = validAboutContent();
+  badDates.experience.entries[0].dates = [];
+  assert.ok(
+    validateContent(route, badDates).some((problem) =>
+      problem.includes('"experience.entries[0].dates" must be an object'),
+    ),
+  );
+});
+
+test('About Experience rejects duplicate technology tags and duplicate role/employer/date identities', () => {
+  const route = { key: 'about', template: 'about' };
+
+  const duplicateTechnology = validAboutContent();
+  duplicateTechnology.experience.entries[0].technologies.push(' technology ');
+  assert.ok(
+    validateContent(route, duplicateTechnology).some((problem) =>
+      problem.includes('duplicate technologies'),
+    ),
+  );
+
+  const duplicateEntry = validAboutContent();
+  duplicateEntry.experience.entries.push(
+    structuredClone(duplicateEntry.experience.entries[0]),
+  );
+  assert.ok(
+    validateContent(route, duplicateEntry).some((problem) =>
+      problem.includes('duplicate role/employer/date combinations'),
+    ),
+  );
+});
+
+test('generic About Experience validation does not hardcode production employers or entry count', () => {
+  const route = { key: 'about', template: 'about' };
+  const content = validAboutContent();
+  content.experience.entries = [
+    validExperienceEntry(),
+    {
+      ...validExperienceEntry(),
+      role: 'Another role',
+      employer: 'Another employer',
+      dates: {
+        start: { label: 'Feb 2019', datetime: '2019-02' },
+        end: { label: 'Dec 2019', datetime: '2019-12' },
+      },
+    },
+  ];
+  assert.deepEqual(validateContent(route, content), []);
+});
+
+test('homepage compact profile card requires exactly one safe action and rejects statement/highlights fields', () => {
+  const route = { key: 'home', template: 'home' };
+  const valid = validHomeContent();
+  assert.deepEqual(validateContent(route, valid), []);
+
+  const invalid = validHomeContent();
+  invalid.about.profileCard.action.path = '//evil.example.com';
+  invalid.about.profileCard.statement = 'Duplicate homepage copy.';
+  invalid.about.profileCard.highlights = ['Not allowed'];
+  const problems = validateContent(route, invalid);
+  assert.ok(
+    problems.some((p) => p.includes('"about.profileCard.action.path"')),
+  );
+  assert.ok(problems.some((p) => p.includes('"about.profileCard.statement"')));
+  assert.ok(problems.some((p) => p.includes('"about.profileCard.highlights"')));
 });

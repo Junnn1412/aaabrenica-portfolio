@@ -20,14 +20,15 @@ import { contentByKey } from '../src/content/pages/index.js';
 
 // --- collectCaseStudyAssetPaths --------------------------------------------
 
-test('collectCaseStudyAssetPaths returns an empty array when neither logo nor gallery is present', () => {
+test('collectCaseStudyAssetPaths returns an empty array when no case-study media is present', () => {
   assert.deepEqual(collectCaseStudyAssetPaths({}), []);
   assert.deepEqual(collectCaseStudyAssetPaths({ heading: 'X' }), []);
 });
 
-test('collectCaseStudyAssetPaths collects logo.src and every gallery item src', () => {
+test('collectCaseStudyAssetPaths collects logo, hero, and every gallery item src', () => {
   const content = {
     logo: { src: '/images/case-studies/example/logo.png', alt: '' },
+    heroMedia: { src: '/images/case-studies/example/hero.webp' },
     gallery: {
       items: [
         { src: '/images/case-studies/example/one.webp' },
@@ -37,6 +38,7 @@ test('collectCaseStudyAssetPaths collects logo.src and every gallery item src', 
   };
   assert.deepEqual(collectCaseStudyAssetPaths(content), [
     '/images/case-studies/example/logo.png',
+    '/images/case-studies/example/hero.webp',
     '/images/case-studies/example/one.webp',
     '/images/case-studies/example/two.webp',
   ]);

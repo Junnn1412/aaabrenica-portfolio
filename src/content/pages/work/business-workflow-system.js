@@ -11,6 +11,11 @@
 // or public URL is approved, and screenshots are deferred to a later,
 // separate sanitization-and-approval round — omitted entirely, not a
 // placeholder.
+// PF-064 — all narrative copy approved by AAA as final V1 copy, no longer
+// provisional; facts preserved exactly, not rewritten for stylistic variety.
+// `outcomes.items` has 5 entries, matching the originally approved manifest
+// — a PF-064 checkpoint summary mistakenly said 4; the file itself was
+// never wrong and is unchanged here.
 export default {
   title: 'Business Workflow System',
   description:
@@ -98,9 +103,11 @@ export default {
   // exist in exactly one place — replaces the prior PF-033-era literal
   // "Government/business workflow system" category (prohibited wording).
   card: {
+    isVisible: false,
     category: 'Internal Workflow System',
     summary:
       'A centralized system for managing a multi-stage application, review, examination, and approval workflow, built and iteratively improved for internal use.',
     tags: ['Angular', 'ASP.NET Core'],
+    presentation: { kind: 'text-only' },
   },
 };

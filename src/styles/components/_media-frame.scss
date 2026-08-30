@@ -23,3 +23,17 @@
 .media-frame--wide {
   aspect-ratio: 21 / 9;
 }
+
+// About profile-card task — this component's first real production caller
+// (src/pages/templates/about.js), proving the abstraction the same way
+// PF-032/PF-060 did for capability cards/case studies. 4:5 is a standard
+// headshot/profile-card ratio; the real portrait (1665×1464, ~1.14:1
+// landscape) is safely center-cropped to it via this file's existing
+// `object-fit: cover` rule above — no distortion, just a modest, visually
+// safe trim off the sides (the subject is centered with generous
+// background margin in the source photo).
+.media-frame--portrait {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+}

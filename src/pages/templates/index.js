@@ -6,6 +6,7 @@ import { renderProcessPage } from './process.js';
 import { renderWorkPage } from './work.js';
 import { renderContactPage } from './contact.js';
 import { renderNotFoundPage } from './not-found.js';
+import { renderAboutPage } from './about.js';
 
 // Single static registry, shared by src/pages/render.js and scripts/validate-routes.mjs.
 export const templates = {
@@ -17,4 +18,5 @@ export const templates = {
   work: renderWorkPage,
   contact: renderContactPage,
   'not-found': renderNotFoundPage,
+  about: renderAboutPage,
 };

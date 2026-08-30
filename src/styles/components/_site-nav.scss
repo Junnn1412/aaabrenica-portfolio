@@ -9,9 +9,26 @@
   flex-basis: 100%;
 }
 
+// Header/nav overflow-defect follow-up (round 3) — `max-width: none` is
+// load-bearing, not decorative, the same pattern `.project-cards`/
+// `.capability-cards`/`.trust-list`/`.process-steps`/`.engagement-options`
+// already establish for exactly this reason: elements/_body-copy.scss's
+// generic `ul, ol { max-width: var(--width-reading); }` (68ch, correct for
+// a prose list) is a bare-tag rule that still wins for `max-width`
+// specifically against this higher-specificity `.site-nav ul` selector,
+// because this rule never previously declared `max-width` at all — higher
+// specificity only wins property-by-property, for properties it actually
+// sets. Without this reset, `.site-nav ul` (and therefore `.site-nav`
+// itself, whose flex-basis:auto is computed from this element's content
+// width) was silently capped at 68ch (~544px at 16px Inter — the exact
+// width AAA's browser measurement reported), while the `<ul>`'s own
+// `flex-flow: row nowrap` children ignored that cap and overflowed past
+// it — independent of viewport width, which is exactly why moving the
+// desktop breakpoint (round 1, round 2) never fixed this.
 .site-nav ul {
   display: flex;
   flex-direction: column;
+  max-width: none;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -23,23 +40,62 @@
 
 // .btn (the CTA item) supplies its own sizing/padding — excluded here so
 // this rule only applies to plain text nav links.
+// Header/nav visual-polish task — `text-decoration: none` is scoped to
+// this one selector only (elements/_links.scss's global underline is
+// untouched). `border-bottom` is reserved (transparent) on *every* link,
+// not just the active one, so the active indicator below never changes
+// any link's box height — switching which link is active causes zero
+// layout shift. Reuses `--focus-ring-width` (2px) for the indicator
+// thickness rather than a new magic number.
 .site-nav a:not(.btn) {
   display: flex;
   align-items: center;
   min-height: var(--touch-target-min);
   padding-block: var(--space-3);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-bottom: var(--focus-ring-width) solid transparent;
+  text-decoration: none;
+  transition:
+    background-color var(--motion-duration-fast) var(--motion-easing-standard),
+    border-color var(--motion-duration-fast) var(--motion-easing-standard);
 }
 
-// Active-route indication beyond color alone: weight + underline, not
-// just the accent color change.
+// Restrained hover feedback: a subtle surface change only, no movement, no
+// elevation — pointer-gated the same way every other hover-lift/feedback
+// rule in this project already is, so touch/no-hover devices never see it.
+@media (hover: hover) and (pointer: fine) {
+  .site-nav a:not(.btn):hover {
+    background-color: var(--color-surface-2);
+  }
+}
+
+// Active-route indication beyond color alone: font-weight + a restrained
+// accent-colored bottom indicator (not the default text underline, and not
+// conveyed by color alone — the weight change is the non-color signal).
+// `--color-accent` is the token this design system already designates for
+// "large text, icons, borders, focus ring" — a border is exactly that
+// role, not the "small/body text" role `--color-accent-text` is reserved
+// for. A real `border` (not `box-shadow`) so forced-colors mode recolors
+// it to the system highlight automatically, the same reasoning already
+// documented for `.project-card`'s focus ring — no separate forced-colors
+// override needed.
 .site-nav a[aria-current='page'] {
   color: var(--color-accent-text);
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+  border-bottom-color: var(--color-accent);
 }
 
-@media (min-width: spacing.$bp-md) {
+// Header/nav overflow-defect follow-up (round 2) — moved from
+// spacing.$bp-lg (1024px, round 1) to spacing.$bp-xl (1280px), together
+// with the matching block in components/_site-header.scss and
+// nav-toggle.js's `desktopQuery`. Round 1's 1024px choice still overflowed
+// in real-browser testing — see docs/DECISION_LOG.md for the full
+// derivation. This is the point where the flex-shrink:0/nowrap
+// protections below stop being safe to apply below and start actually
+// having room to hold their full, non-wrapping, non-shrinking content —
+// see tests/site-header-overflow.test.mjs for the width derivation.
+@media (min-width: spacing.$bp-xl) {
   // `.site-nav` (the <nav> element itself) is a flex item of `header`
   // (justify-content: space-between). With no flex-shrink of its own, it
   // defaults to flex-shrink: 1 — allowed to be compressed below its
@@ -70,8 +126,14 @@
     width: auto;
   }
 
+  // Header/nav visual-polish task — real vertical padding (not zero) so
+  // hover/active have genuine surface to show, while staying compact:
+  // space-2 top/bottom keeps the header from growing noticeably taller
+  // than its pre-polish height. padding-inline/border-radius/border-bottom
+  // reservation are already set by the shared rule above and apply
+  // unchanged at this width.
   .site-nav a:not(.btn) {
     min-height: auto;
-    padding-block: 0;
+    padding-block: var(--space-2);
   }
 }

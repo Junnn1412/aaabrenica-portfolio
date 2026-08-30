@@ -66,12 +66,139 @@ function checkBarePath(path, fieldName, problems) {
   }
 }
 
+function checkOnlyKeys(value, fieldName, allowedKeys, problems) {
+  for (const key of Object.keys(value)) {
+    if (!allowedKeys.includes(key)) {
+      problems.push(`"${fieldName}.${key}" is not supported`);
+    }
+  }
+}
+
+function checkProjectCardPresentation(presentation, fieldName, problems) {
+  if (
+    presentation == null ||
+    typeof presentation !== 'object' ||
+    Array.isArray(presentation)
+  ) {
+    problems.push(
+      `"${fieldName}" must be an object with an explicit valid "kind"`,
+    );
+    return;
+  }
+
+  if (presentation.kind === 'image') {
+    checkOnlyKeys(
+      presentation,
+      fieldName,
+      ['kind', 'src', 'alt', 'width', 'height'],
+      problems,
+    );
+    checkBarePath(presentation.src, `${fieldName}.src`, problems);
+    checkNonEmptyString(presentation.alt, `${fieldName}.alt`, problems);
+    if (!Number.isInteger(presentation.width) || presentation.width <= 0) {
+      problems.push(`"${fieldName}.width" must be a positive integer`);
+    }
+    if (!Number.isInteger(presentation.height) || presentation.height <= 0) {
+      problems.push(`"${fieldName}.height" must be a positive integer`);
+    }
+    return;
+  }
+
+  if (presentation.kind === 'carousel') {
+    checkOnlyKeys(presentation, fieldName, ['kind', 'slides'], problems);
+    if (
+      !checkExactArray(presentation.slides, `${fieldName}.slides`, 3, problems)
+    ) {
+      return;
+    }
+    presentation.slides.forEach((slide, index) => {
+      const slideName = `${fieldName}.slides[${index}]`;
+      if (slide == null || typeof slide !== 'object' || Array.isArray(slide)) {
+        problems.push(`"${slideName}" must be an image descriptor object`);
+        return;
+      }
+      checkOnlyKeys(
+        slide,
+        slideName,
+        ['src', 'alt', 'width', 'height'],
+        problems,
+      );
+      checkBarePath(slide.src, `${slideName}.src`, problems);
+      checkNonEmptyString(slide.alt, `${slideName}.alt`, problems);
+      if (!Number.isInteger(slide.width) || slide.width <= 0) {
+        problems.push(`"${slideName}.width" must be a positive integer`);
+      }
+      if (!Number.isInteger(slide.height) || slide.height <= 0) {
+        problems.push(`"${slideName}.height" must be a positive integer`);
+      }
+    });
+    return;
+  }
+
+  if (presentation.kind === 'text-only') {
+    checkOnlyKeys(presentation, fieldName, ['kind'], problems);
+    return;
+  }
+
+  if (presentation.kind === 'deferred') {
+    checkOnlyKeys(presentation, fieldName, ['kind', 'label'], problems);
+    checkNonEmptyString(presentation.label, `${fieldName}.label`, problems);
+    return;
+  }
+
+  problems.push(
+    `"${fieldName}.kind" must be one of: image, carousel, text-only, deferred`,
+  );
+}
+
 function checkExactArray(value, fieldName, count, problems) {
   if (!Array.isArray(value) || value.length !== count) {
     problems.push(`"${fieldName}" must be an array of exactly ${count} items`);
     return false;
   }
   return true;
+}
+
+function checkProfileCard(card, fieldName, contract, problems) {
+  if (card == null || typeof card !== 'object') {
+    problems.push(`"${fieldName}" is required`);
+    return;
+  }
+
+  if (Object.hasOwn(card, 'cta')) {
+    problems.push(
+      `"${fieldName}.cta" is not supported; use the page-level closing CTA or compact-card action contract`,
+    );
+  }
+
+  if (contract === 'full') {
+    checkNonEmptyString(card.statement, `${fieldName}.statement`, problems);
+    if (
+      checkExactArray(card.highlights, `${fieldName}.highlights`, 3, problems)
+    ) {
+      card.highlights.forEach((item, i) =>
+        checkNonEmptyString(item, `${fieldName}.highlights[${i}]`, problems),
+      );
+    }
+    if (Object.hasOwn(card, 'action')) {
+      problems.push(
+        `"${fieldName}.action" must be omitted from the full variant`,
+      );
+    }
+    return;
+  }
+
+  checkLink(card.action, `${fieldName}.action`, problems);
+  if (Object.hasOwn(card, 'statement')) {
+    problems.push(
+      `"${fieldName}.statement" must be omitted from the compact variant; homepage copy stays in the copy column`,
+    );
+  }
+  if (Object.hasOwn(card, 'highlights')) {
+    problems.push(
+      `"${fieldName}.highlights" must be omitted from the compact variant`,
+    );
+  }
 }
 
 function checkSectionHeader(section, fieldName, problems) {
@@ -291,7 +418,12 @@ function checkHomeContent(content, problems) {
         '"about.paragraphs" must be a non-empty array of non-empty strings',
       );
     }
-    checkLink(c.about.link, 'about.link', problems);
+    checkProfileCard(
+      c.about.profileCard,
+      'about.profileCard',
+      'compact',
+      problems,
+    );
   }
 
   checkCtaShape(c.cta, 'cta', problems);
@@ -461,6 +593,14 @@ function checkProcessContent(content, problems) {
 function checkProjectCardItem(item, fieldPrefix, problems) {
   checkNonEmptyString(item?.heading, `${fieldPrefix}.heading`, problems);
   checkBarePath(item?.link, `${fieldPrefix}.link`, problems);
+  checkProjectCardPresentation(
+    item?.presentation,
+    `${fieldPrefix}.presentation`,
+    problems,
+  );
+  if (typeof item?.isVisible !== 'boolean') {
+    problems.push(`"${fieldPrefix}.isVisible" must be a boolean`);
+  }
   if (
     'category' in (item ?? {}) &&
     item.category != null &&
@@ -544,6 +684,298 @@ function checkNotFoundContent(content, problems) {
   }
 }
 
+const ABOUT_TECHNOLOGY_STACK_HEADING = 'Core Technologies';
+
+function checkAboutTechnologyStack(stack, problems) {
+  if (stack == null || typeof stack !== 'object' || Array.isArray(stack)) {
+    problems.push('"technologyStack" is required');
+    return;
+  }
+
+  checkOnlyKeys(stack, 'technologyStack', ['heading', 'groups'], problems);
+  if (stack.heading !== ABOUT_TECHNOLOGY_STACK_HEADING) {
+    problems.push(
+      `"technologyStack.heading" must be exactly "${ABOUT_TECHNOLOGY_STACK_HEADING}"`,
+    );
+  }
+
+  if (!checkExactArray(stack.groups, 'technologyStack.groups', 4, problems)) {
+    return;
+  }
+
+  const groupHeadings = new Set();
+  const technologies = new Set();
+
+  stack.groups.forEach((group, groupIndex) => {
+    const groupName = `technologyStack.groups[${groupIndex}]`;
+    if (group == null || typeof group !== 'object' || Array.isArray(group)) {
+      problems.push(`"${groupName}" must be an object`);
+      return;
+    }
+
+    checkOnlyKeys(group, groupName, ['heading', 'items'], problems);
+    if (
+      typeof group.heading !== 'string' ||
+      group.heading.trim().length === 0
+    ) {
+      problems.push(`"${groupName}.heading" must be a non-empty string`);
+    } else {
+      const normalizedHeading = group.heading.trim().toLowerCase();
+      if (groupHeadings.has(normalizedHeading)) {
+        problems.push(
+          `"technologyStack.groups" must not contain duplicate group headings`,
+        );
+      }
+      groupHeadings.add(normalizedHeading);
+    }
+
+    if (!Array.isArray(group.items) || group.items.length === 0) {
+      problems.push(`"${groupName}.items" must be a non-empty array`);
+      return;
+    }
+
+    group.items.forEach((item, itemIndex) => {
+      const itemName = `${groupName}.items[${itemIndex}]`;
+      if (typeof item !== 'string' || item.trim().length === 0) {
+        problems.push(`"${itemName}" must be a non-empty string`);
+        return;
+      }
+
+      const normalizedTechnology = item.trim().toLowerCase();
+      if (technologies.has(normalizedTechnology)) {
+        problems.push(
+          `"technologyStack.groups" must not contain duplicate technologies`,
+        );
+      }
+      technologies.add(normalizedTechnology);
+    });
+  });
+}
+
+function checkExperienceDatePart(part, fieldName, requireDatetime, problems) {
+  if (part == null || typeof part !== 'object' || Array.isArray(part)) {
+    problems.push(`"${fieldName}" must be an object`);
+    return;
+  }
+
+  checkOnlyKeys(part, fieldName, ['label', 'datetime'], problems);
+  if (typeof part.label !== 'string' || part.label.trim().length === 0) {
+    problems.push(`"${fieldName}.label" must be a non-empty string`);
+  }
+
+  if (requireDatetime && !Object.hasOwn(part, 'datetime')) {
+    problems.push(`"${fieldName}.datetime" is required`);
+  }
+  if (
+    Object.hasOwn(part, 'datetime') &&
+    (typeof part.datetime !== 'string' ||
+      !/^\d{4}-(?:0[1-9]|1[0-2])$/.test(part.datetime))
+  ) {
+    problems.push(`"${fieldName}.datetime" must use YYYY-MM format`);
+  }
+}
+
+function checkAboutExperience(experience, problems) {
+  if (
+    experience == null ||
+    typeof experience !== 'object' ||
+    Array.isArray(experience)
+  ) {
+    problems.push('"experience" is required');
+    return;
+  }
+
+  checkOnlyKeys(
+    experience,
+    'experience',
+    ['eyebrow', 'heading', 'lede', 'entries'],
+    problems,
+  );
+  for (const field of ['eyebrow', 'heading', 'lede']) {
+    if (
+      typeof experience[field] !== 'string' ||
+      experience[field].trim().length === 0
+    ) {
+      problems.push(`"experience.${field}" must be a non-empty string`);
+    }
+  }
+
+  if (!Array.isArray(experience.entries) || experience.entries.length === 0) {
+    problems.push('"experience.entries" must be a non-empty array');
+    return;
+  }
+
+  const entryIdentities = new Set();
+  experience.entries.forEach((entry, entryIndex) => {
+    const entryName = `experience.entries[${entryIndex}]`;
+    if (entry == null || typeof entry !== 'object' || Array.isArray(entry)) {
+      problems.push(`"${entryName}" must be an object`);
+      return;
+    }
+
+    checkOnlyKeys(
+      entry,
+      entryName,
+      [
+        'role',
+        'employer',
+        'dates',
+        'summary',
+        'responsibilities',
+        'technologies',
+      ],
+      problems,
+    );
+    for (const field of ['role', 'employer', 'summary']) {
+      if (
+        typeof entry[field] !== 'string' ||
+        entry[field].trim().length === 0
+      ) {
+        problems.push(`"${entryName}.${field}" must be a non-empty string`);
+      }
+    }
+
+    if (
+      entry.dates == null ||
+      typeof entry.dates !== 'object' ||
+      Array.isArray(entry.dates)
+    ) {
+      problems.push(`"${entryName}.dates" must be an object`);
+    } else {
+      checkOnlyKeys(
+        entry.dates,
+        `${entryName}.dates`,
+        ['start', 'end'],
+        problems,
+      );
+      checkExperienceDatePart(
+        entry.dates.start,
+        `${entryName}.dates.start`,
+        true,
+        problems,
+      );
+      checkExperienceDatePart(
+        entry.dates.end,
+        `${entryName}.dates.end`,
+        false,
+        problems,
+      );
+    }
+
+    if (
+      !Array.isArray(entry.responsibilities) ||
+      entry.responsibilities.length === 0
+    ) {
+      problems.push(
+        `"${entryName}.responsibilities" must be a non-empty array`,
+      );
+    } else {
+      entry.responsibilities.forEach((responsibility, responsibilityIndex) => {
+        if (
+          typeof responsibility !== 'string' ||
+          responsibility.trim().length === 0
+        ) {
+          problems.push(
+            `"${entryName}.responsibilities[${responsibilityIndex}]" must be a non-empty string`,
+          );
+        }
+      });
+    }
+
+    if (!Array.isArray(entry.technologies) || entry.technologies.length === 0) {
+      problems.push(`"${entryName}.technologies" must be a non-empty array`);
+    } else {
+      const technologies = new Set();
+      entry.technologies.forEach((technology, technologyIndex) => {
+        if (typeof technology !== 'string' || technology.trim().length === 0) {
+          problems.push(
+            `"${entryName}.technologies[${technologyIndex}]" must be a non-empty string`,
+          );
+          return;
+        }
+        const normalizedTechnology = technology.trim().toLowerCase();
+        if (technologies.has(normalizedTechnology)) {
+          problems.push(
+            `"${entryName}.technologies" must not contain duplicate technologies`,
+          );
+        }
+        technologies.add(normalizedTechnology);
+      });
+    }
+
+    const identity = [
+      entry.role,
+      entry.employer,
+      entry.dates?.start?.datetime,
+      entry.dates?.end?.datetime ?? entry.dates?.end?.label,
+    ]
+      .map((value) =>
+        typeof value === 'string' ? value.trim().toLowerCase() : '',
+      )
+      .join('|');
+    if (entryIdentities.has(identity)) {
+      problems.push(
+        '"experience.entries" must not contain duplicate role/employer/date combinations',
+      );
+    }
+    entryIdentities.add(identity);
+  });
+}
+
+function checkAboutContent(content, problems) {
+  checkAboutTechnologyStack(content.technologyStack, problems);
+  checkAboutExperience(content.experience, problems);
+  checkProfileCard(content.profileCard, 'profileCard', 'full', problems);
+}
+
+function checkContactContent(content, problems) {
+  const form = content.form;
+  if (form == null || typeof form !== 'object' || Array.isArray(form)) {
+    problems.push('"form" is required for the contact page');
+    return;
+  }
+
+  checkNonEmptyString(form.heading, 'form.heading', problems);
+  for (const field of ['name', 'email', 'company', 'message']) {
+    checkNonEmptyString(
+      form.fields?.[field]?.label,
+      `form.fields.${field}.label`,
+      problems,
+    );
+  }
+  checkNonEmptyString(
+    form.fields?.message?.help,
+    'form.fields.message.help',
+    problems,
+  );
+  checkNonEmptyString(form.privacy?.text, 'form.privacy.text', problems);
+  checkLink(form.privacy?.link, 'form.privacy.link', problems);
+  checkNonEmptyString(form.submitLabel, 'form.submitLabel', problems);
+  checkNonEmptyString(form.pendingMessage, 'form.pendingMessage', problems);
+  checkNonEmptyString(form.success?.heading, 'form.success.heading', problems);
+  checkNonEmptyString(form.success?.message, 'form.success.message', problems);
+  checkNonEmptyString(
+    form.validation?.heading,
+    'form.validation.heading',
+    problems,
+  );
+  checkNonEmptyString(
+    form.validation?.instruction,
+    'form.validation.instruction',
+    problems,
+  );
+  checkNonEmptyString(form.failureMessage, 'form.failureMessage', problems);
+  for (const error of [
+    'nameRequired',
+    'emailRequired',
+    'emailInvalid',
+    'messageRequired',
+    'maxLength',
+  ]) {
+    checkNonEmptyString(form.errors?.[error], `form.errors.${error}`, problems);
+  }
+}
+
 // PF-060 helpers below, used only by the 'case-study' template branch. Each
 // named top-level section is entirely optional — absent is always valid,
 // never an error — matching §10.4's "where applicable" framing. When a
@@ -598,6 +1030,29 @@ function checkCaseStudyContent(route, content, problems) {
     checkBarePath(logo.src, 'logo.src', problems);
     if ('alt' in logo && logo.alt != null && typeof logo.alt !== 'string') {
       problems.push('"logo.alt", when present, must be a string');
+    }
+    if (!Number.isInteger(logo.width) || logo.width <= 0) {
+      problems.push('"logo.width" must be a positive integer');
+    }
+    if (!Number.isInteger(logo.height) || logo.height <= 0) {
+      problems.push('"logo.height" must be a positive integer');
+    }
+  });
+
+  checkOptionalObject(c.heroMedia, 'heroMedia', problems, (media, problems) => {
+    checkOnlyKeys(
+      media,
+      'heroMedia',
+      ['src', 'alt', 'width', 'height'],
+      problems,
+    );
+    checkBarePath(media.src, 'heroMedia.src', problems);
+    checkNonEmptyString(media.alt, 'heroMedia.alt', problems);
+    if (!Number.isInteger(media.width) || media.width <= 0) {
+      problems.push('"heroMedia.width" must be a positive integer');
+    }
+    if (!Number.isInteger(media.height) || media.height <= 0) {
+      problems.push('"heroMedia.height" must be a positive integer');
     }
   });
 
@@ -740,6 +1195,14 @@ export function validateContent(route, content) {
 
   if (route.template === 'not-found') {
     checkNotFoundContent(content, problems);
+  }
+
+  if (route.template === 'about') {
+    checkAboutContent(content, problems);
+  }
+
+  if (route.template === 'contact') {
+    checkContactContent(content, problems);
   }
 
   return problems;

@@ -16,6 +16,7 @@ import { renderProcessSteps } from '../src/components/process-steps.js';
 import { renderTrustList } from '../src/components/trust-list.js';
 import { renderEngagementOptions } from '../src/components/engagement-options.js';
 import { renderCta } from '../src/components/cta.js';
+import { escapeHtml } from '../src/pages/escape.js';
 import {
   expectSingleList,
   expectItemsHaveListParent,
@@ -85,7 +86,7 @@ test('home: capability cards satisfy the shared list/pairing contract with all 6
   );
 });
 
-test('home: project cards satisfy the shared list/pairing contract with all 3 real items, exactly one featured', () => {
+test('home: only the visible FES project enters the shared card list and accessibility tree', () => {
   const main = homeMain();
   expectItemsHaveListParent(main, {
     listTag: 'ul',
@@ -101,47 +102,35 @@ test('home: project cards satisfy the shared list/pairing contract with all 3 re
     ...main.matchAll(/<li class="project-card project-card--featured">/g),
   ].length;
   assert.equal(featuredCount, 1, 'expected exactly one featured project card');
-  // PF-033 clean-empty-frame precedent: no real card gets a fabricated
-  // decorative composition standing in for a screenshot.
-  const emptyFrames = [
-    ...main.matchAll(/<div class="media-frame project-card__media"><\/div>/g),
-  ].length;
-  assert.equal(
-    emptyFrames,
-    3,
-    'expected all 3 real project cards to use an empty .media-frame',
-  );
-  // PF-060/PF-061: FES Challenger's and Business Workflow System's cards
-  // now each carry a category/summary/tags, sourced from their own `card`
-  // exports (see tests/fes-challenger-render.test.mjs's and
-  // tests/business-workflow-system-render.test.mjs's consistency checks).
-  // eBarangay still has no approved category/summary/tags of its own
-  // (PF-062 still blocked/untouched).
+  const cards = [
+    ...main.matchAll(/<li class="project-card[^"]*">[\s\S]*?<\/li>/g),
+  ].map((match) => match[0]);
+  assert.equal(cards.length, 1);
+  assert.match(cards[0], />FES Challenger</);
+  assert.match(cards[0], /data-project-carousel/);
+  assert.doesNotMatch(main, /Business Workflow System|eBarangay/);
+  assert.doesNotMatch(main, /<li class="project-card[^>]*hidden/);
   const categoryCount = [
     ...main.matchAll(/class="project-card__category tag"/g),
   ].length;
-  assert.equal(
-    categoryCount,
-    2,
-    'expected exactly two project cards with a category tag (FES Challenger, Business Workflow System)',
-  );
+  assert.equal(categoryCount, 1, 'expected only the visible FES category tag');
   assert.equal(
     [...main.matchAll(/class="project-card__summary"/g)].length,
-    2,
-    'expected exactly two project cards with a summary (FES Challenger, Business Workflow System)',
+    1,
+    'expected only the visible FES summary',
   );
   assert.equal(
     [...main.matchAll(/class="project-card__tags"/g)].length,
-    2,
-    'expected exactly two project cards with tags (FES Challenger, Business Workflow System)',
+    1,
+    'expected only the visible FES tags',
   );
   // PF-052 accessibility correction: project cards sit directly under this
   // section's own <h2>, so their headings must be <h3>, not the
   // component's prior unconditional <h4>.
   assert.equal(
     [...main.matchAll(/<h3 class="project-card__heading">/g)].length,
-    3,
-    'expected 3 project-card <h3>s',
+    1,
+    'expected 1 visible project-card <h3>',
   );
   assert.equal(
     [...main.matchAll(/<h4 class="project-card__heading">/g)].length,
@@ -178,12 +167,21 @@ test('home: no prohibited identifying wording appears anywhere in the rendered h
 // PF-041 visual-review defect fix (docs/DECISION_LOG.md): the real
 // homepage has exactly 1 featured + 2 secondary projects — precisely the
 // shape that used to leave an empty third grid track at 1440/1920px.
-test('home: the real project-cards list carries the .project-cards--featured-pair modifier', () => {
+test('home: the one-card list uses the single-track modifier and not featured-pair', () => {
   const main = homeMain();
   assert.match(
     main,
-    /<ul class="project-cards project-cards--featured-pair">/,
-    'expected the real 1-featured+2-secondary project list to opt into the fixed 2-column modifier',
+    /<ul class="project-cards project-cards--single">/,
+    'expected one visible project to opt into the explicit single track',
+  );
+  assert.doesNotMatch(main, /project-cards--featured-pair/);
+});
+
+test('home: Explore All Work remains after the cards inside the scoped gap composition', () => {
+  const main = homeMain();
+  assert.match(
+    main,
+    /<div class="home-projects__body"><ul class="project-cards project-cards--single">[\s\S]*?<\/ul><p class="home-projects__action"><a class="action-link action-link--forward" href="\/work\/">[\s\S]*?<span class="action-link__label">Explore All Work<\/span>[\s\S]*?<\/a><\/p><\/div>/,
   );
 });
 
@@ -205,6 +203,7 @@ test('home: process steps satisfy the shared list/action/badge contract', () => 
     actionClass: 'process-steps__action',
     linkHref: '/process/',
     linkText: 'See the Full Process',
+    variant: 'forward',
   });
 });
 
@@ -217,13 +216,96 @@ test('home: trust list satisfies the shared list/action/icon contract', () => {
     itemClass: 'trust-list__item',
     count: 3,
   });
-  expectDecorativeIcons(section, { count: 3 });
+  expectDecorativeIcons(section, { count: 4 });
   expectSingleSectionAction(section, {
     listHtml: list,
     actionClass: 'trust-list__action',
     linkHref: '/about/',
     linkText: 'Learn About My Approach',
+    variant: 'forward',
   });
+});
+
+test('home: About keeps its exact approved copy first and renders one compact-card action second', () => {
+  const main = homeMain();
+  const section = extractSection(main, '<div class="home-about">');
+  assert.match(section, /<span class="section-header__eyebrow">About<\/span>/);
+  const escapedHeading = escapeHtml(homeContent.about.heading).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    '\\$&',
+  );
+  assert.match(
+    section,
+    new RegExp(`<h2 class="section-header__heading">${escapedHeading}</h2>`),
+  );
+  for (const paragraph of homeContent.about.paragraphs) {
+    assert.ok(
+      section.includes(escapeHtml(paragraph)),
+      'expected the exact existing About preview paragraph text to be present, unmodified',
+    );
+  }
+  const copy = section.match(
+    /<div class="home-about__copy"(?: [^>]*)?>([\s\S]*?)<\/div>/,
+  )?.[1];
+  assert.ok(copy, 'expected the homepage About copy column');
+  assert.doesNotMatch(copy, /<a\b|href=/);
+
+  assert.ok(
+    section.indexOf('home-about__copy') <
+      section.indexOf('profile-card profile-card--compact'),
+    'copy column must precede compact card in DOM order',
+  );
+  assert.equal([...section.matchAll(/href="\/about\/"/g)].length, 1);
+  assert.match(
+    section,
+    /<div class="profile-card profile-card--compact"(?: [^>]*)?>[\s\S]*?<a class="btn btn--primary profile-card__action" href="\/about\/">Read My Full Story<\/a>/,
+  );
+  assert.match(section, /<img[^>]+loading="lazy">/);
+  assert.doesNotMatch(
+    section,
+    /profile-card__statement|profile-card__highlights/,
+  );
+  const compactCard = section.match(
+    /<div class="profile-card profile-card--compact"(?: [^>]*)?>[\s\S]*?<\/div><\/div>/,
+  )?.[0];
+  assert.ok(compactCard, 'expected the complete compact profile card');
+  assert.match(
+    compactCard,
+    /<p class="profile-card__name">Antonio Abrenica<\/p>/,
+  );
+  assert.match(
+    compactCard,
+    /<p class="profile-card__role">Full-Stack Software Developer<\/p>/,
+  );
+  assert.match(
+    compactCard,
+    /src="\/images\/profile\/aaa-portrait\.jpg"[^>]*loading="lazy"/,
+  );
+  assert.equal(
+    [...compactCard.matchAll(/<p class="profile-card__/g)].length,
+    2,
+  );
+  assert.doesNotMatch(
+    compactCard,
+    /I build practical websites|Problem-first planning|implementation through launch|Post-launch support/,
+  );
+  assert.equal(
+    [
+      ...section.matchAll(
+        new RegExp(escapeHtml(homeContent.about.paragraphs[0]), 'g'),
+      ),
+    ].length,
+    1,
+    'approved homepage About paragraph must not be duplicated inside the card',
+  );
+});
+
+test('home: About-owned Experience data never enters the compact preview', () => {
+  const main = homeMain();
+  assert.doesNotMatch(
+    main,
+    /about-experience|experience-timeline|experience-card|Computer Programmer II|Analyst Programmer|SolidService Electronics Corporation|Nephila Web Technology|Department of Public Works and Highways|Bank of Commerce/,
+  );
 });
 
 test('home: engagement options satisfy the shared list/non-interactive contract', () => {
@@ -313,13 +395,14 @@ test('renderCapabilityCards escapes every string field and omits the icon/arrow 
 
 test('renderProjectCards omits category/summary/tags/action when absent, and escapes tag/summary text', () => {
   const html = renderProjectCards([
-    { heading: 'No link project' },
+    { heading: 'No link project', presentation: { kind: 'text-only' } },
     {
       heading: 'Full project',
       category: 'Cat <b>egory</b>',
       summary: 'A summary with <i>markup</i>.',
       tags: ['<Tag>'],
       link: '/work/example/',
+      presentation: { kind: 'text-only' },
     },
   ]);
   const noLinkCard = html.split('</li>')[0];
@@ -342,9 +425,14 @@ test('renderProjectCards omits category/summary/tags/action when absent, and esc
 // which already handles those cases correctly.
 test('renderProjectCards applies .project-cards--featured-pair only for exactly one featured + two secondary items', () => {
   const onePlusTwo = renderProjectCards([
-    { featured: true, heading: 'A', link: '/a/' },
-    { heading: 'B', link: '/b/' },
-    { heading: 'C', link: '/c/' },
+    {
+      featured: true,
+      heading: 'A',
+      link: '/a/',
+      presentation: { kind: 'text-only' },
+    },
+    { heading: 'B', link: '/b/', presentation: { kind: 'text-only' } },
+    { heading: 'C', link: '/c/', presentation: { kind: 'text-only' } },
   ]);
   assert.match(
     onePlusTwo,
@@ -352,25 +440,40 @@ test('renderProjectCards applies .project-cards--featured-pair only for exactly 
   );
 
   const onePlusThree = renderProjectCards([
-    { featured: true, heading: 'A', link: '/a/' },
-    { heading: 'B', link: '/b/' },
-    { heading: 'C', link: '/c/' },
-    { heading: 'D', link: '/d/' },
+    {
+      featured: true,
+      heading: 'A',
+      link: '/a/',
+      presentation: { kind: 'text-only' },
+    },
+    { heading: 'B', link: '/b/', presentation: { kind: 'text-only' } },
+    { heading: 'C', link: '/c/', presentation: { kind: 'text-only' } },
+    { heading: 'D', link: '/d/', presentation: { kind: 'text-only' } },
   ]);
   assert.match(onePlusThree, /^<ul class="project-cards">/);
   assert.doesNotMatch(onePlusThree, /project-cards--featured-pair/);
 
   const noFeatured = renderProjectCards([
-    { heading: 'A', link: '/a/' },
-    { heading: 'B', link: '/b/' },
+    { heading: 'A', link: '/a/', presentation: { kind: 'text-only' } },
+    { heading: 'B', link: '/b/', presentation: { kind: 'text-only' } },
   ]);
   assert.match(noFeatured, /^<ul class="project-cards">/);
   assert.doesNotMatch(noFeatured, /project-cards--featured-pair/);
 
   const twoFeatured = renderProjectCards([
-    { featured: true, heading: 'A', link: '/a/' },
-    { featured: true, heading: 'B', link: '/b/' },
-    { heading: 'C', link: '/c/' },
+    {
+      featured: true,
+      heading: 'A',
+      link: '/a/',
+      presentation: { kind: 'text-only' },
+    },
+    {
+      featured: true,
+      heading: 'B',
+      link: '/b/',
+      presentation: { kind: 'text-only' },
+    },
+    { heading: 'C', link: '/c/', presentation: { kind: 'text-only' } },
   ]);
   assert.doesNotMatch(twoFeatured, /project-cards--featured-pair/);
 });

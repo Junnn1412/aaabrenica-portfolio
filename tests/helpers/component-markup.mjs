@@ -191,7 +191,7 @@ export function expectAriaHiddenBadges(html, { badgeClass, count }) {
 // <p class="actionClass"> and appearing structurally after the list.
 export function expectSingleSectionAction(
   html,
-  { listHtml, actionClass, linkHref, linkText },
+  { listHtml, actionClass, linkHref, linkText, variant },
 ) {
   const links = [...html.matchAll(/<a\s/g)].length;
   assert.equal(links, 1, `expected exactly one <a>, found ${links}`);
@@ -202,13 +202,17 @@ export function expectSingleSectionAction(
     'the section-level link must not be a descendant of the list at any depth',
   );
 
-  const actionRe = new RegExp(
-    `<p class="${escapeRegExp(actionClass)}"><a href="${escapeRegExp(linkHref)}">${escapeRegExp(linkText)}<\\/a><\\/p>`,
-  );
+  const actionRe = variant
+    ? new RegExp(
+        `<p class="${escapeRegExp(actionClass)}"><a class="action-link action-link--${escapeRegExp(variant)}" href="${escapeRegExp(linkHref)}">[\\s\\S]*?<span class="action-link__label">${escapeRegExp(linkText)}<\\/span>[\\s\\S]*?<\\/a><\\/p>`,
+      )
+    : new RegExp(
+        `<p class="${escapeRegExp(actionClass)}"><a href="${escapeRegExp(linkHref)}">${escapeRegExp(linkText)}<\\/a><\\/p>`,
+      );
   const action = html.match(actionRe);
   assert.ok(
     action,
-    `expected the link wrapped in <p class="${actionClass}"><a href="${linkHref}">${linkText}</a></p>`,
+    `expected the ${variant ?? 'plain'} link wrapped by <p class="${actionClass}">`,
   );
   assert.ok(
     html.indexOf(listHtml) + listHtml.length <= html.indexOf(action[0]),
@@ -243,7 +247,9 @@ export function expectNoInteractiveChildren(html, { itemClass }) {
 // .cta panel pattern: `count` panels, each with exactly one interactive
 // element using `actionClass`.
 export function expectCtaPanels(html, { count, actionClass }) {
-  const panels = [...html.matchAll(/<div class="cta">[\s\S]*?<\/div>/g)];
+  const panels = [
+    ...html.matchAll(/<div class="cta"(?: [^>]*)?>[\s\S]*?<\/div>/g),
+  ];
   assert.equal(
     panels.length,
     count,

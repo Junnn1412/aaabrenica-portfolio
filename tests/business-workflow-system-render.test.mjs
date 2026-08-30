@@ -29,8 +29,8 @@ test('Business Workflow System: exactly one <h1>, 7 curated section headings, an
     'The Challenge',
     'My Role',
     'What I Built',
-    'Technology Stack',
     'Key Decisions',
+    'Technology Stack',
     'Outcomes',
   ]);
   assert.equal(
@@ -61,7 +61,7 @@ test('Business Workflow System: no gallery, no logo, and no external link render
 
 test('Business Workflow System: back-to-Work link and closing CTA are present', () => {
   const main = bwsMain();
-  assert.match(main, /<a href="\/work\/">Back to Work<\/a>/);
+  assert.match(main, /class="action-link action-link--back" href="\/work\/"/);
   expectCtaPanels(main, { count: 1, actionClass: 'btn btn--primary' });
 });
 
@@ -135,5 +135,7 @@ test("Home and Work Business Workflow System project cards reuse business-workfl
     assert.equal(item.category, bwsContent.card.category);
     assert.equal(item.summary, bwsContent.card.summary);
     assert.deepEqual(item.tags, bwsContent.card.tags);
+    assert.strictEqual(item.presentation, bwsContent.card.presentation);
   }
+  assert.deepEqual(bwsContent.card.presentation, { kind: 'text-only' });
 });

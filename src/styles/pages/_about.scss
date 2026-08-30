@@ -1,0 +1,266 @@
+@use '../settings/spacing';
+
+.about-page {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.about-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.about-layout__content {
+  min-width: 0;
+}
+
+.about-stack {
+  margin-top: var(--space-7);
+}
+
+.about-stack__groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.about-stack__group {
+  min-width: 0;
+}
+
+.about-stack__group-heading {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-h4);
+}
+
+.about-stack__tags {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: none;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-stack__tag-item {
+  min-width: 0;
+  margin: 0;
+}
+
+.about-stack__tag-item .tag {
+  max-width: 100%;
+}
+
+.about-experience {
+  width: 100%;
+  min-width: 0;
+}
+
+.about-experience__inner {
+  width: 100%;
+  max-width: 70rem;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+// Experience owns a wider, centered composition than the shared reading-width
+// section intro. Keep the reset page-scoped; the lede itself retains the
+// generic readable paragraph measure.
+.about-experience .section-header {
+  width: 100%;
+  max-width: none;
+}
+
+.experience-timeline {
+  --timeline-axis: var(--space-3);
+  --timeline-card-offset: var(--space-7);
+
+  position: relative;
+  display: grid;
+  width: 100%;
+  max-width: none;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0 0 0 var(--timeline-card-offset);
+  list-style: none;
+}
+
+.experience-timeline::before {
+  content: '';
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  left: var(--timeline-axis);
+  border-left: 2px solid var(--color-accent);
+}
+
+.experience-timeline__item {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+}
+
+.experience-timeline__item::before {
+  content: '';
+  position: absolute;
+  top: var(--space-6);
+  left: calc(
+    var(--timeline-axis) - var(--timeline-card-offset) - var(--space-2)
+  );
+  width: var(--space-3);
+  height: var(--space-3);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  background-color: var(--color-canvas);
+}
+
+.experience-card {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-1);
+}
+
+.experience-card__header {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.experience-card__identity {
+  min-width: 0;
+}
+
+.experience-card__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: var(--space-4);
+}
+
+.experience-card__role,
+.experience-card__employer,
+.experience-card__dates,
+.experience-card__summary {
+  margin: 0;
+}
+
+.experience-card__role,
+.experience-card__employer {
+  overflow-wrap: anywhere;
+}
+
+.experience-card__role {
+  margin-bottom: var(--space-1);
+}
+
+.experience-card__employer {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.experience-card__dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.experience-card__summary {
+  max-width: var(--width-reading);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.experience-card__responsibilities {
+  max-width: var(--width-reading);
+  margin: 0;
+  font-size: var(--font-size-body);
+}
+
+.experience-card__responsibilities li:last-child {
+  margin-bottom: 0;
+}
+
+.experience-card__technologies {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: none;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.experience-card__tag-item {
+  min-width: 0;
+  margin: 0;
+}
+
+.experience-card__tag-item .tag {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (width >= spacing.$bp-sm) {
+  .about-stack__groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width >= spacing.$bp-md) {
+  .experience-card {
+    padding: var(--space-6);
+  }
+
+  .experience-card__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-5);
+  }
+
+  .experience-card__dates {
+    justify-self: end;
+    white-space: nowrap;
+  }
+}
+
+@media (width >= spacing.$bp-lg) {
+  .about-layout--with-card {
+    flex-direction: row;
+    align-items: start;
+    gap: var(--space-9);
+  }
+
+  .about-layout--with-card .about-layout__content {
+    flex: 1 1 58%;
+  }
+
+  .about-layout--with-card .profile-card {
+    flex: 1 1 42%;
+  }
+
+  .experience-timeline {
+    gap: var(--space-7);
+  }
+
+  .experience-card {
+    padding: var(--space-7);
+  }
+
+  .experience-card__main {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    gap: var(--space-7);
+  }
+}

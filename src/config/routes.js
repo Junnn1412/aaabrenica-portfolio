@@ -63,7 +63,7 @@ export const routes = [
     path: '/about/',
     entry: 'about/index.html',
     navKey: 'about',
-    template: 'standard',
+    template: 'about',
     content: 'about',
   },
   {

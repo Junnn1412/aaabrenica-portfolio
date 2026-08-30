@@ -5,9 +5,14 @@
 // language, or provisional copy pending AAA's content sign-off). No
 // fabricated outcomes, technologies, or project-category claims: per-
 // section "supporting technologies" is intentionally omitted (no approved
-// per-capability list exists yet), and project evidence appears only under
-// Workflow & Process Solutions (the one project with a documented category
-// match) — both are approved V1 exceptions, not missed scope.
+// per-capability list exists yet). PF-064 added `evidence` links to
+// Corporate Websites and WordPress Development, pointing at the now-complete
+// FES Challenger case study — alongside Workflow & Process Solutions'
+// existing evidence link to Business Workflow System. Custom Business
+// Systems, Existing-System Improvements, and Support & Maintenance still
+// have no matching real case study — evidence stays absent there, an
+// approved V1 state, not missed scope.
+// PF-064 — approved by AAA as final V1 copy, no longer provisional.
 export default {
   title: 'Solutions',
   description:
@@ -64,6 +69,10 @@ export default {
         'A fast, professional, easy-to-maintain website that represents the business well.',
       benefit:
         'A website that supports credibility now and stays straightforward to update going forward.',
+      evidence: {
+        label: 'FES Challenger',
+        path: '/work/fes-challenger/',
+      },
       cta: { label: 'Discuss a Website Project', path: '/contact/' },
     },
     {
@@ -79,6 +88,10 @@ export default {
         'Custom WordPress builds and improvements for teams that need a familiar, editable platform.',
       benefit:
         'A website the team can update directly, without waiting on a developer for routine changes.',
+      evidence: {
+        label: 'FES Challenger',
+        path: '/work/fes-challenger/',
+      },
       cta: { label: 'Discuss a WordPress Project', path: '/contact/' },
     },
     {

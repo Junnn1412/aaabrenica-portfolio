@@ -8,12 +8,19 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as sass from 'sass';
 import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
 import { resolveProperty } from './helpers/cascade-resolver.mjs';
 
 const mainScssPath = fileURLToPath(
   new URL('../src/styles/main.scss', import.meta.url),
 );
 const { css } = sass.compile(mainScssPath);
+const solutionsSource = fs.readFileSync(
+  fileURLToPath(
+    new URL('../src/styles/pages/_solutions.scss', import.meta.url),
+  ),
+  'utf8',
+);
 
 test('anchored solutions sections carry the sticky-header-safe scroll-margin-top', () => {
   const match = css.match(
@@ -141,4 +148,64 @@ test('the margin reset is scoped to the Solutions heading row — .section-heade
     'margin',
   );
   assert.equal(headingMargin, '0 0 var(--space-3)');
+});
+
+test('Solutions uses the scoped centered 72rem editorial composition', () => {
+  const pageRule = css.match(/\.solutions-page__container\s*\{([^}]*)\}/);
+  assert.ok(pageRule);
+  assert.match(pageRule[1], /max-width:\s*72rem;/);
+  const genericContainer = css.match(/\.container\s*\{([^}]*)\}/);
+  assert.ok(genericContainer);
+  assert.match(genericContainer[1], /max-width:\s*var\(--container-max\);/);
+});
+
+test('Solutions information is one flexible column by default and two only at the 64em desktop breakpoint', () => {
+  const baseRule = css.match(/\.solution-section__detail\s*\{([^}]*)\}/);
+  assert.ok(baseRule);
+  assert.match(baseRule[1], /grid-template-columns:\s*minmax\(0, 1fr\);/);
+  assert.match(baseRule[1], /max-width:\s*none;/);
+
+  const blocks = [
+    ...css.matchAll(/@media \(min-width:\s*64em\)\s*\{([\s\S]*?)\n\}/g),
+  ];
+  const desktop = blocks.find((block) =>
+    /\.solution-section__detail/.test(block[1]),
+  );
+  assert.ok(desktop, 'expected a 64em Solutions desktop block');
+  assert.match(
+    desktop[1],
+    /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/,
+  );
+});
+
+test('Solutions keeps readable detail measures and optional evidence outside the information grid', () => {
+  const detailRule = css.match(/\.solution-section__detail dd\s*\{([^}]*)\}/);
+  assert.ok(detailRule);
+  assert.match(detailRule[1], /max-width:\s*var\(--width-reading\);/);
+  const linksRule = css.match(/\.solution-section__links\s*\{([^}]*)\}/);
+  assert.ok(linksRule);
+  assert.match(linksRule[1], /border-top:/);
+  assert.doesNotMatch(linksRule[1], /display:\s*grid/);
+});
+
+test('Solutions layout uses natural flow with no CSS order or fixed section height', () => {
+  assert.doesNotMatch(solutionsSource, /\border\s*:/);
+  assert.doesNotMatch(
+    solutionsSource,
+    /\.solution-section(?:\s|__detail|__column|__links)[^{]*\{[^}]*\bheight\s*:/,
+  );
+});
+
+test('Solutions flexible-track model fits 320 through 1920px without horizontal overflow', () => {
+  for (const width of [320, 375, 390, 768, 1024, 1440, 1920]) {
+    const gutter = Math.min(48, Math.max(20, 16 + width * 0.02));
+    const available = Math.min(width, 72 * 16) - gutter * 2;
+    assert.ok(available > 0, `expected positive content width at ${width}px`);
+    if (width >= 1024) {
+      assert.ok(
+        (available - 32) / 2 > 0,
+        `expected two flexible tracks to fit at ${width}px`,
+      );
+    }
+  }
 });

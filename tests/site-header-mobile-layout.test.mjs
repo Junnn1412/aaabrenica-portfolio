@@ -42,8 +42,13 @@ test('the base (mobile) header rule wraps its flex children', () => {
 test('the desktop header rule reverts to a single non-wrapping row', () => {
   // The desktop override lives inside a nested @media block, compiled as
   // its own separate `header { ... }` occurrence in expanded output.
+  // Header/nav overflow-defect follow-up (round 2) — this breakpoint moved
+  // from 64em (1024px, spacing.$bp-lg, round 1's fix) to 80em (1280px,
+  // spacing.$bp-xl): round 1's 1024px still overflowed in real-browser
+  // testing (see tests/site-header-overflow.test.mjs and
+  // docs/DECISION_LOG.md for the full derivation).
   const match = css.match(
-    /@media \(min-width: 48em\) \{\s*header\s*\{([^}]*)\}/,
+    /@media \(min-width: 80em\) \{\s*header\s*\{([^}]*)\}/,
   );
   assert.ok(match, 'desktop header override not found');
   assert.match(

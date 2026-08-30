@@ -24,7 +24,7 @@ test('not-found: exactly 3 links in a single .not-found__links list, in DOM orde
   assert.ok(listMatch, 'expected a <ul class="not-found__links">');
   const items = [
     ...listMatch[1].matchAll(
-      /<li class="not-found__link-item"><a class="not-found__link" href="([^"]*)">([^<]*)<\/a><\/li>/g,
+      /<li class="not-found__link-item"><a class="action-link action-link--forward" href="([^"]*)">[\s\S]*?<span class="action-link__label">([^<]*)<\/span>[\s\S]*?<\/a><\/li>/g,
     ),
   ];
   assert.equal(items.length, 3);
@@ -42,7 +42,7 @@ test('not-found: every recovery link matches a real, registered route', () => {
   const { main } = notFoundRendered();
   const links = [
     ...main.matchAll(
-      /<li class="not-found__link-item"><a class="not-found__link" href="([^"]*)">/g,
+      /<li class="not-found__link-item"><a class="action-link action-link--forward" href="([^"]*)">/g,
     ),
   ].map((m) => m[1]);
   const registeredPaths = new Set(routes.map((r) => r.path));

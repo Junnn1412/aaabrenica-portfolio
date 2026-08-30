@@ -16,7 +16,11 @@ test('renderRoute("home") produces a single title combining content and site nam
   const { head } = renderRoute(routeByKey('home'));
   const matches = [...head.matchAll(/<title>([^<]*)<\/title>/g)];
   assert.equal(matches.length, 1);
-  assert.ok(matches[0][1].endsWith(site.siteName));
+  assert.equal(site.siteName, 'Antonio Abrenica');
+  assert.equal(
+    matches[0][1],
+    'Practical Software Solutions for Growing Businesses — Antonio Abrenica',
+  );
 });
 
 test('renderRoute("privacy") falls back to site.defaultDescription end-to-end', () => {
@@ -50,22 +54,21 @@ test("about.js's paragraphs do not repeat home.js's about-preview paragraph verb
 
 test('renderRoute for a case-study route includes the backLink to /work/', () => {
   const { main } = renderRoute(routeByKey('work-fes-challenger'));
-  assert.match(main, /<a href="\/work\/">Back to Work<\/a>/);
+  assert.match(main, /class="action-link action-link--back" href="\/work\/"/);
 });
 
 // PF-040: the page container is wired at the template layer (not the
 // skeleton) so PF-041+ can introduce full-bleed sections without fighting
 // a global wrapper — every single-container-template route's main output
 // must still open with it. PF-041/PF-050/PF-051/PF-052/PF-060: home,
-// solutions, process, work, and case-study are the anticipated exceptions
+// solutions, process, and work are the anticipated per-section exceptions
 // (docs/DECISION_LOG.md's PF-040 entry) — each top-level <section> owns its
-// own inner .container instead of one wrapping the whole page.
+// own inner .container. Case studies use one rich-editorial container below.
 const PER_SECTION_CONTAINER_TEMPLATES = [
   'home',
   'solutions',
   'process',
   'work',
-  'case-study',
 ];
 
 test('every route using a single-container template wraps its main content in the page container', () => {
@@ -74,8 +77,8 @@ test('every route using a single-container template wraps its main content in th
     const { main } = renderRoute(route);
     assert.match(
       main,
-      /^<div class="container">[\s\S]*<\/div>$/,
-      `route "${route.key}": expected main to be wrapped in <div class="container">...</div>`,
+      /^<div class="container(?: [^"]+)?">[\s\S]*<\/div>$/,
+      `route "${route.key}": expected main to be wrapped in a .container div`,
     );
   }
 });
@@ -106,21 +109,13 @@ test('home route composes per-section containers instead of one page-level wrapp
 // PF-060 — case-study routes follow the same bare-intro-container +
 // per-section-container shape as solutions/process/work, not home's
 // section-only opening.
-test('a case-study route composes a bare intro container followed by per-section containers', () => {
+test('a case-study route composes one scoped editorial container', () => {
   const { main } = renderRoute(routeByKey('work-fes-challenger'));
   assert.match(
     main,
-    /^<div class="container">/,
-    'expected main to open with a bare intro <div class="container">',
+    /^<div class="container case-study">[\s\S]*<\/div>$/,
+    'expected one case-study editorial container',
   );
-  const sectionOpens = [...main.matchAll(/<section class="page-section">/g)];
-  const sectionContainers = [
-    ...main.matchAll(/<section class="page-section"><div class="container">/g),
-  ];
-  assert.ok(sectionOpens.length > 0, 'expected at least one top-level section');
-  assert.equal(
-    sectionOpens.length,
-    sectionContainers.length,
-    'every top-level section must open with its own <div class="container">',
-  );
+  assert.equal([...main.matchAll(/class="container/g)].length, 1);
+  assert.doesNotMatch(main, /case-study-section[^>]*><div class="container/);
 });

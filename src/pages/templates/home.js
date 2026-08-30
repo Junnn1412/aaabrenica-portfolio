@@ -14,25 +14,16 @@ import { renderTrustList } from '../../components/trust-list.js';
 import { renderEngagementOptions } from '../../components/engagement-options.js';
 import { renderCta } from '../../components/cta.js';
 import { renderSectionHeader } from '../../components/section-header.js';
+import { renderProfileCard } from '../../components/profile-card.js';
+import { renderHeroVisual } from '../../components/hero-visual.js';
+import { renderActionLink } from '../../components/action-link.js';
+import { getVisibleProjectCards } from '../../content/project-card-visibility.js';
+import { contentRevealAttributes } from '../../components/content-reveal.js';
 
 // Original, decorative, aria-hidden abstract technical composition — no
 // fabricated screenshot, no textual claim. Same inline-SVG technique
 // already proven in the project-card demo specimen's decorative
 // composition (dev/design-system/index.html).
-function renderHeroVisual() {
-  return (
-    `<svg class="hero__visual" viewBox="0 0 400 400" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid meet">` +
-    `<circle cx="120" cy="130" r="70" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></circle>` +
-    `<circle cx="290" cy="260" r="46" fill="none" stroke="var(--color-accent)" stroke-width="2"></circle>` +
-    `<path d="M60 320 L160 200 L230 250 L360 90" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></path>` +
-    `<circle cx="60" cy="320" r="5" fill="var(--color-accent)"></circle>` +
-    `<circle cx="160" cy="200" r="5" fill="var(--color-accent)"></circle>` +
-    `<circle cx="230" cy="250" r="5" fill="var(--color-accent)"></circle>` +
-    `<circle cx="360" cy="90" r="5" fill="var(--color-accent)"></circle>` +
-    `</svg>`
-  );
-}
-
 function renderHero(content) {
   const paragraphs = content.paragraphs
     .map((p) => `<p class="text-lead">${escapeHtml(p)}</p>`)
@@ -40,7 +31,7 @@ function renderHero(content) {
   const { primaryCta, secondaryCta } = content.hero;
   return (
     `<section class="hero"><div class="container hero__inner">` +
-    `<div class="hero__content">` +
+    `<div class="hero__content"${contentRevealAttributes('fade-up')}>` +
     `<h1 class="text-display">${escapeHtml(content.heading)}</h1>` +
     paragraphs +
     `<div class="hero__actions">` +
@@ -55,10 +46,10 @@ function renderHero(content) {
 
 function renderTrustSection(trust) {
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section"><div class="container"><div class="home-reveal-group"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader(trust) +
     renderTrustList(trust.items, trust.link) +
-    `</div></section>`
+    `</div></div></section>`
   );
 }
 
@@ -67,40 +58,43 @@ function renderTrustSection(trust) {
 function renderProblemsSection(problems) {
   const items = problems.items.map((p) => `<li>${escapeHtml(p)}</li>`).join('');
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section"><div class="container"><div class="home-reveal-group"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader(problems) +
     `<ul class="list--marked">${items}</ul>` +
     `<p class="text-lead">${escapeHtml(problems.reassurance)}</p>` +
-    `<p><a href="${escapeHtml(problems.link.path)}">${escapeHtml(problems.link.label)}</a></p>` +
-    `</div></section>`
+    `<p>${renderActionLink({ label: problems.link.label, href: problems.link.path, variant: 'forward' })}</p>` +
+    `</div></div></section>`
   );
 }
 
 function renderCapabilitiesSection(capabilities) {
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section"><div class="container"><div class="home-reveal-group"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader(capabilities) +
     renderCapabilityCards(capabilities.items, 3) +
-    `</div></section>`
+    `</div></div></section>`
   );
 }
 
 function renderProjectsSection(projects) {
+  const visibleItems = getVisibleProjectCards(projects.items);
   return (
     `<section class="page-section"><div class="container">` +
-    renderSectionHeader(projects) +
-    renderProjectCards(projects.items, 3) +
-    `<p><a href="${escapeHtml(projects.link.path)}">${escapeHtml(projects.link.label)}</a></p>` +
+    `<div${contentRevealAttributes('fade-up')}>${renderSectionHeader(projects)}</div>` +
+    `<div class="home-projects__body">` +
+    renderProjectCards(visibleItems, 3) +
+    `<p class="home-projects__action">${renderActionLink({ label: projects.link.label, href: projects.link.path, variant: 'forward' })}</p>` +
+    `</div>` +
     `</div></section>`
   );
 }
 
 function renderProcessSection(process) {
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section"><div class="container"><div class="home-reveal-group"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader(process) +
     renderProcessSteps(process.steps, process.link) +
-    `</div></section>`
+    `</div></div></section>`
   );
 }
 
@@ -109,27 +103,36 @@ function renderProcessSection(process) {
 // around it.
 function renderEngagementSection(engagement) {
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section"><div class="container"><div class="home-reveal-group"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader({
       heading: engagement.heading,
       lede: engagement.lede,
     }) +
     renderEngagementOptions(engagement.items) +
-    `</div></section>`
+    `</div></div></section>`
   );
 }
 
-// §9.9: no existing component — composed entirely from .section-header and
-// base body copy; no photo (none approved).
-function renderAboutSection(about) {
+// §9.9: approved copy remains in the first column; the shared compact
+// profile card follows it and owns the section's one relocated About action.
+function renderAboutSection(about, profile) {
   const paragraphs = about.paragraphs
     .map((p) => `<p>${escapeHtml(p)}</p>`)
     .join('');
   return (
     `<section class="page-section"><div class="container">` +
+    `<div class="home-about">` +
+    `<div class="home-about__copy"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader(about) +
     paragraphs +
-    `<p><a href="${escapeHtml(about.link.path)}">${escapeHtml(about.link.label)}</a></p>` +
+    `</div>` +
+    renderProfileCard({
+      ...about.profileCard,
+      variant: 'compact',
+      profile,
+      reveal: 'fade-in',
+    }) +
+    `</div>` +
     `</div></section>`
   );
 }
@@ -137,7 +140,7 @@ function renderAboutSection(about) {
 function renderCtaSection(cta) {
   return (
     `<section class="page-section"><div class="container">` +
-    renderCta(cta) +
+    renderCta({ ...cta, reveal: 'fade-up' }) +
     `</div></section>`
   );
 }
@@ -151,7 +154,7 @@ export function renderHomePage({ content, navItems, activeKey, site }) {
     renderProjectsSection(content.projects) +
     renderProcessSection(content.process) +
     renderEngagementSection(content.engagement) +
-    renderAboutSection(content.about) +
+    renderAboutSection(content.about, site.profile) +
     renderCtaSection(content.cta);
 
   return {

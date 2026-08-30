@@ -15,9 +15,12 @@
 @use 'objects/page-section';
 @use 'components/skip-link';
 @use 'components/button';
+@use 'components/action-link';
+@use 'components/content-reveal';
 @use 'components/tag';
 @use 'components/media-frame';
 @use 'components/form-control';
+@use 'components/contact-form';
 @use 'components/hero';
 @use 'components/capability-card';
 @use 'components/project-card';
@@ -25,6 +28,7 @@
 @use 'components/trust-list';
 @use 'components/engagement-options';
 @use 'components/cta';
+@use 'components/profile-card';
 @use 'components/site-header';
 @use 'components/site-nav';
 @use 'components/site-footer';
@@ -34,3 +38,5 @@
 @use 'pages/contact';
 @use 'pages/not-found';
 @use 'pages/case-study';
+@use 'pages/home';
+@use 'pages/about';

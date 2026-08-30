@@ -72,6 +72,10 @@ test('isSafeExternalUrl accepts an allowed HTTPS host for its group', () => {
     isSafeExternalUrl('https://www.linkedin.com/in/aaa', 'linkedin'),
     true,
   );
+  assert.equal(
+    isSafeExternalUrl('https://www.facebook.com/Junnabrenica/', 'facebook'),
+    true,
+  );
 });
 
 test('isSafeExternalUrl rejects a non-HTTPS protocol', () => {
@@ -85,6 +89,7 @@ test('isSafeExternalUrl rejects a wrong or unrelated host', () => {
     isSafeExternalUrl('https://linkedin.com/in/aaa', 'github'),
     false,
   );
+  assert.equal(isSafeExternalUrl('https://example.com/aaa', 'facebook'), false);
 });
 
 test('isSafeExternalUrl rejects malformed and non-string input', () => {

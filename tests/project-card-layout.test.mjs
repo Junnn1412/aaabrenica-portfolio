@@ -199,11 +199,22 @@ test('the project-cards section element carries both preview-section and preview
 });
 
 function getProjectCardsSection() {
-  const section = previewHtml.match(
-    /<section class="preview-section preview-section--wide" id="project-cards">[\s\S]*?<\/section>/,
-  );
-  assert.ok(section, 'project-cards <section> not found');
-  return section[0];
+  const opening =
+    '<section class="preview-section preview-section--wide" id="project-cards">';
+  const start = previewHtml.indexOf(opening);
+  assert.notEqual(start, -1, 'project-cards <section> not found');
+
+  let depth = 0;
+  const sectionTags = /<section\b[^>]*>|<\/section>/g;
+  sectionTags.lastIndex = start;
+  for (const match of previewHtml.matchAll(sectionTags)) {
+    depth += match[0].startsWith('</') ? -1 : 1;
+    if (depth === 0) {
+      return previewHtml.slice(start, match.index + match[0].length);
+    }
+  }
+
+  assert.fail('project-cards <section> is not closed');
 }
 
 test('every <ul class="project-cards"> in the showcase is well-formed: equal open/close tags for li, div, svg, span, h4, and p', () => {
@@ -227,7 +238,7 @@ test('every <ul class="project-cards"> in the showcase is well-formed: equal ope
   }
 
   for (const [index, list] of lists.entries()) {
-    for (const tag of ['li', 'div', 'svg', 'span', 'h4', 'p', 'a']) {
+    for (const tag of ['li', 'section', 'div', 'svg', 'span', 'h4', 'p', 'a']) {
       const { open, close } = countTag(list[0], tag);
       assert.equal(
         open,
@@ -236,6 +247,45 @@ test('every <ul class="project-cards"> in the showcase is well-formed: equal ope
       );
     }
   }
+});
+
+test('showcase has no empty project media frame and uses three real FES carousel controls', () => {
+  assert.doesNotMatch(
+    previewHtml,
+    /<div class="media-frame project-card__media">\s*<\/div>/,
+  );
+  assert.doesNotMatch(previewHtml, /project-card__frame-dots/);
+  assert.equal(
+    [...previewHtml.matchAll(/data-project-carousel-slide/g)].length,
+    3,
+  );
+  assert.equal(
+    [...previewHtml.matchAll(/data-project-carousel-indicator="\d"/g)].length,
+    3,
+  );
+});
+
+test('resolved image presentation cascade keeps a responsive 16:9 frame and cover-fitted image', () => {
+  const frame = {
+    tag: 'div',
+    classes: ['media-frame', 'project-card__media'],
+    ancestors: [
+      { tag: 'li', classes: ['project-card'] },
+      { tag: 'section', classes: ['project-card__frame'] },
+    ],
+  };
+  assert.equal(resolveProperty(css, frame, 'aspect-ratio'), '16/9');
+  assert.equal(resolveProperty(css, frame, 'width'), '100%');
+
+  const image = {
+    tag: 'img',
+    classes: [],
+    ancestors: [...frame.ancestors, frame],
+  };
+  assert.equal(resolveProperty(css, image, 'width'), '100%');
+  assert.equal(resolveProperty(css, image, 'height'), '100%');
+  assert.equal(resolveProperty(css, image, 'object-fit'), 'cover');
+  assert.equal(resolveProperty(css, image, 'object-position'), 'center');
 });
 
 // PF-041 — shared with tests/home-render.test.mjs's real renderer-output

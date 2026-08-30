@@ -27,6 +27,16 @@ $palette-cobalt-fill-active: color.adjust(
   $lightness: -20%
 );
 
+// Shared premium-blue primary-button gradient. Every stop is intentionally
+// dark enough for --color-text-primary to clear 4.5:1; state pairs become
+// progressively darker without changing hue family or adding gloss/neon.
+$palette-primary-gradient-start: #123a9f;
+$palette-primary-gradient-end: #245fd6;
+$palette-primary-gradient-hover-start: #0e2f86;
+$palette-primary-gradient-hover-end: #1b49ad;
+$palette-primary-gradient-active-start: #0b276f;
+$palette-primary-gradient-active-end: #123a9f;
+
 // Lightened sibling of $palette-slate-600 for real interactive boundaries
 // (button/form-control borders) that need to clear WCAG 1.4.11's 3:1
 // non-text floor — $palette-slate-600 itself stays reserved for purely
@@ -70,6 +80,12 @@ $colors: (
   'color-accent-fill': $palette-cobalt-fill,
   'color-accent-fill-hover': $palette-cobalt-fill-hover,
   'color-accent-fill-active': $palette-cobalt-fill-active,
+  'color-primary-gradient-start': $palette-primary-gradient-start,
+  'color-primary-gradient-end': $palette-primary-gradient-end,
+  'color-primary-gradient-hover-start': $palette-primary-gradient-hover-start,
+  'color-primary-gradient-hover-end': $palette-primary-gradient-hover-end,
+  'color-primary-gradient-active-start': $palette-primary-gradient-active-start,
+  'color-primary-gradient-active-end': $palette-primary-gradient-active-end,
   'color-border-interactive': $palette-slate-border-interactive,
   'color-focus-ring': $palette-cobalt-500,
   'color-selection-bg': $palette-selection-bg,

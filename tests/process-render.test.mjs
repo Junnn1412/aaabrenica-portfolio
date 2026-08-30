@@ -21,13 +21,17 @@ function processMain() {
 
 function stageBlocks(main) {
   return [
-    ...main.matchAll(/<li class="process-detail__stage">[\s\S]*?<\/li>/g),
+    ...main.matchAll(
+      /<li class="process-detail__stage"(?: [^>]*)?>[\s\S]*?<\/li>/g,
+    ),
   ].map((m) => m[0]);
 }
 
 function pageSectionBlocks(main) {
   return [
-    ...main.matchAll(/<section class="page-section">[\s\S]*?<\/section>/g),
+    ...main.matchAll(
+      /<section class="page-section(?: [^"]*)?"(?: [^>]*)?>[\s\S]*?<\/section>/g,
+    ),
   ].map((m) => m[0]);
 }
 
@@ -120,6 +124,31 @@ test('process: exactly 34 fact pairs across the 7 stages (5 each for the first 6
     .length;
   assert.equal(dts, 34, 'expected 34 <dt> across all 7 stages');
   assert.equal(dds, 34, 'expected 34 matching <dd> across all 7 stages');
+});
+
+test('process: every stage preserves title then five canonical detail fields in semantic order', () => {
+  const blocks = stageBlocks(processMain());
+  blocks.forEach((block, index) => {
+    assert.ok(
+      block.indexOf('process-detail__heading-row') <
+        block.indexOf('process-facts'),
+    );
+    const terms = [
+      ...block.matchAll(/<dt class="process-facts__term">([^<]+)<\/dt>/g),
+    ].map((match) => match[1].replace('&amp;', '&'));
+    const expected = [
+      'What Happens',
+      'What We Need From You',
+      'What I Deliver',
+      'Review & Approval',
+      ...(index < 6 ? ['What Happens Next'] : []),
+    ];
+    assert.deepEqual(terms, expected);
+    assert.equal(
+      [...block.matchAll(/<div class="process-facts__item">/g)].length,
+      expected.length,
+    );
+  });
 });
 
 test('process: Working Together section carries exactly 2 fact pairs, separate from the stages', () => {

@@ -1,6 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderNav } from '../src/components/partials/nav.js';
+import { primaryNav } from '../src/config/navigation.js';
+import { site } from '../src/config/site.js';
 
 const navItems = [
   { key: 'home', label: 'Home', path: '/' },
@@ -53,4 +55,30 @@ test('appends the CTA as a distinct final item when provided', () => {
 test('omits any CTA markup when not provided', () => {
   const html = renderNav(navItems, 'home');
   assert.doesNotMatch(html, /site-nav__cta/);
+});
+
+test('production navigation order is Home, Solutions, Process, Work, About, Start a Project with no ordinary Contact link', () => {
+  const html = renderNav(primaryNav, 'home', site.primaryCta);
+  const labels = [...html.matchAll(/<a[^>]*>([^<]+)<\/a>/g)].map(
+    (match) => match[1],
+  );
+  assert.deepEqual(labels, [
+    'Home',
+    'Solutions',
+    'Process',
+    'Work',
+    'About',
+    'Start a Project',
+  ]);
+  assert.equal([...html.matchAll(/href="\/contact\/"/g)].length, 1);
+  assert.doesNotMatch(html, />Contact<\/a>/);
+});
+
+test('Contact route marks the sole Start a Project CTA current', () => {
+  const html = renderNav(primaryNav, 'contact', site.primaryCta);
+  assert.match(
+    html,
+    /<a class="btn btn--primary btn--sm site-nav__cta" href="\/contact\/" aria-current="page">Start a Project<\/a>/,
+  );
+  assert.equal([...html.matchAll(/aria-current="page"/g)].length, 1);
 });

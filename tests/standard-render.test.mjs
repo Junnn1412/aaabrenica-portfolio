@@ -31,7 +31,7 @@ test('renders heading and paragraphs inside one page container', () => {
   const { main } = render(baseContent());
   assert.match(
     main,
-    /^<div class="container"><h1>Heading<\/h1><p>First paragraph\.<\/p><p>Second paragraph\.<\/p><\/div>$/,
+    /^<div class="container"><div data-content-reveal="fade-up"><h1>Heading<\/h1><p>First paragraph\.<\/p><p>Second paragraph\.<\/p><\/div><\/div>$/,
   );
 });
 
@@ -39,7 +39,10 @@ test('optional link renders when present', () => {
   const { main } = render(
     baseContent({ link: { label: 'Return home', path: '/' } }),
   );
-  assert.match(main, /<p><a href="\/">Return home<\/a><\/p>/);
+  assert.match(
+    main,
+    /<p><a class="action-link action-link--forward" href="\/">[\s\S]*?<span class="action-link__label">Return home<\/span>[\s\S]*?<\/a><\/p>/,
+  );
 });
 
 test('link is omitted entirely, not rendered blank, when absent', () => {

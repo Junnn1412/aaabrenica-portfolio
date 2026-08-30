@@ -25,6 +25,9 @@ import {
   RefreshCw,
   LifeBuoy,
   ArrowUpRight,
+  ArrowRight,
+  ArrowLeft,
+  ExternalLink,
 } from 'lucide';
 
 export const TRUST_ICONS = {
@@ -57,3 +60,11 @@ export const CAPABILITY_ACCENTS = [
 // isn't a "key" a content module chooses, just a single shared constant.
 // Matches the showcase's exact arrow SVG (d="M7 7h10v10" / d="M7 17 17 7").
 export const CARD_ARROW_ICON = ArrowUpRight;
+
+// PF-064 — explicit standalone-action variants. The caller chooses the
+// semantic direction; URLs are never inspected to infer presentation.
+export const ACTION_LINK_ICONS = {
+  forward: ArrowRight,
+  back: ArrowLeft,
+  external: ExternalLink,
+};

@@ -9,12 +9,14 @@ import { renderFooter } from '../../components/partials/footer.js';
 import { renderSectionHeader } from '../../components/section-header.js';
 import { renderProjectCards } from '../../components/project-card.js';
 import { renderCta } from '../../components/cta.js';
+import { getVisibleProjectCards } from '../../content/project-card-visibility.js';
+import { contentRevealAttributes } from '../../components/content-reveal.js';
 
 function renderIntro(content) {
   const paragraphs = content.paragraphs
     .map((p) => `<p class="text-lead">${escapeHtml(p)}</p>`)
     .join('');
-  return `<div class="container"><h1>${escapeHtml(content.heading)}</h1>${paragraphs}</div>`;
+  return `<div class="container"><div${contentRevealAttributes('fade-up')}><h1>${escapeHtml(content.heading)}</h1>${paragraphs}</div></div>`;
 }
 
 // headingLevel: 3 — these cards sit directly under this section's own
@@ -23,10 +25,11 @@ function renderIntro(content) {
 // Gate-C showcase and any future unchanged caller). See docs/DECISION_LOG.md's
 // PF-052 accessibility-correction entry.
 function renderProjectsSection(projects) {
+  const visibleItems = getVisibleProjectCards(projects.items);
   return (
     `<section class="page-section"><div class="container">` +
-    renderSectionHeader(projects) +
-    renderProjectCards(projects.items, 3) +
+    `<div${contentRevealAttributes('fade-up')}>${renderSectionHeader(projects)}</div>` +
+    renderProjectCards(visibleItems, 3) +
     `</div></section>`
   );
 }
@@ -38,7 +41,7 @@ function renderProjectsSection(projects) {
 function renderClosingCtaSection(cta) {
   return (
     `<section class="page-section"><div class="container">` +
-    renderCta({ ...cta, headingLevel: 2 }) +
+    renderCta({ ...cta, headingLevel: 2, reveal: 'fade-up' }) +
     `</div></section>`
   );
 }

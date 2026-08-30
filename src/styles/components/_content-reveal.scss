@@ -1,0 +1,58 @@
+// Progressive enhancement: attributes alone never hide content. JavaScript
+// adds the transient animation class only when a target is ready to reveal,
+// so absent/failed JavaScript leaves every server-rendered element visible.
+[data-content-reveal] {
+  --content-reveal-delay: 0ms;
+}
+
+[data-content-reveal-stagger='1'] {
+  --content-reveal-delay: var(--motion-stagger-reveal);
+}
+
+[data-content-reveal-stagger='2'] {
+  --content-reveal-delay: var(--motion-stagger-reveal-double);
+}
+
+[data-content-reveal-stagger='3'] {
+  --content-reveal-delay: var(--motion-stagger-reveal-triple);
+}
+
+.is-content-reveal-animating[data-content-reveal='fade-up'] {
+  animation: content-reveal-fade-up var(--motion-duration-reveal)
+    var(--motion-easing-reveal) var(--content-reveal-delay) both;
+}
+
+.is-content-reveal-animating[data-content-reveal='fade-in'] {
+  animation: content-reveal-fade-in var(--motion-duration-reveal)
+    var(--motion-easing-reveal) var(--content-reveal-delay) both;
+}
+
+@keyframes content-reveal-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-md));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes content-reveal-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-content-reveal-animating[data-content-reveal] {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

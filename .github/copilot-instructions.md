@@ -57,19 +57,19 @@ unknown.
 
 Preserve:
 
--   Vite multi-page static architecture
--   build-time HTML composition
--   static/crawlable output
--   `src/config/routes.js` as the route source of truth
--   structured content separated from presentation
--   content escaping through the existing boundary
--   centralized link safety
--   schema validation
--   controlled component contracts
--   ITCSS-lite SCSS
--   semantic design tokens
--   progressive enhancement
--   accessibility requirements
+- Vite multi-page static architecture
+- build-time HTML composition
+- static/crawlable output
+- `src/config/routes.js` as the route source of truth
+- structured content separated from presentation
+- content escaping through the existing boundary
+- centralized link safety
+- schema validation
+- controlled component contracts
+- ITCSS-lite SCSS
+- semantic design tokens
+- progressive enhancement
+- accessibility requirements
 
 Do not introduce a frontend framework, CMS, page builder, Tailwind, or a
 new templating system.
@@ -81,11 +81,11 @@ is more familiar.
 
 Before creating a component or abstraction:
 
--   inspect existing components and patterns
--   determine whether there is a genuine reuse case
--   prefer the existing contract when it fits
--   avoid speculative generic APIs
--   keep one-consumer page-specific behavior local to the page
+- inspect existing components and patterns
+- determine whether there is a genuine reuse case
+- prefer the existing contract when it fits
+- avoid speculative generic APIs
+- keep one-consumer page-specific behavior local to the page
 
 ## Content
 
@@ -105,12 +105,12 @@ Do not introduce a CSS framework or arbitrary global styles.
 
 When changing responsive behavior, consider:
 
--   320px
--   375px
--   768px
--   1024px
--   1440px
--   1920px
+- 320px
+- 375px
+- 768px
+- 1024px
+- 1440px
+- 1920px
 
 Preserve DOM order and accessibility rather than using CSS ordering as a
 shortcut.
@@ -121,7 +121,7 @@ Do not bypass or weaken existing checks.
 
 Use the relevant commands, normally including:
 
-``` bash
+```bash
 npm run check:routes
 npm run lint
 npm run format:check
@@ -140,17 +140,17 @@ responsive, performance, or production deployment behavior.
 
 Require explicit approval before materially changing:
 
--   route architecture
--   shared components
--   design tokens
--   security/privacy behavior
--   contact-form activation
--   Cloudflare Functions
--   WAF
--   Resend
--   CSP/security headers
--   DNS/domain behavior
--   production release configuration
+- route architecture
+- shared components
+- design tokens
+- security/privacy behavior
+- contact-form activation
+- Cloudflare Functions
+- WAF
+- Resend
+- CSP/security headers
+- DNS/domain behavior
+- production release configuration
 
 Never invent secrets.
 
@@ -158,21 +158,21 @@ Never invent secrets.
 
 Stop rather than guessing when:
 
--   requirements conflict
--   historical/current state is unclear
--   required content/evidence is missing
--   a new dependency is required
--   a security/privacy decision is needed
--   scope expands materially
--   a shared abstraction would be introduced without demonstrated reuse
--   validation would need to be weakened
--   production authorization is required
+- requirements conflict
+- historical/current state is unclear
+- required content/evidence is missing
+- a new dependency is required
+- a security/privacy decision is needed
+- scope expands materially
+- a shared abstraction would be introduced without demonstrated reuse
+- validation would need to be weakened
+- production authorization is required
 
 ## Current deployment direction
 
 The Version 1 release path is:
 
-``` text
+```text
 Pre-launch closure
 → Technical SEO
 → Cloudflare preview

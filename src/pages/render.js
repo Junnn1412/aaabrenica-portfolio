@@ -8,13 +8,57 @@ import { site } from '../config/site.js';
 function buildHead(route, content) {
   const title = `${escapeHtml(content.title)} — ${escapeHtml(site.siteName)}`;
   const description = content.description ?? site.defaultDescription;
+  const canonicalUrl =
+    site.baseUrl && route.key !== 'not-found'
+      ? new URL(route.path, site.baseUrl).toString()
+      : null;
+
   let head = `<title>${title}</title><meta name="description" content="${escapeHtml(description)}">`;
-  // Canonical markup is omitted entirely while no production domain is
-  // connected, and unconditionally for the 404 page (a self-canonicalizing
-  // error page isn't desired) — never an empty href either way.
-  if (site.baseUrl && route.key !== 'not-found') {
-    head += `<link rel="canonical" href="${escapeHtml(site.baseUrl + route.path)}">`;
+
+  if (canonicalUrl) {
+    head += `<link rel="canonical" href="${escapeHtml(canonicalUrl)}">`;
   }
+
+  if (canonicalUrl) {
+    head +=
+      `<meta property="og:type" content="website">` +
+      `<meta property="og:title" content="${escapeHtml(title)}">` +
+      `<meta property="og:description" content="${escapeHtml(description)}">` +
+      `<meta property="og:site_name" content="${escapeHtml(site.siteName)}">` +
+      `<meta property="og:url" content="${escapeHtml(canonicalUrl)}">` +
+      `<meta name="twitter:card" content="summary">` +
+      `<meta name="twitter:title" content="${escapeHtml(title)}">` +
+      `<meta name="twitter:description" content="${escapeHtml(description)}">`;
+
+    if (route.key === 'home') {
+      const sameAs = [
+        site.social.github,
+        site.social.linkedin,
+        site.social.facebook,
+      ].filter(Boolean);
+
+      const structuredData = {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'WebSite',
+            name: site.siteName,
+            url: site.baseUrl,
+            description,
+          },
+          {
+            '@type': 'Person',
+            name: site.profile.identity.formalName,
+            url: site.baseUrl,
+            sameAs,
+          },
+        ],
+      };
+
+      head += `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>`;
+    }
+  }
+
   return head;
 }
 

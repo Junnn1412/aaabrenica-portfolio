@@ -103,9 +103,11 @@ export default {
   // exist in exactly one place — replaces the prior PF-033-era literal
   // "Government/business workflow system" category (prohibited wording).
   card: {
+    isVisible: false,
     category: 'Internal Workflow System',
     summary:
       'A centralized system for managing a multi-stage application, review, examination, and approval workflow, built and iteratively improved for internal use.',
     tags: ['Angular', 'ASP.NET Core'],
+    presentation: { kind: 'text-only' },
   },
 };

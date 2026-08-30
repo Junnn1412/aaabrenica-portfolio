@@ -5,7 +5,7 @@ import { renderNav } from './nav.js';
 // replaceable slot: absent today (renders text-only), later a temporary
 // placeholder, eventually the final SBTech PH emblem — swapping the value
 // never requires touching this markup. The mark is purely decorative
-// (`alt=""`); "AAA Portfolio" stays the one real accessible name, and both
+// (`alt=""`); the concise public name stays the one real accessible name, and both
 // live inside the same single `<a>` so the whole lockup is one keyboard
 // stop with one accessible name.
 function renderBrandMark(brandMark) {

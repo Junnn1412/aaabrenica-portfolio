@@ -33,6 +33,7 @@ export function isSafeEmail(email) {
 const ALLOWED_EXTERNAL_HOSTS = {
   github: ['github.com', 'www.github.com'],
   linkedin: ['linkedin.com', 'www.linkedin.com'],
+  facebook: ['facebook.com', 'www.facebook.com'],
 };
 
 export function isSafeExternalUrl(url, hostGroup) {

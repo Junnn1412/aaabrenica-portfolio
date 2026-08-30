@@ -6,7 +6,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderRoute } from '../src/pages/render.js';
 import { routes } from '../src/config/routes.js';
-import fesChallengerContent from '../src/content/pages/work/fes-challenger.js';
+import fesChallengerContent, {
+  fesCarouselSlides,
+  homepageHeroImage,
+  projectsPageImage,
+  servicesPageImage,
+} from '../src/content/pages/work/fes-challenger.js';
 import homeContent from '../src/content/pages/home.js';
 import workContent from '../src/content/pages/work/index.js';
 import { expectCtaPanels } from './helpers/component-markup.mjs';
@@ -29,8 +34,8 @@ test('FES Challenger: exactly one <h1>, 8 curated section headings (7 content + 
     'The Challenge',
     'My Role',
     'What I Built',
-    'Technology Stack',
     'Key Decisions',
+    'Technology Stack',
     'Outcomes',
     'Project Gallery',
   ]);
@@ -54,7 +59,27 @@ const RAW_CAPTURE_FILENAMES = [
   'fes-home-mobile.png',
 ];
 
-test('FES Challenger: the gallery renders exactly the 4 approved images, in the approved order, with real paths/alt/caption/dimensions', () => {
+test('FES Challenger: Homepage renders once in the hero with canonical intrinsic dimensions and eager priority', () => {
+  const main = fesMain();
+  assert.strictEqual(fesChallengerContent.heroMedia, homepageHeroImage);
+  const heroImages = [
+    ...main.matchAll(
+      /<div class="media-frame case-study-hero__media"[^>]*>[\s\S]*?<img ([^>]*)>[\s\S]*?<\/div>/g,
+    ),
+  ];
+  assert.equal(heroImages.length, 1);
+  assert.match(
+    heroImages[0][1],
+    /src="\/images\/case-studies\/fes-challenger\/gallery\/homepage-hero-desktop\.png"/,
+  );
+  assert.match(heroImages[0][1], /width="2880" height="1388"/);
+  assert.match(
+    heroImages[0][1],
+    /loading="eager" fetchpriority="high" decoding="async"/,
+  );
+});
+
+test('FES Challenger: the lower gallery renders exactly Services then Projects', () => {
   const main = fesMain();
   assert.match(
     main,
@@ -63,16 +88,9 @@ test('FES Challenger: the gallery renders exactly the 4 approved images, in the 
   const items = [
     ...main.matchAll(/<li class="case-study-gallery__item">[\s\S]*?<\/li>/g),
   ].map((m) => m[0]);
-  assert.equal(items.length, 4, 'expected exactly 4 gallery items');
+  assert.equal(items.length, 2, 'expected exactly 2 gallery items');
 
   const expected = [
-    {
-      src: '/images/case-studies/fes-challenger/gallery/homepage-hero-desktop.png',
-      alt: 'FES Challenger homepage hero section with a marine salvage vessel photo and headline',
-      width: 719,
-      height: 443,
-      caption: 'Homepage',
-    },
     {
       src: '/images/case-studies/fes-challenger/gallery/services-page-desktop.png',
       alt: 'FES Challenger Services page showing marine salvage and underwater service categories',
@@ -87,13 +105,6 @@ test('FES Challenger: the gallery renders exactly the 4 approved images, in the 
       height: 447,
       caption: 'Projects',
     },
-    {
-      src: '/images/case-studies/fes-challenger/gallery/homepage-mobile.png',
-      alt: 'FES Challenger homepage on a mobile viewport, showing the responsive hero and navigation menu',
-      width: 544,
-      height: 689,
-      caption: 'Mobile view',
-    },
   ];
 
   items.forEach((item, i) => {
@@ -101,7 +112,7 @@ test('FES Challenger: the gallery renders exactly the 4 approved images, in the 
     assert.match(
       item,
       new RegExp(
-        `<img src="${e.src.replace(/\//g, '\\/')}" alt="${e.alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}" width="${e.width}" height="${e.height}" loading="lazy">`,
+        `<img src="${e.src.replace(/\//g, '\\/')}" alt="${e.alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}" width="${e.width}" height="${e.height}" loading="lazy" decoding="async">`,
       ),
       `gallery item ${i + 1} (${e.caption}) markup did not match expected src/alt/width/height`,
     );
@@ -111,6 +122,11 @@ test('FES Challenger: the gallery renders exactly the 4 approved images, in the 
       `gallery item ${i + 1} caption mismatch`,
     );
   });
+  assert.doesNotMatch(main, /homepage-mobile\.png|Mobile view/);
+  assert.doesNotMatch(
+    items.map((item) => item).join(''),
+    /homepage-hero-desktop\.png/,
+  );
 });
 
 test('FES Challenger: none of the 7 raw capture filenames survive in the rendered output', () => {
@@ -155,7 +171,7 @@ test('FES Challenger: the logo renders once, decoratively (empty alt), at its ap
   const main = fesMain();
   const logos = [
     ...main.matchAll(
-      /<img class="case-study-hero__logo" src="([^"]*)" alt="([^"]*)">/g,
+      /<img class="case-study-hero__logo" src="([^"]*)" alt="([^"]*)" width="(\d+)" height="(\d+)">/g,
     ),
   ];
   assert.equal(logos.length, 1, 'expected exactly one logo image');
@@ -164,6 +180,14 @@ test('FES Challenger: the logo renders once, decoratively (empty alt), at its ap
     '/images/case-studies/fes-challenger/fes-challenger-logo.png',
   );
   assert.equal(logos[0][2], '', 'expected an empty (decorative) alt');
+  assert.equal(Number(logos[0][3]), 140, 'expected real intrinsic width');
+  assert.equal(Number(logos[0][4]), 137, 'expected real intrinsic height');
+  assert.deepEqual(fesChallengerContent.logo, {
+    src: '/images/case-studies/fes-challenger/fes-challenger-logo.png',
+    alt: '',
+    width: 140,
+    height: 137,
+  });
   assert.match(
     main,
     /<div class="case-study-hero__heading-row"><img class="case-study-hero__logo"[^>]*><h1>FES Challenger<\/h1><\/div>/,
@@ -189,7 +213,7 @@ test('FES Challenger: the external link appears exactly once in main, and is the
 
 test('FES Challenger: back-to-Work link and closing CTA are present', () => {
   const main = fesMain();
-  assert.match(main, /<a href="\/work\/">Back to Work<\/a>/);
+  assert.match(main, /class="action-link action-link--back" href="\/work\/"/);
   expectCtaPanels(main, { count: 1, actionClass: 'btn btn--primary' });
 });
 
@@ -212,8 +236,83 @@ test("Home and Work FES project cards reuse fes-challenger.js's own card export,
     (item) => item.heading === 'FES Challenger',
   );
   for (const item of [homeItem, workItem]) {
+    assert.equal(item.isVisible, true);
     assert.equal(item.category, fesChallengerContent.card.category);
     assert.equal(item.summary, fesChallengerContent.card.summary);
     assert.deepEqual(item.tags, fesChallengerContent.card.tags);
+    assert.strictEqual(
+      item.presentation,
+      fesChallengerContent.card.presentation,
+    );
+  }
+  const descriptors = [homepageHeroImage, servicesPageImage, projectsPageImage];
+  assert.strictEqual(
+    fesChallengerContent.card.presentation.slides,
+    fesCarouselSlides,
+  );
+  assert.equal(fesChallengerContent.card.presentation.kind, 'carousel');
+  descriptors.forEach((descriptor, index) => {
+    assert.strictEqual(
+      fesChallengerContent.card.presentation.slides[index],
+      descriptor,
+    );
+  });
+  assert.strictEqual(fesChallengerContent.heroMedia, homepageHeroImage);
+  assert.deepEqual(
+    fesChallengerContent.gallery.items.map(({ caption, ...image }) => ({
+      caption,
+      image,
+    })),
+    [
+      { caption: 'Services', image: servicesPageImage },
+      { caption: 'Projects', image: projectsPageImage },
+    ],
+  );
+});
+
+test('FES Challenger: each shared carousel screenshot exists as one physical file only', () => {
+  const galleryDir = fileURLToPath(
+    new URL(
+      '../public/images/case-studies/fes-challenger/gallery/',
+      import.meta.url,
+    ),
+  );
+  const names = fs.readdirSync(galleryDir);
+  for (const expected of [
+    'homepage-hero-desktop.png',
+    'services-page-desktop.png',
+    'projects-page-desktop.png',
+  ]) {
+    assert.deepEqual(
+      names.filter((name) => name.toLowerCase() === expected),
+      [expected],
+    );
+  }
+});
+
+test('FES Challenger: Mobile View remains archived on disk but unpublished and pending screenshots remain absent', () => {
+  const galleryDir = fileURLToPath(
+    new URL(
+      '../public/images/case-studies/fes-challenger/gallery/',
+      import.meta.url,
+    ),
+  );
+  const main = fesMain();
+  assert.equal(fs.existsSync(galleryDir + 'homepage-mobile.png'), true);
+  assert.doesNotMatch(
+    JSON.stringify(fesChallengerContent),
+    /homepage-mobile\.png/,
+  );
+  assert.doesNotMatch(main, /homepage-mobile\.png|Mobile view/);
+
+  for (const pending of [
+    'project-details-page-desktop.png',
+    'about-us-page-desktop.png',
+  ]) {
+    assert.doesNotMatch(
+      JSON.stringify(fesChallengerContent),
+      new RegExp(pending.replace('.', '\\.')),
+    );
+    assert.doesNotMatch(main, new RegExp(pending.replace('.', '\\.')));
   }
 });

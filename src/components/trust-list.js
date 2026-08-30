@@ -8,6 +8,7 @@
 // src/pages/icon-registry.js).
 import { escapeHtml } from '../pages/escape.js';
 import { renderIcon } from './icon.js';
+import { renderActionLink } from './action-link.js';
 import { TRUST_ICONS } from '../pages/icon-registry.js';
 
 function renderItem({ icon, heading }) {
@@ -21,6 +22,6 @@ function renderItem({ icon, heading }) {
 
 export function renderTrustList(items, link) {
   const list = `<ul class="trust-list">${items.map(renderItem).join('')}</ul>`;
-  const action = `<p class="trust-list__action"><a href="${escapeHtml(link.path)}">${escapeHtml(link.label)}</a></p>`;
+  const action = `<p class="trust-list__action">${renderActionLink({ label: link.label, href: link.path, variant: 'forward' })}</p>`;
   return list + action;
 }

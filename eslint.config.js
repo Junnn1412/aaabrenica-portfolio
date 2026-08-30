@@ -5,9 +5,17 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 export default [
   js.configs.recommended,
   {
-    files: ['src/scripts/**/*.js'],
+    files: ['src/scripts/**/*.js', 'src/contact/**/*.js'],
     languageOptions: {
       globals: globals.browser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+  },
+  {
+    files: ['functions/**/*.js'],
+    languageOptions: {
+      globals: globals.serviceworker,
       ecmaVersion: 'latest',
       sourceType: 'module',
     },

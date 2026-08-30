@@ -123,6 +123,12 @@ const pairs = [
   ['color-accent-fill', 'color-text-primary', BODY_TEXT_MIN], // .btn--primary label
   ['color-accent-fill-hover', 'color-text-primary', BODY_TEXT_MIN],
   ['color-accent-fill-active', 'color-text-primary', BODY_TEXT_MIN],
+  ['color-primary-gradient-start', 'color-text-primary', BODY_TEXT_MIN],
+  ['color-primary-gradient-end', 'color-text-primary', BODY_TEXT_MIN],
+  ['color-primary-gradient-hover-start', 'color-text-primary', BODY_TEXT_MIN],
+  ['color-primary-gradient-hover-end', 'color-text-primary', BODY_TEXT_MIN],
+  ['color-primary-gradient-active-start', 'color-text-primary', BODY_TEXT_MIN],
+  ['color-primary-gradient-active-end', 'color-text-primary', BODY_TEXT_MIN],
   ['color-border-interactive', 'color-canvas', NON_TEXT_MIN], // button/form-control boundary
   ['color-border-interactive', 'color-surface-1', NON_TEXT_MIN],
   ['color-focus-ring', 'color-canvas', FOCUS_INDICATOR_MIN], // numerically identical to

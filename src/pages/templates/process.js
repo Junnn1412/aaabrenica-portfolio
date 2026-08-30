@@ -7,12 +7,13 @@ import { renderHeader } from '../../components/partials/header.js';
 import { renderFooter } from '../../components/partials/footer.js';
 import { renderSectionHeader } from '../../components/section-header.js';
 import { renderCta } from '../../components/cta.js';
+import { contentRevealAttributes } from '../../components/content-reveal.js';
 
 function renderIntro(content) {
   const paragraphs = content.paragraphs
     .map((p) => `<p class="text-lead">${escapeHtml(p)}</p>`)
     .join('');
-  return `<div class="container"><h1>${escapeHtml(content.heading)}</h1>${paragraphs}</div>`;
+  return `<div class="container"><div class="process-page__container"><div class="process-page__intro"${contentRevealAttributes('fade-up')}><h1>${escapeHtml(content.heading)}</h1>${paragraphs}</div></div></div>`;
 }
 
 // Shared by a stage's own facts and the Working Together section's facts —
@@ -25,8 +26,10 @@ function renderFacts(pairs) {
   const items = pairs
     .map(
       ([term, detail]) =>
+        `<div class="process-facts__item">` +
         `<dt class="process-facts__term">${escapeHtml(term)}</dt>` +
-        `<dd class="process-facts__detail">${escapeHtml(detail)}</dd>`,
+        `<dd class="process-facts__detail">${escapeHtml(detail)}</dd>` +
+        `</div>`,
     )
     .join('');
   return `<dl class="process-facts">${items}</dl>`;
@@ -52,7 +55,7 @@ function renderStage(stage, index) {
     facts.push(['What Happens Next', stage.next]);
   }
   return (
-    `<li class="process-detail__stage">` +
+    `<li class="process-detail__stage"${contentRevealAttributes('fade-up')}>` +
     `<div class="process-detail__heading-row">` +
     `<span class="process-detail__number" aria-hidden="true">${index + 1}</span>` +
     `<h3 class="process-detail__heading">${escapeHtml(stage.heading)}</h3>` +
@@ -64,20 +67,20 @@ function renderStage(stage, index) {
 
 function renderStagesSection(stages) {
   return (
-    `<section class="page-section"><div class="container">` +
-    renderSectionHeader(stages) +
+    `<section class="page-section process-stages"><div class="container"><div class="process-page__container">` +
+    `<div${contentRevealAttributes('fade-up')}>${renderSectionHeader(stages)}</div>` +
     `<ol class="process-detail">${stages.items.map(renderStage).join('')}</ol>` +
-    `</div></section>`
+    `</div></div></section>`
   );
 }
 
 function renderWorkingTogetherSection(workingTogether) {
   const facts = workingTogether.items.map((item) => [item.heading, item.body]);
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section process-working"><div class="container"><div class="process-page__container"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader({ heading: workingTogether.heading }) +
     renderFacts(facts) +
-    `</div></section>`
+    `</div></div></section>`
   );
 }
 
@@ -89,9 +92,9 @@ function renderWorkingTogetherSection(workingTogether) {
 // element of a section already opened by its own <h2>).
 function renderClosingCtaSection(cta) {
   return (
-    `<section class="page-section"><div class="container">` +
-    renderCta({ ...cta, headingLevel: 2 }) +
-    `</div></section>`
+    `<section class="page-section"><div class="container"><div class="process-page__container">` +
+    renderCta({ ...cta, headingLevel: 2, reveal: 'fade-up' }) +
+    `</div></div></section>`
   );
 }
 

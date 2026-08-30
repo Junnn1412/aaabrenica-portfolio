@@ -2,8 +2,13 @@
 $motion-duration-fast: 120ms;
 $motion-duration-base: 200ms;
 $motion-duration-slow: 360ms;
+$motion-duration-reveal: 560ms;
+$motion-stagger-reveal: 80ms;
+$motion-stagger-reveal-double: 160ms;
+$motion-stagger-reveal-triple: 240ms;
 $motion-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
 $motion-easing-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+$motion-easing-reveal: cubic-bezier(0.22, 1, 0.36, 1);
 
 // Matches the requirements doc's approved 4-6px card-lift range (upper
 // bound, for a clearly perceptible but still restrained hover lift).
@@ -15,8 +20,13 @@ $motion: (
   'motion-duration-fast': $motion-duration-fast,
   'motion-duration-base': $motion-duration-base,
   'motion-duration-slow': $motion-duration-slow,
+  'motion-duration-reveal': $motion-duration-reveal,
+  'motion-stagger-reveal': $motion-stagger-reveal,
+  'motion-stagger-reveal-double': $motion-stagger-reveal-double,
+  'motion-stagger-reveal-triple': $motion-stagger-reveal-triple,
   'motion-easing-standard': $motion-easing-standard,
   'motion-easing-emphasis': $motion-easing-emphasis,
+  'motion-easing-reveal': $motion-easing-reveal,
   'motion-distance-sm': $motion-distance-sm,
   'motion-distance-md': $motion-distance-md,
 ) !default;

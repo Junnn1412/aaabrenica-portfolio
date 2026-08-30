@@ -33,5 +33,7 @@
 // safe trim off the sides (the subject is centered with generous
 // background margin in the source photo).
 .media-frame--portrait {
+  display: block;
+  width: 100%;
   aspect-ratio: 4 / 5;
 }

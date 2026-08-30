@@ -12,6 +12,7 @@ import { renderContactPage } from '../src/pages/templates/contact.js';
 import { routes } from '../src/config/routes.js';
 import { site } from '../src/config/site.js';
 import { primaryNav } from '../src/config/navigation.js';
+import contactContent from '../src/content/pages/contact.js';
 
 function contactMain() {
   const route = routes.find((r) => r.key === 'contact');
@@ -21,6 +22,26 @@ function contactMain() {
 test('contact: exactly one <h1>', () => {
   const main = contactMain();
   assert.equal([...main.matchAll(/<h1[ >]/g)].length, 1);
+});
+
+test('contact: form is disabled by default while all direct methods remain rendered', () => {
+  const main = contactMain();
+  assert.equal(site.contactForm.enabled, false);
+  assert.doesNotMatch(main, /data-contact-form/);
+  assert.doesNotMatch(main, /Tell Me About Your Project/);
+  assert.match(main, new RegExp(`mailto:${site.contactEmail}`));
+  assert.match(main, new RegExp(site.social.github.replaceAll('.', '\\.')));
+  assert.match(main, new RegExp(site.social.linkedin.replaceAll('.', '\\.')));
+});
+
+test('contact: explicit source enablement renders the progressive form after direct methods', () => {
+  const { main } = renderContactPage({
+    content: contactContent,
+    navItems: primaryNav,
+    activeKey: 'contact',
+    site: { ...site, contactForm: { ...site.contactForm, enabled: true } },
+  });
+  assert.match(main, /data-contact-form/);
 });
 
 test('contact: exactly one <h2 class="contact-methods__heading"> and exactly 3 .contact-methods__item entries', () => {
@@ -81,7 +102,7 @@ test('contact: every href in main is a safe internal path or an https external l
 
 test('renderContactPage omits an unsafe email or external URL entirely, not merely escaped', () => {
   const hostileSite = {
-    siteName: 'AAA Portfolio',
+    siteName: 'Antonio Abrenica',
     contactEmail: 'not-an-email',
     social: {
       github: 'https://evil.example.com',

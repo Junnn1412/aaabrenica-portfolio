@@ -16,6 +16,7 @@
 // AAA as final V1 copy, no longer provisional.
 import fesChallenger from './fes-challenger.js';
 import businessWorkflowSystem from './business-workflow-system.js';
+import ebarangay from './ebarangay.js';
 
 export default {
   title: 'Work',
@@ -43,6 +44,7 @@ export default {
       {
         heading: 'eBarangay',
         link: '/work/ebarangay/',
+        ...ebarangay.card,
       },
     ],
   },

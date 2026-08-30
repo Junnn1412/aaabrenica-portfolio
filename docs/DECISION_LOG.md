@@ -797,9 +797,9 @@ nowrap` (removing wrapping as an escape valve entirely, not just making
 - **Decision:**
   1. **4 of 7 captured screenshots selected**: `hero-banner.png` (homepage hero), `services-page.png` (dedicated Services page — chosen over `services-section.png`, an overlapping homepage teaser section with the same category-card format), `projects-page.png` (dedicated Projects page — chosen over the weaker `projects-section1.png`, a mostly-white stats block with no project photography), and `fes-home-mobile.png` (the only responsive-implementation evidence). `projects-section2.png` (a richer 6-project thumbnail grid, genuinely distinct evidence — "breadth of real completed work" rather than mere repetition) was the proposed optional 5th image; AAA declined it to keep the gallery at exactly 4.
   2. **No redaction or cropping needed for any file.** Every image was visually inspected (not metadata-only) for browser chrome, admin UI, staging indicators, credentials, and personal data — none found. Every image shows only content already public on `https://feschallenger.com/` (the case study's own approved external link).
-  3. **No resizing.** Source dimensions were kept exactly as captured (719×443 down to 544×689) — AAA confirmed larger captures aren't obtainable and explicitly accepted the current resolution for the gallery's display size.
+  3. **No resizing.** Source dimensions were kept exactly as captured. The homepage hero file was re-verified on 2026-08-19 as 2880×1388 (correcting the earlier 719×443 metadata); the remaining approved screenshots range from 716×448 to 544×689. No binary was resized or re-encoded.
   4. **WebP was attempted, per AAA's instruction, before falling back to PNG.** Checked for a WebP encoder already available locally without installing a package: no `cwebp`, no ImageMagick, no ffmpeg (the only `convert` binary found on the system is Windows' unrelated FAT→NTFS filesystem-conversion utility, not ImageMagick — confirmed by running it with `/?` before ruling it out, not assumed from the name alone), and .NET's built-in GDI+ `ImageCodecInfo.GetImageEncoders()` lists only BMP/JPEG/GIF/TIFF/PNG, no WebP. Per AAA's explicit fallback rule, all 4 selected images ship as PNG — byte-identical to the reviewed originals (verified with `cmp`), not re-encoded, resized, or quality-altered in any way.
-  5. **`srcset` derivatives not implemented — genuinely not justified, not a shortcut.** Source images are only marginally larger than the gallery grid's largest real display column (~715–720px source vs. ~400–500px max column width), leaving little headroom for a meaningful second density tier; the added multi-file/markup complexity wouldn't be proportionate. AAA approved this conclusion directly.
+  5. **`srcset` derivatives not implemented.** The approved gallery ships one source per screenshot. The 2026-08-19 intrinsic-metadata correction for the 2880×1388 homepage hero did not authorize generating derivative binaries; no file was duplicated or re-encoded.
   6. **Zero architecture changes** — re-confirmed, not assumed: `content.gallery.items[]`'s existing schema shape (`{ src, alt, width, height, caption? }`), `case-study.js`'s existing `renderGallerySection()`, `_case-study.scss`'s existing `.case-study-gallery` grid, and `scripts/case-study-assets.mjs`'s existing generic (not logo-only) asset-existence checks all needed no modification — this is the moment the PF-060 gallery architecture was built for.
   7. **All 7 raw capture files removed from `public/`** after the 4 delivery files were created and byte-verified — AAA confirmed the originals are backed up outside the repository, so deletion (not archival elsewhere in the repo) was the correct action. The approved logo is untouched.
 - **Consequences:** `npm run verify` passes (442/442 tests — up from 440, 2 net new). New: none (no new files beyond the 4 image assets and the `gallery/` directory). Modified: `src/content/pages/work/fes-challenger.js` (`gallery` added), `tests/fes-challenger-render.test.mjs` (exact gallery count/order/paths/alt/caption/dimensions assertion; raw-filename-absence assertion against both rendered output and the real `public/` filesystem), `docs/CONTENT_INVENTORY.md` (full PF-063 audit/decision record), `docs/TESTING_AND_QA.md`. Not modified: `src/pages/content-schema.js`, `src/pages/templates/case-study.js`, `src/styles/pages/_case-study.scss`, `scripts/case-study-assets.mjs`, `package.json`. A deliberate-failure pass was run and confirmed correct before being restored: temporarily pointing the first gallery item at a nonexistent filename made both `scripts/validate-routes.mjs` and the new render-test assertion fail with the expected "does not exist on disk" / mismatch messages, then the fix was fully restored and re-verified clean (`grep` confirmed no mutation marker remained).
@@ -898,7 +898,7 @@ nowrap` (removing wrapping as an escape valve entirely, not just making
 - **Status:** Accepted — implementation complete. **AAA completed the desktop and mobile browser review and approved the presentation**: the Brand/Quick Links/Connect hierarchy, mobile stack order, Quick Links' 2-column readability, icon recognizability/restraint, bottom-row legibility with Privacy appearing once, no clipping or horizontal overflow, and the temporary brand mark's modest-but-acceptable presentation. Keyboard-only, forced-colors, reduced-motion, full-width-matrix, and full-route checks remain pending (see `docs/TESTING_AND_QA.md`'s updated checklist) unless independently confirmed elsewhere. This entry does not close PF-064 or any broader visual-polish milestone.
 - **Context:** A focused follow-up to the header/nav polish restructured the footer from a single flat block (nav list + a mixed text-link list + copyright) into three labeled columns (Brand, Quick Links, Connect) plus a bottom row (copyright, Privacy), matching the approved plan. No profile photo, no new footer copy — the brand column is mark + "AAA Portfolio" only, per AAA's explicit decision (no short approved tagline existed to reuse).
 - **Decision:**
-  1. **GitHub/LinkedIn icon sourcing — the exact official Simple Icons monochrome path data, fetched live, not reconstructed from memory.** `node_modules/lucide` does not ship brand/logo icons (confirmed: no `github.mjs`/`linkedin.mjs` under `dist/esm/icons/`) — Lucide deliberately dropped brand marks in recent releases. Per AAA's decision, the two glyphs were fetched from the published Simple Icons project (MIT License, `simple-icons` npm package v16.28.0): GitHub's path via `raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg`, LinkedIn's via `cdn.jsdelivr.net/npm/simple-icons@16.28.0/icons/linkedin.svg` (GitHub's copy additionally cross-checked against both sources, byte-identical). Both fetched 2026-08-18. Path data is reproduced verbatim in `src/components/social-icons.js`, with the exact source URLs, package version, and retrieval date recorded in that file's own header comment — not just here.
+  1. **GitHub/LinkedIn icon sourcing — the exact official Simple Icons monochrome path data, fetched live, not reconstructed from memory.** `node_modules/lucide` does not ship brand/logo icons (confirmed: no `github.mjs`/`linkedin.mjs` under `dist/esm/icons/`) — Lucide deliberately dropped brand marks in recent releases. The two glyphs were fetched from the published Simple Icons project (`simple-icons` npm package v16.28.0, CC0-1.0): GitHub's path via `raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg`, LinkedIn's via `cdn.jsdelivr.net/npm/simple-icons@16.28.0/icons/linkedin.svg` (GitHub's copy additionally cross-checked against both sources, byte-identical). Both fetched 2026-08-18. Path data is reproduced verbatim in `src/components/social-icons.js`, with the exact source URLs, package version, and retrieval date recorded in that file's own header comment — not just here. The earlier MIT description was a documentation error; the pinned package metadata and license identify CC0-1.0.
   2. **New `src/components/social-icons.js`, deliberately separate from `src/pages/icon-registry.js`/`src/components/icon.js`.** The user's instruction was explicit: don't pretend GitHub/LinkedIn are Lucide icons, and don't add them to the Lucide registry under Lucide names. Beyond that instruction, the two icon shapes are also structurally different and couldn't share a renderer cleanly: Lucide icons are multi-shape, stroke-based (`stroke="currentColor" fill="none"`, `icon.js`'s fixed `SVG_ATTRS`), while Simple Icons ships one single filled `<path>` per mark (`fill="currentColor"`). `renderSocialIcon(name, {className})` is a closed two-entry map (`github`, `linkedin`) that throws on an unknown key — the same fail-loud precedent `icon.js`'s own `renderIcon()` already establishes for its closed tag/attribute sets. Always decorative (`aria-hidden="true"` hardcoded, not caller-configurable) — the parent `<a>`'s `aria-label` is the one real accessible name, matching the same "icon never carries its own name" pattern already established for the header/case-study logos.
   3. **Footer structure**: `.site-footer__columns` (CSS Grid, single column at mobile/tablet — Brand → Quick Links → Connect in document order — three columns from `spacing.$bp-md`, 768px) plus `.site-footer__bottom` (copyright + Privacy, flex row). No `.container` wrapper — `footer` stays full-bleed with `padding-inline: var(--gutter)` directly on the element, the same architecture already proven correct for `header` across the three-round overflow investigation, rather than introducing a second footer-only pattern.
   4. **Quick Links and Connect headings are real `<h2>` elements**, per AAA's explicit "footer headings should remain real semantic headings" instruction. Confirmed safe before implementing: every existing test that counts `<h2>`s (10 files: `work-render.test.mjs`, `contact-render.test.mjs`, etc.) scopes its check to `renderRoute(route).main` specifically — `main` and `footer` are separate strings in this architecture (`render.js` returns `{head, header, main, footer}`), so adding footer headings touched none of them. Visual treatment reuses `objects/_section-header.scss`'s `.section-header__eyebrow` recipe verbatim (uppercase, letter-spaced, `--font-size-label`, `--color-accent-text`) rather than inventing a new heading style — proven identical via a compiled-CSS test, not just visually similar.
@@ -934,3 +934,421 @@ _This log will be backfilled with the project's earlier approved decisions
 (technology stack, hosting, positioning, information architecture, and
 others) under PF-002. Entries added from PF-011 onward are recorded here
 as they are made._
+
+## 2026-08-19 — Profile-card correction: exact-case portrait path, shared full/compact variants, single-action pages
+
+- **Status:** Implemented; automated verification complete. Browser review remains required, and PF-064 stays open.
+- **Context:** Browser review found three connected defects in the initial About-only profile card: the image URL requested lowercase `.jpg` while Git/build output contained uppercase `.JPG`; the card touched the closing CTA because adjacent siblings had no explicit layout gap; and the card duplicated the page-level Contact CTA. AAA also approved extending the same design language to the homepage About preview without duplicating markup or its existing approved paragraph.
+- **Decision:** `site.profile` is the single source for AAA's name, role, and approved portrait metadata. `src/components/profile-card.js` provides a closed `full`/`compact` renderer. Full renders the non-lazy portrait, approved statement, and exactly three highlights with no action. Compact renders the lazy portrait and exactly one `Read My Full Story` action to `/about/`, with no statement/highlights/Contact action; the unchanged homepage paragraph stays in the preceding copy column. `.profile-card` owns the shared neutral surface, 4:5 centered cover frame, and static electric-blue bracket. About uses `.about-page { display: grid; gap: var(--space-8); }` to separate its content/card layout from the unchanged closing CTA. Home and About both stack in DOM order by default and use the established 64em 58/42 split without CSS `order`.
+- **Asset correction:** AAA manually performed the Git-aware rename `public/images/profile/aaa-portrait.JPG` to `public/images/profile/aaa-portrait.jpg`; the JPEG bytes were not edited or re-encoded. The generic asset-existence helper now compares each requested path segment with real directory entries before `existsSync`, so a `.JPG`/`.jpg` mismatch fails on Windows as well as case-sensitive systems without changing path-safety rules.
+- **Consequences:** The About main now contains exactly one `/contact/` action—the existing page-level closing CTA. The homepage About section contains exactly one `/about/` action—the relocated compact-card action. Focused renderer/layout tests cover variant content, lazy-loading behavior, DOM order, exact action counts, explicit page gap, centered crop, static bracket, and the absence of CSS `order`. Header, navigation, footer, Contact form scope, unrelated homepage sections, portrait bytes, and PF-064 status are unchanged.
+- **Revisit condition:** AAA must repeat the documented responsive/browser review for both affected compositions before this polish task or PF-064 can close.
+
+## 2026-08-21 — Disabled Contact form with external Cloudflare WAF prerequisite
+
+- **Status:** Accepted architecture; implemented and disabled; not yet
+  operationally enabled, browser-approved, delivery-approved, or
+  privacy-approved. PF-064 remains open; PF-072 retains broader deployment and
+  CSP ownership.
+- **Decision:** Retain the Cloudflare Pages Function at `/api/contact` and
+  Resend behind a replaceable adapter. Keep `site.contactForm.enabled: false`
+  plus an independent dashboard runtime gate. Use one repository-owned
+  `_routes.json`; add no Worker, Durable Object, KV/D1/database, Turnstile,
+  dependency, local counter, or rate-limiter binding. Require an
+  exact-path Cloudflare WAF rate-limiting rule on a hostname inside AAA's zone
+  before public enablement.
+- **Reason:** The external WAF provides the approved request-rate safeguard
+  without adding application state or infrastructure. The Function remains
+  authoritative for POST-only, parsing, validation, delivery, and generic
+  failure behavior. A generic `*.pages.dev` preview hostname is not presumed to
+  be inside or protected by AAA's zone rule; protected preview work requires a
+  Cloudflare-managed staging hostname in that zone.
+- **Privacy:** The live no-form Privacy statements are unchanged. Candidate
+  replacement copy is isolated in `docs/CONTACT_FORM_PRIVACY_DRAFT.md` and is
+  gated on Resend/sender setup, real delivery and Reply-To, WAF verification,
+  verified provider/account retention facts, and AAA's production approval.
+- **Verification boundary:** Automated repository coverage can prove source
+  behavior, including the client `429` branch; only a later operational
+  dashboard/browser/network check can prove WAF deployment and enforcement.
+  Exact setup, test, and enablement instructions are in
+  `docs/CONTACT_FORM_OPERATIONS.md`.
+- **Pre-handoff audit correction:** Added the missing ignored local-variable
+  contract, explicit no-markup initializer guard, same-origin check, bounded
+  8-second provider abort, categorized provider-status logs, and built-output
+  isolation checks. Neither gate was enabled. Final audit coverage passes
+  49/49 focused and 619/619 full tests; deliberate failures and remaining
+  external checks are recorded in `docs/TESTING_AND_QA.md`.
+
+---
+
+## 2026-08-19 — Project-card media: closed presentation variants and shared FES screenshot
+
+- **Status:** Implemented; browser review and PF-064 remain open.
+- **Decision:** Every Home/Work project card must declare one validated
+  `presentation.kind`: `image`, `text-only`, or `deferred`. Only `image`
+  renders browser dots, `.media-frame`, and `<img>`; `text-only` and
+  `deferred` emit no media subtree. FES Challenger uses its already-approved
+  homepage gallery screenshot. Business Workflow System is deliberately
+  text-only. eBarangay is deferred with the exact visible status "Case study
+  in development" and no added project facts.
+- **Canonical asset metadata:** `fes-challenger.js` defines one
+  `homepageHeroImage` descriptor and spreads it into both the first gallery
+  item and `card.presentation`. Its path is unchanged and its intrinsic
+  dimensions are corrected to the verified file size, 2880×1388; gallery
+  cropping remains controlled by the existing 16:9 frame and `object-fit:
+cover`, so the metadata correction introduces no distortion.
+- **Validation:** Schema and renderer both reject missing/unknown kinds and
+  malformed or cross-variant fields. Project-card image sources use the
+  existing root-safe, segment-by-segment exact-case asset checker against
+  both `public/` and `dist/`. Tests assert the shared Home/Work source,
+  single physical file, lazy loading, image cascade, absence of empty media
+  markup, deferred wording, and unchanged featured-pair/link behavior.
+- **Revisit condition:** AAA must repeat the documented Home/Work desktop,
+  mobile, keyboard, forced-colors, reduced-motion, zoom, and overflow checks.
+  Do not close browser review or PF-064 from automated verification alone.
+
+## 2026-08-19 — Project-card browser-review follow-up: visibility, carousel, edge, and spacing
+
+- **Status:** Implemented and awaiting AAA browser re-review; PF-064 remains
+  open.
+- **Visibility:** Every shared project `card` has a required boolean
+  `isVisible`. FES is `true`; Business Workflow System and eBarangay are
+  `false`. Home and Work use one strict pre-render filter, while schema,
+  asset, and exact-set route-completeness validation continue reading all
+  three raw records and all three case-study routes.
+- **Carousel:** FES's presentation is now the closed `carousel` kind with
+  exactly three approved desktop slides. A 44px token-based bar places
+  Previous left, three real indicators centered, and Next right. There is no
+  autoplay, timer, hover advance, swipe, drag, or dependency. Controls stay
+  hidden unless atomic initialization succeeds; the first slide remains a
+  valid no-JavaScript fallback.
+- **Framing:** The outer `.project-card` alone owns the radius. The production
+  class combination resolves project media to `border-radius: 0` plus
+  `overflow: hidden`; generic `.media-frame` remains unchanged. Carousel
+  screenshots use a stable 16:9 frame and centered `object-fit: contain` so
+  essential screenshot content is not cropped.
+- **Composition:** One visible card emits `.project-cards--single`, never the
+  featured-pair modifier. Home wraps the list and Explore action in a real
+  grid with `gap: var(--space-6)`.
+
+---
+
+## 2026-08-19 — FES case-study hero-logo responsive sizing
+
+- **Status:** Implemented and visually approved by AAA on the supplied desktop
+  and mobile views; the unperformed checks listed below and PF-064 remain open.
+- **Root cause:** The verified 140×137 mark was fixed to a 3rem square at every
+  viewport while the H1 grew to a 3.25rem font size and nearly 3.74rem line
+  box. The generic H1 bottom margin also remained inside the flex item's
+  alignment box, so centering was against inflated geometry rather than the
+  visible heading.
+- **Decision:** The canonical FES `logo` object now owns `width: 140` and
+  `height: 137`; the shared case-study schema requires positive dimensions and
+  the shared template renders them generically. The logo remains decorative
+  (`alt=""`), nonshrinking, `width: auto`, and `object-fit: contain`, with a
+  3.5rem default height and 4.5rem height from the existing 48em breakpoint.
+  The horizontal row retains centered alignment and `var(--space-3)` gap. Its
+  scoped H1 margin is zero, and the row now owns the unchanged
+  `var(--space-4)` post-heading spacing.
+- **Scope:** No logo binary, copy, button, gallery, project carousel, shared
+  chrome, profile card, or logo-free case-study markup changed. Logo absence
+  remains valid and emits no image or wrapper.
+- **Deliberate failure:** Temporarily restoring the old 3rem height in both
+  responsive states failed 1/10 targeted layout tests on the resolved default
+  value (`3rem` instead of `3.5rem`); the approved values were restored.
+- **Browser confirmation:** AAA confirmed stronger but restrained visual weight,
+  optical logo/H1 centering, preserved aspect ratio without visible distortion,
+  a horizontal mobile row, no clipping or overflow, balanced title wrapping and
+  post-heading spacing, a non-dominating desktop mark, and stable lead/button
+  placement.
+- **Revisit condition:** The full required-width sweep beyond the supplied
+  views, 200% zoom, screen-reader silence, throttled-load layout-shift review,
+  forced-colors/reduced-motion checks, and complete route-regression sweep remain
+  pending. PF-064 therefore remains open.
+
+---
+
+## 2026-08-21 — PF-064 About-page core technologies and profile-copy refinement
+
+- **Status:** Implemented; automated verification complete; AAA browser review
+  remains pending and PF-064 remains open.
+- **Content decision:** About publishes the approved 14-item core technology
+  stack in four fixed groups: Frontend, Backend, Data, and CMS & Delivery. The
+  second biography paragraph now qualifies support as agreed. The About-only
+  full-card statement and highlights no longer repeat the biography's
+  experience duration. Home's compact card remains unchanged.
+- **Ownership:** `src/content/pages/about.js` owns the stack. Shared
+  `site.profile` remains limited to identity and portrait data, and the shared
+  full/compact profile-card renderer is unchanged. A small About-template
+  renderer is the only caller; no speculative shared stack component exists.
+- **Semantic decision:** The stack follows both biography paragraphs inside the
+  left column. It is a labelled section with an H2, four H3 group headings, and
+  noninteractive list items containing the existing neutral `.tag` treatment.
+  The full profile card remains second in the layout and the closing CTA remains
+  after it. No CSS `order`, links, icons, logos, ratings, proficiency claims,
+  animation, or additional card surface were introduced.
+- **Responsive decision:** Groups use one flexible track by default and two
+  `minmax(0, 1fr)` tracks from the existing 40em breakpoint. Tag lists wrap and
+  reset the generic prose-list constraints. The existing 64em 58/42 About
+  composition, portrait, bracket, card, and CTA remain intact.
+- **Validation:** The About schema requires the exact stack heading, exactly
+  four closed group objects, non-empty headings/item arrays/technology strings,
+  and no duplicate group headings or technologies. Generic validation does not
+  hardcode production group/item wording; real-content tests enforce AAA's
+  exact group and technology order.
+- **Scope:** `docs/CONTENT_INVENTORY.md`, Home content, Contact architecture,
+  the unpublished Privacy draft and live Privacy content, project carousel,
+  header/footer, portrait asset, and `.claude/` remain untouched.
+
+---
+
+## 2026-08-21 — PF-064 About Experience timeline and maintenance-safe biography
+
+- **Status:** Implemented and repository-verified. AAA accepted the mobile
+  presentation but rejected the initial narrow desktop composition. The scoped
+  desktop correction is implemented, and AAA approved its supplied corrected
+  desktop result on 2026-08-21. That visual approval does not close PF-064;
+  additional polish remains.
+- **Content:** The first biography paragraph now begins “Since 2020” instead of
+  a duration requiring annual maintenance. The About meta description also no
+  longer contains “about five years.” The approved second paragraph, Core
+  Technologies, full profile card, and closing CTA remain unchanged.
+- **Experience ownership:** `src/content/pages/about.js` owns the eyebrow,
+  heading, lede, and four reverse-chronological employment entries. Job history
+  does not enter shared `site.profile`, Home content, or the compact card.
+- **Factual employer boundary:** Department of Public Works and Highways, Bank
+  of Commerce, SolidService Electronics Corporation, and Nephila Web Technology
+  Inc. are approved plain-text factual employment references. They are not
+  links and have no logos, brand colors, marketing language, sponsorship, or
+  endorsement treatment.
+- **Confidentiality:** The DPWH entry stays at the approved generic internal
+  workflow level and omits accreditation, the application identity, workflow
+  stages, roles, URLs, infrastructure, and operational details. Bank of Commerce
+  system names and internal details are omitted. No entry adds screenshots,
+  internal product names, employee data, client names, or unapproved metrics.
+- **Semantic/presentation decision:** The established `.section-header` eyebrow
+  pattern is reused because it already provides the exact eyebrow/H2/lede
+  hierarchy without a new visual language. A full-width labelled section follows
+  the intro/profile composition and precedes the CTA. Its ordered list contains
+  four labelled articles with H3 roles, plain-text employers, `<time>` values,
+  responsibility lists, and static `.tag` lists. Timeline line/nodes are CSS
+  pseudo-elements and never enter the accessibility tree.
+- **Desktop browser-review correction:** Emitted markup already placed Experience
+  after the closed 58/42 intro/profile layout; the defect was not nesting or a
+  grid-column assignment. The shared `.section-header` and the About-specific
+  `.experience-timeline` each retained `max-width: var(--width-reading)` without
+  centering, leaving the cards at the biography measure. An About-only inner
+  composition now owns `width: 100%`, `max-width: 70rem`, and centered inline
+  margins. The scoped Experience header and timeline share that boundary; no
+  global section-header or prose reset changed.
+- **Responsive decision:** The existing About breakpoints remain. Dates stack
+  below identity by default and move to a flexible upper-right column at 48em.
+  Mobile's accepted one-column card remains the default. At 64em, a minimal
+  wrapper lays summary and responsibilities into flexible 2fr/3fr tracks, while
+  technologies remain below; semantic order is unchanged. Wider padding and
+  entry gaps use existing spacing tokens. The timeline keeps a restrained
+  electric-blue axis/node, neutral token-based cards, flexible widths, wrapping
+  tags/text, and no fixed heights, CSS `order`, animation, gradient, glow, blur,
+  or shadow.
+- **Validation:** The closed About Experience schema requires non-empty header
+  strings and entries; closed entry/date objects; valid `YYYY-MM` start/end
+  values where present; non-empty responsibilities and technologies; and no
+  duplicate role/employer/date identity or case-insensitive technology tag.
+  Logo/image/link fields fail as unknown. Production tests, not the generic
+  validator, enforce the four approved employers and exact content/order.
+- **Scope:** Contact enablement, Privacy, case studies, carousel, header/footer,
+  portrait, `CONTENT_INVENTORY.md`, dependencies, and `.claude/` are unchanged.
+
+---
+
+## 2026-08-21 — PF-064 compact navigation/footer and primary-button refinement
+
+- **Status:** Implemented and repository-verified; browser checks listed in
+  `docs/TESTING_AND_QA.md` remain pending. AAA approved the supplied corrected
+  desktop Experience layout. That approval records the corrected Experience
+  composition only; PF-064 remains open because additional polish remains.
+- **Navigation:** The ordinary Contact item is removed from `primaryNav`.
+  Home, Solutions, Process, Work, and About retain their order, followed by the
+  sole navbar Contact action, `Start a Project`. `site.primaryCta.key` is now
+  `contact`, allowing the existing renderer to put `aria-current="page"` on
+  that CTA on `/contact/` without duplicating the destination.
+- **Footer:** AAA rejected the centered brand/social/copyright result because it
+  repeated the sticky navbar's persistent identity and consumed too much vertical
+  space. The amended final contract removes the complete footer brand lockup.
+  Copyright now precedes Email/GitHub/LinkedIn/Facebook in DOM order. Mobile uses
+  two compact centered rows; from the existing 48em breakpoint, the same content
+  becomes one container-bound row with copyright left, social links right, and
+  `justify-content: space-between`. Quick Links, headings, footer navigation,
+  Contact, Privacy, columns, and hidden branding remain absent. The footer
+  landmark, closed safe-link policy, 44px targets, accessible names, decorative
+  SVGs, global focus, forced-colors behavior, and scoped list/paragraph resets
+  remain. Corrected footer browser approval is pending.
+- **Facebook:** `site.social.facebook` is the exact approved
+  `https://www.facebook.com/Junnabrenica/` URL. The closed host policy accepts
+  only HTTPS Facebook URLs on `facebook.com`/`www.facebook.com`. The path is the
+  official monochrome Facebook glyph from the pinned Simple Icons v16.28.0
+  `icons/facebook.svg`, fetched and independently checked 2026-08-21. The
+  pinned package metadata and license are CC0-1.0; the requested MIT wording was
+  not recorded because it conflicts with the official source. External anchors
+  retain `target="_blank" rel="noopener noreferrer"`.
+- **Privacy deployment boundary:** Removing the footer Privacy link does not
+  remove or alter `/privacy/`. It is allowed only while Contact remains
+  disabled. Contact must not be enabled until a clearly discoverable public
+  Privacy link is restored and the approved Contact Privacy copy is published.
+  Runtime configuration cannot waive this condition; PF-072 retains the final
+  coordinated Privacy/Contact deployment gate.
+- **Primary button:** AAA approved the supplied primary-button gradient; its
+  implementation is unchanged. Every shared `.btn--primary` anchor/button receives a
+  static `135deg` deep-blue gradient from centralized semantic tokens. Default
+  stops are `#123a9f`/`#245fd6`, hover stops are `#0e2f86`/`#1b49ad`, and active
+  stops are `#0b276f`/`#123a9f`. Warm-white text clears 4.5:1 at every stop
+  (8.514, 4.928, 10.256, 6.972, 11.831, and 8.514:1). The persistent
+  `#5e70ab` boundary clears 3:1 against canvas and surface-1 (4.002 and
+  3.516:1). Hover is pointer-gated; the established focus ring remains;
+  disabled and forced-colors states remove the image; no animated gradient,
+  glow, scale, or large shadow was introduced.
+- **Scope:** Contact and Privacy content, the disabled Contact form, About and
+  Experience implementation, project carousel, case studies, profile content,
+  dependencies, and `.claude/` are unchanged by this refinement. PF-064 and
+  PF-072 remain open.
+
+---
+
+## 2026-08-21 — PF-064 personal-name hierarchy and progressive Home hero SVG
+
+- **Status:** Implemented and repository-verified; the hero animation and
+  corrected compact footer still require AAA browser review. The approved
+  primary-button gradient remains unchanged and visually approved. PF-064 stays
+  open.
+- **Identity:** One frozen configuration contract owns `displayName: "Antonio
+Abrenica"` and `formalName: "Antonio A. Abrenica III"`. `site.siteName`
+  references the concise value. Navbar text, title/site-name composition,
+  footer copyright, and the Home compact profile card deliberately select the
+  concise value. The About full card deliberately selects the formal value;
+  its portrait alt is exactly `Portrait of Antonio A. Abrenica III`. The shared
+  card renderer chooses by its closed `compact`/`full` variant, never by route
+  truthiness or string length, and escapes either value. Missing, blank, or
+  unknown identity fields fail validation.
+- **Visitor-facing correction:** Current Home, About, and Contact metadata plus
+  the Home About preview replace the superseded standalone AAA identity. Built
+  output rejects `AAA Portfolio` and a standalone profile-card `AAA`. Existing
+  routes, domain, email, social destinations, employment facts, and résumé facts
+  are unchanged. Historical documentation retains superseded wording where it
+  explains an earlier decision.
+- **Temporary brand boundary:** The existing 231×140 PNG remains an unedited,
+  temporary legacy placeholder pending the final personal/SBTech-inspired
+  asset. It remains inside the one navbar Home link with `alt=""`; the image's
+  embedded legacy text never supplies an accessible name. The visible concise
+  name supplies the link name. No binary work occurred.
+- **Hero boundary:** The Home abstract diagram is a hero visual, not a logo.
+  Its former template-local inline SVG was extracted to one Home-specific
+  renderer. The renderer emits the entire static 400×400 diagram: one blue-gray
+  base connection, a restrained reveal overlay, one electric-blue signal path,
+  two circular nodes, and four connection points. It has `aria-hidden="true"`,
+  `focusable="false"`, and no title, description, role, controls, link, filter,
+  remote resource, or executable content.
+- **Progressive motion:** CSS owns an 800ms one-time reveal overlay and a 6s
+  signal loop, with 1.02/1.035 maximum node scaling. The base line never
+  disappears, so no-JavaScript and failed initialization retain a complete
+  diagram with the same dimensions and no layout shift. A small initializer
+  validates exact SVG geometry before adding state classes. It uses
+  `IntersectionObserver` and `visibilitychange` to pause CSS animations and
+  resume their current state; the introduction is not reset by focus or resize.
+  Browsers without `IntersectionObserver` use a safe running enhancement.
+  There is no frame loop, timer autoplay, SMIL, animation library, pointer
+  interaction, telemetry, or new dependency.
+- **Reduced motion/mobile:** JavaScript withholds enhancement classes while
+  reduced motion is active and responds to runtime preference changes; a scoped
+  media query independently disables every hero animation and restores final
+  dash state. Mobile keeps the same content-first DOM and 400×400 aspect ratio,
+  removes only idle breathing, uses `min-width: 0`, and preserves natural
+  responsive sizing. Modeled widths cover 320–1920px, but browser confirmation
+  is still required.
+- **Scope:** Contact enablement, live Privacy content, footer implementation,
+  button implementation, project carousel, case studies, portrait/logo binaries,
+  package metadata, routes, external services, and `.claude/` are unchanged.
+
+---
+
+## 2026-08-21 — PF-064 action links and rich case-study composition
+
+- **Status:** Implemented and repository-verified; the responsive/browser checks
+  in `docs/TESTING_AND_QA.md` remain pending. PF-064 stays open.
+- **Action-link decision:** One renderer owns explicit `forward`, `back`, and
+  `external` variants and resolves their Arrow Right, Arrow Left, and External
+  Link glyphs from the closed Lucide registry. Variants are caller-authored and
+  never inferred from URLs. Converted actions are Home's `Learn About My
+Approach`, `Explore Solutions`, `Explore All Work`, and `See the Full Process`;
+  all six Solutions inquiry actions; the three Solutions related-project links;
+  `Back to Work` on all three case studies; and the 404 Home, Work, and Contact
+  recovery links. Project-card `View Case Study` remains the existing
+  `aria-hidden` affordance for its stretched title link: creating a second link
+  would duplicate one destination and produce repeated, context-poor accessible
+  names. Buttons, jump navigation, inline/legal/contact links, tags, navbar,
+  footer, carousel controls, and stretched-card links retain their contracts.
+- **Case-study diagnosis:** The prior template emitted every narrative section
+  in a separate generic container, while `p`, `ul`/`ol`, and `.section-header`
+  independently won `max-width: var(--width-reading)` (68ch). The outer
+  containers could reach 80rem, but the actual copy and lists remained a narrow,
+  left-aligned reading column and no shared editorial grid used the free width.
+- **Editorial decision:** Rich case studies now use one centered, scoped 72rem
+  container. No existing token matched the approved 70–72rem measure
+  (`--container-max` is 80rem and `--container-wide` is 90rem), so the new
+  maximum stays case-study-only. Presence-driven pairs place Client/Context with
+  Challenge and What I Built with Key Decisions on desktop; a single member
+  expands. Role, Technology Stack, Outcomes, and Gallery span the composition.
+  Mobile/tablet retain natural source order and one track; no CSS `order` or
+  fixed section height is used.
+- **Hero/gallery decision:** Optional closed `heroMedia` adds the second hero
+  track only when real media exists. FES reuses its canonical 2880×1388 Homepage
+  descriptor in the hero and carousel. The full screenshot is contained rather
+  than cropped, uses intrinsic dimensions, and receives eager/high-priority
+  above-fold loading. The lower gallery now publishes only Services then
+  Projects with lazy loading. BWS and eBarangay remain valid without media.
+- **Unpublished evidence:** `homepage-mobile.png` remains on disk, unreferenced
+  and archived. The Project Details/About Us reservations remain documentation
+  only; no content entries, placeholders, alt text, or rendered frames were
+  added. Existing binaries at or near those names are not approved evidence and
+  remain outside the asset registry until the real-asset review gate completes.
+
+## 2026-08-21 — PF-064 Solutions, Process, and shared page reveal refinement
+
+- **Status:** Implemented and repository-verified; PF-064 remains open and
+  visual/browser approval is pending. No content facts, routes, navigation,
+  footer, buttons, carousel behavior, Contact/Privacy implementation, or Home
+  hero SVG lifecycle changed.
+- **Solutions diagnosis and composition:** The 80rem site container was not
+  itself the bottleneck; the repeated `<dd>` values were capped at the global
+  68ch `--width-reading` measure and the page had no internal editorial grid.
+  Solutions now adds a scoped centered 72rem boundary. Each semantic `<dl>`
+  groups Problem/Audience and Build/Benefit into two flexible desktop columns;
+  evidence remains optional and the evidence/action row omits unavailable
+  elements rather than reserving empty tracks. Below 64em the same DOM groups
+  stack naturally with no CSS `order` or fixed section height.
+- **Process diagnosis and composition:** The prior 48em term/value grid used a
+  12–16rem label track and one 68ch-capped detail track, so each stage still
+  read as a narrow column. Process now uses the same scoped 72rem boundary, a
+  CSS-only vertical rail, a stage number/title identity column, and two
+  flexible fact-group columns from 64em. The optional fifth fact spans a row
+  when odd; mobile/tablet retain one source-order column. Working Together
+  uses the same presence-safe facts grid.
+- **Shared page reveal:** Templates emit only explicit, closed
+  `data-content-reveal="fade-up|fade-in"` metadata (with a capped three-step
+  stagger where useful). CSS never hides data-marked content by default.
+  `content-reveal.js` uses one shared IntersectionObserver, reveals each target
+  once, unobserves completed targets, completes active targets when the tab is
+  hidden or reduced motion becomes active, and immediately reveals focused or
+  hash-target content. Observer construction failure leaves below-fold content
+  static and usable. The centralized motion tokens are 560ms and 80ms with a
+  16px maximum translate and the dedicated `cubic-bezier(.22,1,.36,1)` reveal
+  easing.
+- **Reveal scope:** Hero/intro copy, meaningful section groups, Solutions
+  sections, Process stages/communication, case-study hero/editorial sections,
+  About biography/profile/stack/Experience/CTA, and Home groups/CTA are
+  eligible. Header/navbar, mobile navigation, footer, skip link, tags, form
+  feedback, carousel slides/controls, action-link icons, and the existing Home
+  hero SVG internals remain excluded. No content module owns animation timing.
+- **Accessibility boundary:** Source, reading, focus, and visual order remain
+  aligned. No reveal attribute adds a focus stop, role, or accessible name;
+  reduced motion is static, forced colors retain normal structural styles, and
+  no-JavaScript output is complete.

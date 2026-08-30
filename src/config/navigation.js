@@ -4,5 +4,4 @@ export const primaryNav = [
   { key: 'process', label: 'Process', path: '/process/' },
   { key: 'work', label: 'Work', path: '/work/' },
   { key: 'about', label: 'About', path: '/about/' },
-  { key: 'contact', label: 'Contact', path: '/contact/' },
 ];

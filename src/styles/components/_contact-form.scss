@@ -1,0 +1,68 @@
+.contact-form-panel {
+  max-width: var(--width-reading);
+  margin-top: var(--space-10);
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-1);
+}
+
+.contact-form .field {
+  max-width: none;
+}
+
+.contact-form textarea.field__control {
+  min-height: 10rem;
+}
+
+.contact-form__honeypot {
+  position: absolute;
+  inset-inline-start: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-form__privacy,
+.contact-form__alternative,
+.form-status,
+.form-feedback p,
+.form-feedback ul {
+  max-width: none;
+}
+
+.form-status {
+  min-height: 1.5em;
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-secondary);
+}
+
+.form-feedback {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.form-feedback:focus {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-width);
+}
+
+.form-feedback--error {
+  border-color: var(--status-danger);
+}
+
+.form-feedback--success {
+  border-color: var(--status-success);
+}
+
+.form-feedback h2,
+.form-feedback h3 {
+  margin-bottom: var(--space-2);
+}
+
+.form-feedback p,
+.form-feedback ul {
+  margin-bottom: 0;
+}

@@ -82,10 +82,10 @@ case study — `src/content/pages/solutions.js`, guarded by
 
 ### Assets
 
-| Asset                                                          | Status                                                            | Provenance                                                           | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| -------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FES logo (`fes-challenger-logo.png`)                           | **Publishable — supplied, verified, and integrated**              | AAA-supplied approved asset                                          | Placed at `public/images/case-studies/fes-challenger/fes-challenger-logo.png`. Inspected directly (PNG signature, IHDR chunk, chunk list): valid PNG, **140×137px** (aspect ratio ≈1.02, effectively square), 8-bit truecolor+alpha (RGBA — supports transparency), no interlacing, 19,767 bytes (~19.3 KB) — small enough for direct web delivery, no conversion/optimization needed. Configured as `content.logo = { src: '/images/case-studies/fes-challenger/fes-challenger-logo.png', alt: '' }` in `fes-challenger.js` — decorative (`alt=""`), per AAA's stated preference for keeping the visible `<h1>` as the real identity. `.case-study-hero__logo` (`src/styles/pages/_case-study.scss`) fixes its display box to `3rem × 3rem` with `object-fit: contain`, so the real aspect ratio is preserved with no distortion regardless of the source file's exact dimensions. Existence verified automatically both pre-build (`scripts/validate-routes.mjs`, against `public/`) and post-build (`scripts/verify-build-output.mjs`, against `dist/`) via `scripts/case-study-assets.mjs`. |
-| Screenshots — 4 published, 3 declined (see PF-063 audit below) | **Publishable — supplied, individually reviewed, and integrated** | AAA-supplied approved assets, captured from the live production site | Gallery ships with 4 real images. See the full PF-063 inventory/decision table below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Asset                                                          | Status                                                            | Provenance                                                           | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FES logo (`fes-challenger-logo.png`)                           | **Publishable — supplied, verified, and integrated**              | AAA-supplied approved asset                                          | Placed at `public/images/case-studies/fes-challenger/fes-challenger-logo.png`. Direct inspection confirms a valid 19,767-byte RGBA PNG at **140×137px**; it was not edited or re-encoded. The canonical `content.logo` supplies the path, decorative `alt: ''`, and real `width: 140`/`height: 137`; the shared template renders those intrinsic attributes generically. `.case-study-hero__logo` preserves the ratio with `width: auto`, `object-fit: contain`, a 3.5rem default height, and a 4.5rem height from 48em. Existence remains verified pre-build against `public/` and post-build against `dist/` through the shared exact-case asset validation. |
+| Screenshots — 4 published, 3 declined (see PF-063 audit below) | **Publishable — supplied, individually reviewed, and integrated** | AAA-supplied approved assets, captured from the live production site | Gallery ships with 4 real images. See the full PF-063 inventory/decision table below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ### Screenshot request list (candidates for evaluation — not pre-approved)
 
@@ -116,15 +116,15 @@ directly (PNG signature/IHDR, not metadata only) and viewed visually
 (subject, quality, chrome/admin UI, private/identifying content,
 duplication) before any selection.
 
-| File (original name)    | Format/dimensions/size                   | Subject                                                                            | Decision                                           | Reason                                                                                           |
-| ----------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `hero-banner.png`       | Valid PNG, 719×443, 492.6 KB, 8-bit RGBA | Homepage hero: nav + ship photo + headline                                         | **Selected** → `gallery/homepage-hero-desktop.png` | Homepage/hero visual identity — no equivalent evidence otherwise                                 |
-| `services-page.png`     | Valid PNG, 716×448, 378.9 KB, 8-bit RGBA | Dedicated Services page: hero + 3 service cards; nav shows "SERVICES" active       | **Selected** → `gallery/services-page-desktop.png` | Strongest Services-page evidence (own hero, active nav state)                                    |
-| `services-section.png`  | Valid PNG, 718×449, 178.0 KB, 8-bit RGBA | A services teaser section (different heading/cards); nav "SERVICES" not active     | **Declined — removed**                             | Overlaps with `services-page.png` (same category-card format); not materially different evidence |
-| `projects-page.png`     | Valid PNG, 718×447, 371.8 KB, 8-bit RGBA | Dedicated Projects page: hero + 3 named project cards; nav shows "PROJECTS" active | **Selected** → `gallery/projects-page-desktop.png` | Strongest Projects-page evidence (own hero, active nav state)                                    |
-| `projects-section1.png` | Valid PNG, 713×449, 40.6 KB, 8-bit RGBA  | Mostly-white intro/stats block, no project photography                             | **Declined — removed**                             | Weak visual evidence; no distinct claim support                                                  |
-| `projects-section2.png` | Valid PNG, 719×449, 245.8 KB, 8-bit RGBA | Grid of 6 real project thumbnails with photos, bottom row partially cut            | **Declined — removed**                             | The optional 5th-image slot; declined by AAA to keep the gallery to exactly 4                    |
-| `fes-home-mobile.png`   | Valid PNG, 544×689, 332.6 KB, 8-bit RGBA | Mobile homepage: hamburger nav, hero, CTAs, start of a stats section               | **Selected** → `gallery/homepage-mobile.png`       | Only visual evidence for the site's "responsive" claim                                           |
+| File (original name)    | Format/dimensions/size                            | Subject                                                                            | Decision                                           | Reason                                                                                           |
+| ----------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `hero-banner.png`       | Valid PNG, 2880×1388, 4,339,585 bytes, 8-bit RGBA | Homepage hero: nav + underwater diving image + headline                            | **Selected** → `gallery/homepage-hero-desktop.png` | Homepage/hero visual identity — no equivalent evidence otherwise                                 |
+| `services-page.png`     | Valid PNG, 716×448, 378.9 KB, 8-bit RGBA          | Dedicated Services page: hero + 3 service cards; nav shows "SERVICES" active       | **Selected** → `gallery/services-page-desktop.png` | Strongest Services-page evidence (own hero, active nav state)                                    |
+| `services-section.png`  | Valid PNG, 718×449, 178.0 KB, 8-bit RGBA          | A services teaser section (different heading/cards); nav "SERVICES" not active     | **Declined — removed**                             | Overlaps with `services-page.png` (same category-card format); not materially different evidence |
+| `projects-page.png`     | Valid PNG, 718×447, 371.8 KB, 8-bit RGBA          | Dedicated Projects page: hero + 3 named project cards; nav shows "PROJECTS" active | **Selected** → `gallery/projects-page-desktop.png` | Strongest Projects-page evidence (own hero, active nav state)                                    |
+| `projects-section1.png` | Valid PNG, 713×449, 40.6 KB, 8-bit RGBA           | Mostly-white intro/stats block, no project photography                             | **Declined — removed**                             | Weak visual evidence; no distinct claim support                                                  |
+| `projects-section2.png` | Valid PNG, 719×449, 245.8 KB, 8-bit RGBA          | Grid of 6 real project thumbnails with photos, bottom row partially cut            | **Declined — removed**                             | The optional 5th-image slot; declined by AAA to keep the gallery to exactly 4                    |
+| `fes-home-mobile.png`   | Valid PNG, 544×689, 332.6 KB, 8-bit RGBA          | Mobile homepage: hamburger nav, hero, CTAs, start of a stats section               | **Selected** → `gallery/homepage-mobile.png`       | Only visual evidence for the site's "responsive" claim                                           |
 
 No file needed redaction or cropping — none showed browser chrome, admin UI,
 staging indicators, credentials, or personal data; every image shows only
@@ -142,20 +142,20 @@ Per AAA's explicit fallback rule, all 4 selected images ship as **PNG**,
 byte-identical to the reviewed originals (verified via `cmp`) — no
 conversion, resize, or quality change of any kind.
 
-**`srcset` derivatives: not implemented, per AAA's approval.** Source
-images are ~715–720px wide (desktop) / 544px (mobile) — only marginally
-larger than the gallery grid's largest display column (~400–500px),
-leaving little headroom for a meaningful second density tier.
+**`srcset` derivatives: not implemented, per AAA's approval.** The current
+gallery contract uses one source per approved screenshot. The homepage hero
+file's intrinsic metadata was re-verified as 2880×1388 on 2026-08-19; this
+correction did not resize, re-encode, or duplicate the binary.
 
 **Final gallery** (`content.gallery.items`, `fes-challenger.js`), in
 display order:
 
-| #   | File                                | Dimensions | Size     | Alt                                                                                             | Caption     |
-| --- | ----------------------------------- | ---------- | -------- | ----------------------------------------------------------------------------------------------- | ----------- |
-| 1   | `gallery/homepage-hero-desktop.png` | 719×443    | 492.6 KB | "FES Challenger homepage hero section with a marine salvage vessel photo and headline"          | Homepage    |
-| 2   | `gallery/services-page-desktop.png` | 716×448    | 378.9 KB | "FES Challenger Services page showing marine salvage and underwater service categories"         | Services    |
-| 3   | `gallery/projects-page-desktop.png` | 718×447    | 371.8 KB | "FES Challenger Projects page showing completed marine salvage project cards"                   | Projects    |
-| 4   | `gallery/homepage-mobile.png`       | 544×689    | 332.6 KB | "FES Challenger homepage on a mobile viewport, showing the responsive hero and navigation menu" | Mobile view |
+| #   | File                                | Dimensions | Size            | Alt                                                                                               | Caption     |
+| --- | ----------------------------------- | ---------- | --------------- | ------------------------------------------------------------------------------------------------- | ----------- |
+| 1   | `gallery/homepage-hero-desktop.png` | 2880×1388  | 4,339,585 bytes | "Screenshot of the FES Challenger homepage with navigation above an underwater diving hero image" | Homepage    |
+| 2   | `gallery/services-page-desktop.png` | 716×448    | 378.9 KB        | "FES Challenger Services page showing marine salvage and underwater service categories"           | Services    |
+| 3   | `gallery/projects-page-desktop.png` | 718×447    | 371.8 KB        | "FES Challenger Projects page showing completed marine salvage project cards"                     | Projects    |
+| 4   | `gallery/homepage-mobile.png`       | 544×689    | 332.6 KB        | "FES Challenger homepage on a mobile viewport, showing the responsive hero and navigation menu"   | Mobile view |
 
 All 7 raw capture files (4 renamed-into-gallery + 3 declined) were removed
 from `public/` after the 4 delivery files were created and byte-verified —
@@ -253,3 +253,73 @@ gain fabricated content later without a deliberate, reviewed
 implementation. Still **Missing**: logo, screenshots, verified stack,
 features, role, decisions, outcomes, repository/live URL — none approved,
 none published.
+
+**Project-card presentation (approved 2026-08-19):** the Home and Work
+eBarangay card reuses one `card.presentation` descriptor from this module:
+`{ kind: 'deferred', label: 'Case study in development' }`. It adds no
+category, summary, tags, media, or completion claim. Business Workflow
+System is explicitly `text-only`. FES Challenger alone uses approved image
+media, sharing the existing homepage gallery screenshot path and verified
+2880×1388 intrinsic dimensions from one canonical descriptor; no duplicate
+or re-encoded binary was added.
+
+## Home/Work publication-state and FES carousel addendum (2026-08-19)
+
+All three project modules and case-study routes remain registered. Their shared
+card publication states are FES `isVisible: true`, Business Workflow System
+`isVisible: false`, and eBarangay `isVisible: false`. The latter two are omitted
+before Home/Work rendering; their content, route files, schemas, and exact-set
+route validation remain intact.
+
+FES card media now reuses exactly three existing desktop gallery descriptors:
+
+| Asset                               | Verified dimensions |
+| ----------------------------------- | ------------------: |
+| `gallery/homepage-hero-desktop.png` |           2880×1388 |
+| `gallery/services-page-desktop.png` |             716×448 |
+| `gallery/projects-page-desktop.png` |             718×447 |
+
+The mobile gallery screenshot remains gallery-only. No screenshot was copied,
+edited, re-encoded, or added. Shared path/dimension literals live only in the
+canonical descriptors in `fes-challenger.js`; gallery and carousel consumers
+reuse them with the existing truthful alt text.
+
+## FES presentation update and pending evidence (PF-064, 2026-08-21)
+
+This section supersedes the earlier four-item rendered-gallery description.
+The canonical 2880×1388 Homepage screenshot is now case-study hero media and
+remains slide 1 of the unchanged project-card carousel. Its physical size is
+4,339,585 bytes. The current rendered case-study gallery is exactly:
+
+1. `gallery/services-page-desktop.png` — caption `Services`
+2. `gallery/projects-page-desktop.png` — caption `Projects`
+
+`gallery/homepage-mobile.png` remains physically archived but is unreferenced,
+unregistered, and unpublished. It was not deleted or modified. Its prior alt and
+caption are no longer visitor-facing content.
+
+The following exact future paths are reserved documentation only and are not
+production content, registered assets, built HTML, placeholder frames, or
+approved/integrated screenshots:
+
+- `/images/case-studies/fes-challenger/gallery/project-details-page-desktop.png`
+  — planned caption `Project details`
+- `/images/case-studies/fes-challenger/gallery/about-us-page-desktop.png` —
+  planned caption `About us`
+
+Capture specification for both: CSS viewport 1440×810, DPR 2, expected final
+pixels 2880×1620. Provisional alt direction only—not published alt text:
+
+- Project details: screenshot of an FES Challenger project-details page
+  presenting project information and imagery.
+- About us: screenshot of the FES Challenger About Us page introducing the
+  company.
+
+A read-only repository inspection found an existing
+`about-us-page-desktop.png` binary and a differently named
+`projects-details-page-desktop.png` binary. Neither is registered or published;
+the plural filename does not satisfy the reserved singular path. File presence
+does not establish approval. Before either future integration, AAA still
+requires byte/format inspection, intrinsic-dimension verification, visual
+classification, final alt-text approval, exact-case asset validation, and
+gallery integration. No placeholder may be published while that gate is open.

@@ -1,18 +1,241 @@
 @use '../settings/spacing';
 
-// About profile-card task — mirrors components/_hero.scss's own
-// stacked-at-mobile/row-at-desktop flex pattern exactly (same `width >=
-// 64em` breakpoint, same flex-basis-split technique) rather than inventing
-// a second two-column mechanism. Source order is biography then card, at
-// every width — no `order` property anywhere in this file, so DOM order,
-// reading order, and focus order all agree with the visual order.
+.about-page {
+  display: grid;
+  gap: var(--space-8);
+}
+
 .about-layout {
   display: flex;
   flex-direction: column;
   gap: var(--space-7);
 }
 
-@media (width >= 64em) {
+.about-layout__content {
+  min-width: 0;
+}
+
+.about-stack {
+  margin-top: var(--space-7);
+}
+
+.about-stack__groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.about-stack__group {
+  min-width: 0;
+}
+
+.about-stack__group-heading {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-h4);
+}
+
+.about-stack__tags {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: none;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-stack__tag-item {
+  min-width: 0;
+  margin: 0;
+}
+
+.about-stack__tag-item .tag {
+  max-width: 100%;
+}
+
+.about-experience {
+  width: 100%;
+  min-width: 0;
+}
+
+.about-experience__inner {
+  width: 100%;
+  max-width: 70rem;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+// Experience owns a wider, centered composition than the shared reading-width
+// section intro. Keep the reset page-scoped; the lede itself retains the
+// generic readable paragraph measure.
+.about-experience .section-header {
+  width: 100%;
+  max-width: none;
+}
+
+.experience-timeline {
+  --timeline-axis: var(--space-3);
+  --timeline-card-offset: var(--space-7);
+
+  position: relative;
+  display: grid;
+  width: 100%;
+  max-width: none;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0 0 0 var(--timeline-card-offset);
+  list-style: none;
+}
+
+.experience-timeline::before {
+  content: '';
+  position: absolute;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  left: var(--timeline-axis);
+  border-left: 2px solid var(--color-accent);
+}
+
+.experience-timeline__item {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+}
+
+.experience-timeline__item::before {
+  content: '';
+  position: absolute;
+  top: var(--space-6);
+  left: calc(
+    var(--timeline-axis) - var(--timeline-card-offset) - var(--space-2)
+  );
+  width: var(--space-3);
+  height: var(--space-3);
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-full);
+  background-color: var(--color-canvas);
+}
+
+.experience-card {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-1);
+}
+
+.experience-card__header {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--space-2);
+}
+
+.experience-card__identity {
+  min-width: 0;
+}
+
+.experience-card__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: var(--space-4);
+}
+
+.experience-card__role,
+.experience-card__employer,
+.experience-card__dates,
+.experience-card__summary {
+  margin: 0;
+}
+
+.experience-card__role,
+.experience-card__employer {
+  overflow-wrap: anywhere;
+}
+
+.experience-card__role {
+  margin-bottom: var(--space-1);
+}
+
+.experience-card__employer {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.experience-card__dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.experience-card__summary {
+  max-width: var(--width-reading);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.experience-card__responsibilities {
+  max-width: var(--width-reading);
+  margin: 0;
+  font-size: var(--font-size-body);
+}
+
+.experience-card__responsibilities li:last-child {
+  margin-bottom: 0;
+}
+
+.experience-card__technologies {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: none;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.experience-card__tag-item {
+  min-width: 0;
+  margin: 0;
+}
+
+.experience-card__tag-item .tag {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (width >= spacing.$bp-sm) {
+  .about-stack__groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (width >= spacing.$bp-md) {
+  .experience-card {
+    padding: var(--space-6);
+  }
+
+  .experience-card__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-5);
+  }
+
+  .experience-card__dates {
+    justify-self: end;
+    white-space: nowrap;
+  }
+}
+
+@media (width >= spacing.$bp-lg) {
   .about-layout--with-card {
     flex-direction: row;
     align-items: start;
@@ -23,121 +246,21 @@
     flex: 1 1 58%;
   }
 
-  .about-layout--with-card .about-card {
+  .about-layout--with-card .profile-card {
     flex: 1 1 42%;
   }
-}
 
-// Dark premium surface, reusing .capability-card's dimensional recipe
-// (padding/radius) without its bold accent-fill background — a neutral
-// surface, consistent with the rest of this theme rather than a second
-// visual language.
-.about-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  align-self: start;
-  padding: var(--space-6);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background-color: var(--color-surface-1);
-}
+  .experience-timeline {
+    gap: var(--space-7);
+  }
 
-.about-card__portrait {
-  position: relative;
-}
+  .experience-card {
+    padding: var(--space-7);
+  }
 
-// Restrained "technical/circuit" accent — a single corner bracket, not a
-// full frame or multiple branches. A generated box (::after) is never
-// exposed to the accessibility tree at all, the same guarantee every
-// other decorative ::before/::after layer in this project already relies
-// on (e.g. .capability-card's own ::before pattern layer) — no aria-hidden
-// needed or possible to add to a pseudo-element. A real `border` (not
-// box-shadow/gradient) so forced-colors mode recolors it to the system
-// highlight automatically, the same reasoning already established for
-// .project-card's focus ring and the active nav-route indicator. Static —
-// no transition, no animation; site-wide motion is a separate, later
-// polish pass, not this task's.
-.about-card__portrait::after {
-  content: '';
-  position: absolute;
-  right: calc(-1 * var(--space-3));
-  bottom: calc(-1 * var(--space-3));
-  width: var(--space-7);
-  height: var(--space-7);
-  border-right: 2px solid var(--color-accent);
-  border-bottom: 2px solid var(--color-accent);
-  border-radius: 0 0 var(--radius-sm) 0;
-  pointer-events: none;
-}
-
-.about-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-// elements/_body-copy.scss's generic `p { margin: 0 0 var(--space-4); }`
-// would otherwise add unwanted bottom margin on top of .about-card__body's
-// own `gap` — the same fix shape already used for
-// .site-footer__meta/.site-footer__privacy.
-.about-card__name,
-.about-card__role,
-.about-card__statement {
-  margin: 0;
-}
-
-.about-card__name {
-  color: var(--color-text-primary);
-  font-family: var(--font-family-display);
-  font-size: var(--font-size-h4);
-  font-weight: 600;
-}
-
-.about-card__role {
-  color: var(--color-accent-text);
-  font-size: var(--font-size-small);
-  font-weight: 600;
-  letter-spacing: var(--letter-spacing-label);
-  text-transform: uppercase;
-}
-
-.about-card__statement {
-  color: var(--color-text-secondary);
-}
-
-// The card is narrower than elements/_body-copy.scss's generic
-// `ul, ol { max-width: var(--width-reading); }` (68ch, ~544px) at every
-// supported width — .about-card itself is capped by its own
-// `flex: 1 1 42%` share of a container whose own max-width is
-// `--container-max` (80rem), so this list can never actually reach 68ch
-// wide regardless of whether max-width is reset here. Only `margin`,
-// `padding`, and `list-style` genuinely affect this element (the same
-// generic rule sets all three), so only those are reset — no `max-width`
-// override is added or tested, since the leak this project has twice
-// found elsewhere (.site-nav ul, this same generic rule) cannot occur on
-// an element that's already narrower than the cap for an unrelated,
-// structural reason.
-.about-card__highlights {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-small);
-}
-
-// elements/_body-copy.scss's generic `li { margin-bottom: var(--space-2); }`
-// would otherwise add extra bottom margin on top of the flex `gap` above,
-// unevenly spacing every item but the last — the same reasoning as
-// .capability-card's own equivalent reset.
-.about-card__highlights li {
-  margin: 0;
-}
-
-.about-card__cta {
-  align-self: start;
-  margin-top: var(--space-2);
+  .experience-card__main {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+    gap: var(--space-7);
+  }
 }

@@ -29,6 +29,9 @@ export { findMissingAssets as findMissingCaseStudyAssets };
 export function collectCaseStudyAssetPaths(content) {
   const paths = [];
   if (typeof content?.logo?.src === 'string') paths.push(content.logo.src);
+  if (typeof content?.heroMedia?.src === 'string') {
+    paths.push(content.heroMedia.src);
+  }
   if (Array.isArray(content?.gallery?.items)) {
     for (const item of content.gallery.items) {
       if (typeof item?.src === 'string') paths.push(item.src);

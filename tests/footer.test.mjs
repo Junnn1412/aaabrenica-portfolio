@@ -1,267 +1,172 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderFooter } from '../src/components/partials/footer.js';
+import { renderHeader } from '../src/components/partials/header.js';
 import { primaryNav } from '../src/config/navigation.js';
 import { site as realSite } from '../src/config/site.js';
 
-const navItems = [
-  { key: 'home', label: 'Home', path: '/' },
-  { key: 'solutions', label: 'Solutions', path: '/solutions/' },
-];
-
 const nullSite = {
-  siteName: 'AAA Portfolio',
-  resumePath: null,
-  social: { github: null, linkedin: null },
+  siteName: 'Antonio Abrenica',
+  social: { github: null, linkedin: null, facebook: null },
   contactEmail: null,
 };
 
 const fullSite = {
-  siteName: 'AAA Portfolio',
-  resumePath: '/resume.pdf',
+  siteName: 'Antonio Abrenica',
   social: {
     github: 'https://github.com/aaa',
     linkedin: 'https://www.linkedin.com/in/aaa',
+    facebook: 'https://www.facebook.com/aaa/',
   },
   contactEmail: 'hello@aaabrenica.site',
 };
 
-// --- Brand group ---
+function render(site = realSite) {
+  return renderFooter(primaryNav, site, { year: 2026 });
+}
 
-test('exactly one brand group: mark absent when site.brandMark is null, visible "AAA Portfolio" text present, no invented copy', () => {
-  const html = renderFooter(navItems, nullSite, { year: 2026 });
-  assert.equal([...html.matchAll(/site-footer__brand"/g)].length, 1);
-  assert.doesNotMatch(html, /site-footer__brand-mark/);
+test('footer emits copyright first and the social list second inside the shared container', () => {
+  const html = render();
   assert.match(
     html,
-    /<span class="site-footer__brand-name">AAA Portfolio<\/span>/,
+    /^<footer><div class="container site-footer__inner"><p class="site-footer__meta">© 2026 Antonio Abrenica\. All rights reserved\.<\/p><ul class="site-footer__links">[\s\S]*?<\/ul><\/div><\/footer>$/,
   );
+  assert.ok(
+    html.indexOf('site-footer__meta') < html.indexOf('site-footer__links'),
+  );
+  assert.equal([...html.matchAll(/site-footer__meta"/g)].length, 1);
+  assert.equal([...html.matchAll(/site-footer__links"/g)].length, 1);
 });
 
-test('brand mark renders decoratively (alt="") when site.brandMark is configured, using the real inspected dimensions — no accessible name on the image itself', () => {
-  const site = {
-    ...nullSite,
-    brandMark: { src: '/x.png', width: 10, height: 20 },
-  };
-  const html = renderFooter(navItems, site, { year: 2026 });
-  assert.match(
+test('footer emits no logo image, brand link, brand wrapper, or hidden brand content', () => {
+  const html = render();
+  assert.doesNotMatch(
     html,
-    /<img class="site-footer__brand-mark" src="\/x\.png" alt="" width="10" height="20">/,
+    /<img\b|site-footer__brand|site-footer__brand-mark/,
   );
+  assert.doesNotMatch(html, /<a[^>]*href="\/"[^>]*>[^<]*Antonio Abrenica/);
+  assert.doesNotMatch(html, /hidden[^>]*>[^<]*Antonio Abrenica/);
 });
 
-test('the real production site.brandMark renders in the footer brand group', () => {
-  const html = renderFooter(navItems, realSite, { year: 2026 });
+test('sticky-navbar brand lockup remains present exactly once', () => {
+  const header = renderHeader(primaryNav, 'home', realSite);
+  assert.equal([...header.matchAll(/class="site-header__brand"/g)].length, 1);
+  assert.equal([...header.matchAll(/class="site-brand__mark"/g)].length, 1);
+  assert.equal([...header.matchAll(/class="site-brand__text"/g)].length, 1);
   assert.match(
+    header,
+    /<span class="site-brand__text">Antonio Abrenica<\/span>/,
+  );
+});
+
+test('footer headings, navigation, Quick Links, Connect, Contact, and Privacy remain absent', () => {
+  const html = render();
+  assert.doesNotMatch(
     html,
-    /<img class="site-footer__brand-mark" src="\/images\/brand\/aaa-placeholder-logo\.png" alt="" width="231" height="140">/,
+    /<h[1-6]\b|<nav\b|Quick Links|>Connect<|>Contact<|site-footer__nav|aria-label="Footer"|site-footer__heading|site-footer__columns|site-footer__bottom|site-footer__privacy|href="\/privacy\/"/,
   );
+  for (const { label, path } of primaryNav) {
+    assert.doesNotMatch(html, new RegExp(`href="${path}"[^>]*>${label}<`));
+  }
 });
 
-// --- Quick Links group ---
-
-test('exactly one Quick Links group with a real <h2> heading and the injected navItems', () => {
-  const html = renderFooter(navItems, nullSite, { year: 2026 });
-  assert.match(
-    html,
-    /<nav class="site-footer__nav" aria-label="Footer"><h2 class="site-footer__heading">Quick Links<\/h2>/,
-  );
-  assert.equal(
-    [...html.matchAll(/site-footer__heading">Quick Links/g)].length,
-    1,
-  );
-  assert.match(html, /<a href="\/">Home<\/a>/);
-  assert.match(html, /<a href="\/solutions\/">Solutions<\/a>/);
-});
-
-test('footer nav never emits aria-current — the footer is not route-aware', () => {
-  const html = renderFooter(navItems, nullSite, { year: 2026 });
-  assert.doesNotMatch(html, /aria-current/);
-});
-
-test('Quick Links contains exactly the real 6 primaryNav destinations, in order, and nothing else', () => {
-  const html = renderFooter(primaryNav, realSite, { year: 2026 });
-  const navMatch = html.match(/<nav class="site-footer__nav"[\s\S]*?<\/nav>/);
-  assert.ok(navMatch, 'expected a .site-footer__nav region');
-  const items = [
-    ...navMatch[0].matchAll(/<li><a href="([^"]*)">([^<]*)<\/a><\/li>/g),
+test('social links render in exact Email, GitHub, LinkedIn, Facebook order', () => {
+  const html = render();
+  const links = [
+    ...html.matchAll(
+      /<a class="site-footer__connect-link" href="([^"]+)" aria-label="([^"]+)"[^>]*>/g,
+    ),
   ];
   assert.deepEqual(
-    items.map((m) => m[2]),
-    ['Home', 'Solutions', 'Process', 'Work', 'About', 'Contact'],
-  );
-  assert.deepEqual(
-    items.map((m) => m[1]),
-    primaryNav.map((n) => n.path),
-  );
-});
-
-test('Privacy never appears inside Quick Links', () => {
-  const html = renderFooter(primaryNav, realSite, { year: 2026 });
-  const navMatch = html.match(/<nav class="site-footer__nav"[\s\S]*?<\/nav>/);
-  assert.doesNotMatch(navMatch[0], /Privacy/);
-});
-
-// --- Connect group: icon-only Email/GitHub/LinkedIn ---
-
-test('null contact/social/résumé fields render no Connect group at all — no empty wrapper, no placeholder', () => {
-  const html = renderFooter(navItems, nullSite, { year: 2026 });
-  assert.doesNotMatch(html, /mailto:/);
-  assert.doesNotMatch(html, /github\.com/);
-  assert.doesNotMatch(html, /linkedin\.com/);
-  assert.doesNotMatch(html, /Résumé/);
-  assert.doesNotMatch(html, /site-footer__connect/);
-  assert.doesNotMatch(html, /<li><\/li>/);
-});
-
-test('valid fixture contact data renders icon-only Email/GitHub/LinkedIn links with the correct hrefs and aria-labels, escaped', () => {
-  const html = renderFooter(navItems, fullSite, { year: 2026 });
-  assert.match(
-    html,
-    /<a class="site-footer__connect-link" href="mailto:hello@aaabrenica\.site" aria-label="Email">/,
-  );
-  assert.match(
-    html,
-    /<a class="site-footer__connect-link" href="https:\/\/github\.com\/aaa" aria-label="GitHub">/,
-  );
-  assert.match(
-    html,
-    /<a class="site-footer__connect-link" href="https:\/\/www\.linkedin\.com\/in\/aaa" aria-label="LinkedIn">/,
+    links.map((match) => [match[2], match[1]]),
+    [
+      ['Email', `mailto:${realSite.contactEmail}`],
+      ['GitHub', realSite.social.github],
+      ['LinkedIn', realSite.social.linkedin],
+      ['Facebook', 'https://www.facebook.com/Junnabrenica/'],
+    ],
   );
 });
 
-test('invalid fixture contact data renders nothing for that field (safe-link filtering preserved)', () => {
-  const site = {
-    siteName: 'AAA Portfolio',
-    resumePath: 'resume.pdf', // missing leading slash — unsafe internal path
-    social: {
-      github: 'https://evil.example.com', // wrong host
-      linkedin: 'http://linkedin.com/in/aaa', // not HTTPS
-    },
-    contactEmail: 'not-an-email',
-  };
-  const html = renderFooter(navItems, site, { year: 2026 });
-  assert.doesNotMatch(html, /mailto:/);
-  assert.doesNotMatch(html, /evil\.example\.com/);
-  assert.doesNotMatch(html, /linkedin\.com/);
-  assert.doesNotMatch(html, /resume\.pdf/);
+test('all destinations and external security attributes remain unchanged', () => {
+  const html = render(fullSite);
+  const email = html.match(/<a[^>]*aria-label="Email"[^>]*>/)?.[0];
+  assert.ok(email);
+  assert.match(email, /href="mailto:hello@aaabrenica\.site"/);
+  assert.doesNotMatch(email, /target=|rel=/);
+
+  for (const label of ['GitHub', 'LinkedIn', 'Facebook']) {
+    const anchor = html.match(
+      new RegExp(`<a[^>]*aria-label="${label}"[^>]*>`),
+    )?.[0];
+    assert.ok(anchor, `expected ${label} anchor`);
+    assert.match(anchor, /href="https:\/\//);
+    assert.match(anchor, /target="_blank"/);
+    assert.match(anchor, /rel="noopener noreferrer"/);
+  }
 });
 
-test('the real configured site renders icon-only Email, GitHub, and LinkedIn links', () => {
-  const html = renderFooter(navItems, realSite, { year: 2026 });
-  assert.match(
-    html,
-    new RegExp(
-      `<a class="site-footer__connect-link" href="mailto:${realSite.contactEmail}" aria-label="Email">`.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        '\\$&',
-      ),
-    ),
-  );
-  assert.match(
-    html,
-    new RegExp(
-      `<a class="site-footer__connect-link" href="${realSite.social.github}" aria-label="GitHub">`.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        '\\$&',
-      ),
-    ),
-  );
-  assert.match(
-    html,
-    new RegExp(
-      `<a class="site-footer__connect-link" href="${realSite.social.linkedin}" aria-label="LinkedIn">`.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        '\\$&',
-      ),
-    ),
-  );
-});
-
-test('no visible "Email"/"GitHub"/"LinkedIn" text anywhere — the icon is the only visible content, decorative and aria-hidden', () => {
-  const html = renderFooter(navItems, fullSite, { year: 2026 });
-  assert.doesNotMatch(html, />Email</);
-  assert.doesNotMatch(html, />GitHub</);
-  assert.doesNotMatch(html, />LinkedIn</);
-  const connectMatch = html.match(
-    /<div class="site-footer__connect">[\s\S]*?<\/div>/,
-  );
-  assert.ok(connectMatch, 'expected a .site-footer__connect region');
-  const svgCount = [...connectMatch[0].matchAll(/<svg /g)].length;
-  const ariaHiddenCount = [...connectMatch[0].matchAll(/aria-hidden="true"/g)]
-    .length;
-  assert.equal(
-    svgCount,
-    ariaHiddenCount,
-    'every icon svg in Connect must be aria-hidden',
-  );
-});
-
-test('each Connect link has exactly one accessible name (aria-label on the anchor) and the icon never duplicates it', () => {
-  const html = renderFooter(navItems, fullSite, { year: 2026 });
+test('each icon link has one anchor name and one decorative, unfocusable SVG', () => {
+  const html = render();
   const links = [
     ...html.matchAll(
       /<a class="site-footer__connect-link"[^>]*aria-label="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g,
     ),
   ];
-  assert.equal(links.length, 3, 'expected exactly 3 Connect links');
+  assert.equal(links.length, 4);
   for (const [, label, inner] of links) {
-    assert.ok(label.length > 0, 'expected a non-empty aria-label');
-    // The icon inside must be aria-hidden and must not itself carry an
-    // aria-label/title that would create a second accessible name.
-    assert.doesNotMatch(inner, /aria-label=/);
-    assert.doesNotMatch(inner, /<title>/);
+    assert.ok(label.length > 0);
+    assert.equal([...inner.matchAll(/<svg /g)].length, 1);
+    assert.match(inner, /aria-hidden="true"/);
+    assert.match(inner, /focusable="false"/);
+    assert.doesNotMatch(
+      inner,
+      /aria-label=|<title>|>Email<|>GitHub<|>LinkedIn<|>Facebook</,
+    );
   }
 });
 
-test('GitHub and LinkedIn use the real Simple Icons brand-mark path data (fill="currentColor"), not Lucide stroke icons', () => {
-  const html = renderFooter(navItems, fullSite, { year: 2026 });
-  assert.match(html, /aria-label="GitHub">/);
-  assert.match(html, /aria-label="LinkedIn">/);
-  const githubIcon = html.match(
-    /aria-label="GitHub">(<svg[\s\S]*?<\/svg>)<\/a>/,
-  )[1];
-  const linkedinIcon = html.match(
-    /aria-label="LinkedIn">(<svg[\s\S]*?<\/svg>)<\/a>/,
-  )[1];
-  assert.match(githubIcon, /fill="currentColor"/);
-  assert.match(githubIcon, /<path d="M12 \.297/);
-  assert.match(linkedinIcon, /fill="currentColor"/);
-  assert.match(linkedinIcon, /<path d="M20\.447 20\.452/);
+test('official brand-icon renderers remain intact, including pinned Facebook data', () => {
+  const html = render();
+  const facebook = html.match(
+    /aria-label="Facebook"[^>]*>(<svg[\s\S]*?<\/svg>)<\/a>/,
+  )?.[1];
+  const email = html.match(
+    /aria-label="Email"[^>]*>(<svg[\s\S]*?<\/svg>)<\/a>/,
+  )?.[1];
+  assert.ok(facebook);
+  assert.match(facebook, /fill="currentColor"/);
+  assert.match(facebook, /<path d="M9\.101 23\.691v-7\.98H6\.627/);
+  assert.doesNotMatch(facebook, /stroke=/);
+  assert.ok(email);
+  assert.match(email, /stroke="currentColor"/);
+  assert.match(email, /fill="none"/);
 });
 
-test('Email uses the Lucide Mail icon (stroke-based), not a Simple Icons brand mark', () => {
-  const html = renderFooter(navItems, fullSite, { year: 2026 });
-  const emailIcon = html.match(
-    /aria-label="Email">(<svg[\s\S]*?<\/svg>)<\/a>/,
-  )[1];
-  assert.match(emailIcon, /stroke="currentColor"/);
-  assert.match(emailIcon, /fill="none"/);
-});
-
-test('résumé stays absent with no empty item/placeholder when resumePath is null (preserved existing behavior)', () => {
-  const html = renderFooter(navItems, nullSite, { year: 2026 });
-  assert.doesNotMatch(html, /Résumé/);
-});
-
-// --- Bottom row ---
-
-test('privacy link and copyright are always present, in the bottom row', () => {
-  const html = renderFooter(navItems, nullSite, { year: 2026 });
-  assert.match(
+test('unsafe or missing contact values omit the social list without disturbing copyright', () => {
+  const html = render({
+    siteName: 'Antonio Abrenica',
+    social: {
+      github: 'https://evil.example.com',
+      linkedin: 'http://linkedin.com/in/aaa',
+      facebook: 'https://example.com/aaa',
+    },
+    contactEmail: 'not-an-email',
+  });
+  assert.doesNotMatch(
     html,
-    /<div class="site-footer__bottom">[\s\S]*<a href="\/privacy\/">Privacy<\/a>[\s\S]*<\/div>/,
+    /site-footer__links|site-footer__connect-link|<li>/,
   );
-  assert.match(html, /© 2026 AAA Portfolio\. All rights reserved\./);
+  assert.match(html, /<p class="site-footer__meta">© 2026 Antonio Abrenica/);
 });
 
-test('the injected year is deterministic regardless of the real current date', () => {
-  const html = renderFooter(navItems, nullSite, { year: 2031 });
-  assert.match(html, /© 2031/);
+test('copyright appears exactly once and Privacy remains absent', () => {
+  const html = renderFooter(primaryNav, nullSite, { year: 2031 });
+  assert.equal([...html.matchAll(/© 2031 Antonio Abrenica/g)].length, 1);
+  assert.doesNotMatch(html, /Privacy|href="\/privacy\/"/);
 });
 
-test('with no options object, the real current year is used', () => {
-  const html = renderFooter(navItems, nullSite);
-  const year = new Date().getFullYear();
-  assert.match(html, new RegExp(`© ${year} `));
+test('default copyright year uses the current year', () => {
+  const html = renderFooter(primaryNav, nullSite);
+  assert.match(html, new RegExp(`© ${new Date().getFullYear()} `));
 });

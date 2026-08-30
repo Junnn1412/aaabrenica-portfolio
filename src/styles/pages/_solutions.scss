@@ -1,7 +1,17 @@
 // PF-050 — Solutions-page-only structural hooks. Page-specific (ITCSS
 // `pages/` layer, reserved but unused until now — see main.scss), not a
 // reusable design-system component: no showcase specimen, no second
-// caller expected. Reuses existing tokens only.
+// caller expected. The scoped 72rem boundary follows the established rich
+// case-study precedent without widening the global 68ch prose measure.
+@use '../settings/spacing';
+
+.solutions-page__container {
+  max-width: 72rem;
+}
+
+.solutions-page__intro {
+  min-width: 0;
+}
 
 .solutions-jump-nav {
   margin: var(--space-7) 0 0;
@@ -145,7 +155,15 @@ $solution-icon-accents: 'lime', 'amber', 'coral', 'violet', 'cyan', 'magenta';
 }
 
 .solution-section__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  max-width: none;
   margin: var(--space-6) 0 0;
+}
+
+.solution-section__column {
+  min-width: 0;
 }
 
 .solution-section__label {
@@ -171,12 +189,28 @@ $solution-icon-accents: 'lime', 'amber', 'coral', 'violet', 'cyan', 'magenta';
 // .trust-list__action/.process-steps__action (border-top + generous top
 // margin, so the link reads as belonging to the whole section, not the
 // last detail pair above it).
-.solution-section__evidence,
-.solution-section__action {
+.solution-section__links {
   max-width: none;
   margin: var(--space-7) 0 0;
   padding-top: var(--space-5);
   border-top: var(--border-width) solid var(--color-border);
+}
+
+.solution-section__evidence,
+.solution-section__action {
+  max-width: none;
+  margin: 0;
+}
+
+.solution-section__evidence {
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: spacing.$bp-lg) {
+  .solution-section__detail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap-lg);
+  }
 }
 
 // Keeps each anchored section's heading clear of the sticky desktop

@@ -1,24 +1,40 @@
-// PF-051 — Process-page-only structural hooks. Page-specific (ITCSS
-// `pages/` layer, second real file after `_solutions.scss`), not a
-// reusable design-system component: no showcase specimen, no second
-// caller expected. Reuses existing tokens/breakpoints only.
+// Process-page-only editorial layout. The scoped 72rem maximum follows the
+// established rich-case-study precedent; global paragraphs and lists retain
+// their 68ch reading measure.
 @use '../settings/spacing';
 
-// Resets the generic `ul, ol { max-width: var(--width-reading); margin: 0 0
-// var(--space-4); padding-left: var(--space-5); }` prose rule
-// (elements/_body-copy.scss) — same fix, same reasoning as
-// .process-steps/.trust-list/.engagement-options/.solutions-jump-nav__list.
+.process-page__container {
+  max-width: 72rem;
+}
+
+.process-page__intro {
+  min-width: 0;
+}
+
 .process-detail {
+  --process-rail-axis: 1.25rem;
+
+  position: relative;
   max-width: none;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-// Resets the generic `li { margin-bottom: var(--space-2); }` prose rule.
-// Inter-stage rhythm comes from padding-block + the sibling divider below,
-// not li margin — same spacing/divider split as .page-section's own.
+// The rail and nodes are CSS-only decoration. Real sequence semantics come
+// from the ol/li structure, and the visible number is aria-hidden.
+.process-detail::before {
+  content: '';
+  position: absolute;
+  top: var(--space-5);
+  bottom: var(--space-5);
+  left: var(--process-rail-axis);
+  border-left: var(--border-width) solid var(--color-border-interactive);
+}
+
 .process-detail__stage {
+  position: relative;
+  min-width: 0;
   margin: 0;
   padding-block: var(--space-7);
 }
@@ -31,25 +47,18 @@
   border-top: var(--border-width) solid var(--color-border);
 }
 
-// Deliberately NOT built from .section-header (used only for the page's
-// three real <h2>s — Stages, Working Together, closing CTA — never for a
-// per-stage <h3>), so PF-050's icon/heading vertical-misalignment defect
-// cannot recur here: that defect came from a flex item (.section-header)
-// carrying its own margin-bottom AND its child heading carrying a second,
-// separately-trapped margin-bottom. Here the <h3> itself is the direct
-// flex item, with margin: 0 declared explicitly below — one box, one
-// margin, already zero, so there is no second nested margin to trap.
 .process-detail__heading-row {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
   align-items: center;
   gap: var(--space-4);
   margin: 0 0 var(--space-5);
 }
 
-// Decorative numbered badge, same idiom as .process-steps__number — not a
-// CSS counter. Ordinal semantics come from the real <ol>/<li> structure,
-// not from this badge's visible digit.
 .process-detail__number {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -65,34 +74,32 @@
 }
 
 .process-detail__heading {
+  min-width: 0;
   margin: 0;
   font-family: var(--font-family-display);
   font-size: var(--font-size-h3);
   line-height: var(--line-height-heading);
+  overflow-wrap: anywhere;
 }
 
-@media (forced-colors: active) {
-  // Same reasoning as .process-steps__number: its only boundary today is a
-  // background-color fill, which forced-colors drops.
-  .process-detail__number {
-    border: 1px solid CanvasText;
-    background-color: transparent;
-  }
-}
-
-// Shared by both a stage's own facts and the Working Together section's
-// facts. Mobile-default: plain stacked flow (no grid) — dt immediately
-// above its own dd, in DOM order, spaced by the dt's own top margin so a
-// new pair reads as visually grouped. No project generic rule exists for
-// dl/dt/dd at all (confirmed against elements/_body-copy.scss); the
-// browser default `dl { margin: 1em 0 }` is reset here explicitly.
 .process-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
   max-width: none;
   margin: var(--space-6) 0 0;
 }
 
+.process-detail__stage .process-facts {
+  margin-left: calc(2.5rem + var(--space-4));
+}
+
+.process-facts__item {
+  min-width: 0;
+}
+
 .process-facts__term {
-  margin: var(--space-5) 0 var(--space-2);
+  margin: 0 0 var(--space-2);
   color: var(--color-accent-text);
   font-family: var(--font-family-body);
   font-size: var(--font-size-label);
@@ -101,42 +108,50 @@
   text-transform: uppercase;
 }
 
-.process-facts__term:first-of-type {
-  margin-top: 0;
-}
-
-// Resets the browser default `dd { margin-inline-start: 40px }` — dd has
-// no project generic rule either, so this is a real UA-stylesheet reset.
-// max-width caps line length even once the desktop grid (below) hands dd a
-// wider track than 68ch on very wide viewports.
 .process-facts__detail {
   max-width: var(--width-reading);
-  margin: 0 0 var(--space-4);
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
-// Desktop+: term/detail 2-column grid via CSS Grid's implicit row
-// auto-placement. .process-facts' children stay <dt>, <dd>, <dt>, <dd>… in
-// that exact DOM order — declaring exactly 2 grid-template-columns makes
-// the browser wrap each pair onto its own grid row automatically (dt1 ->
-// row1/col1, dd1 -> row1/col2, dt2 -> row2/col1, …) with zero markup
-// change and zero effect on DOM/reading/tab order, which CSS Grid
-// placement never alters. Because every stage owns its own separate <dl>
-// nested inside its own <li>, this grid can never place two different
-// stages' content side by side — the column split only ever operates
-// within one stage's own facts.
-@media (min-width: spacing.$bp-md) {
-  .process-facts {
+@media (forced-colors: active) {
+  .process-detail__number {
+    border: 1px solid CanvasText;
+    background-color: transparent;
+  }
+
+  .process-detail::before {
+    border-color: CanvasText;
+  }
+}
+
+// Desktop: stage identity occupies a restrained timeline column; semantic
+// dt/dd groups share two flexible detail columns. An odd final group spans
+// the row instead of leaving a conspicuous empty companion cell. Tablet and
+// mobile keep the one-column source order above.
+@media (min-width: spacing.$bp-lg) {
+  .process-detail__stage {
     display: grid;
-    grid-template-columns: minmax(12rem, 16rem) 1fr;
-    gap: var(--space-4) var(--space-6);
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+    gap: var(--gap-lg);
+  }
+
+  .process-detail__heading-row {
+    align-self: start;
+    margin: 0;
+  }
+
+  .process-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
+    gap: var(--space-6) var(--gap-lg);
   }
 
-  .process-facts__term {
+  .process-detail__stage .process-facts {
     margin: 0;
   }
 
-  .process-facts__detail {
-    margin: 0;
+  .process-facts__item:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }

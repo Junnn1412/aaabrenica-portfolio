@@ -13,4 +13,11 @@ export default {
     "This case study is still in development and isn't ready to share yet. In the meantime, take a look at my other projects.",
   ],
   backLink: { label: 'Back to Work', path: '/work/' },
+  card: {
+    isVisible: false,
+    presentation: {
+      kind: 'deferred',
+      label: 'Case study in development',
+    },
+  },
 };

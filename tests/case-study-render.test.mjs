@@ -39,9 +39,14 @@ test('a minimal case study (only backLink + base fields) renders zero section he
   );
   assert.doesNotMatch(main, /case-study-gallery/);
   assert.doesNotMatch(main, /case-study-hero__logo/);
+  assert.match(
+    main,
+    /<div class="case-study-hero__heading-row"><h1>Minimal Case Study<\/h1><\/div>/,
+    'logo absence must leave the heading intact without an empty image wrapper',
+  );
   assert.doesNotMatch(main, /class="cta"/);
   assert.equal([...main.matchAll(/<h1[ >]/g)].length, 1);
-  assert.match(main, /<a href="\/work\/">Back to Work<\/a>/);
+  assert.match(main, /class="action-link action-link--back" href="\/work\/"/);
 });
 
 test('each named optional section renders only when its own field is present', () => {
@@ -72,7 +77,18 @@ test('every string field is escaped, including nested list/tag/gallery text', ()
     heading: '<b>Bold</b> & Heading',
     paragraphs: ['Lead & <script>alert(1)</script>'],
     backLink: { label: 'Back & <b>Work</b>', path: '/work/' },
-    logo: { src: '/images/logo.png', alt: '<b>Logo</b> & alt' },
+    logo: {
+      src: '/images/logo.png',
+      alt: '<b>Logo</b> & alt',
+      width: 140,
+      height: 137,
+    },
+    heroMedia: {
+      src: '/images/case-studies/example/hero.png?x=&quot;',
+      alt: 'Hero & <b>alt</b>',
+      width: 1440,
+      height: 810,
+    },
     externalLink: { label: 'Visit & <b>Site</b>', url: 'https://example.com/' },
     client: { body: ['Client & <i>context</i>.'] },
     role: {
@@ -112,6 +128,12 @@ test('every string field is escaped, including nested list/tag/gallery text', ()
   assert.match(main, /Lead &amp; &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   assert.match(main, /Back &amp; &lt;b&gt;Work&lt;\/b&gt;/);
   assert.match(main, /&lt;b&gt;Logo&lt;\/b&gt; &amp; alt/);
+  assert.match(main, /Hero &amp; &lt;b&gt;alt&lt;\/b&gt;/);
+  assert.match(main, /hero\.png\?x=&amp;quot;/);
+  assert.match(
+    main,
+    /<img class="case-study-hero__logo"[^>]*width="140" height="137">/,
+  );
   assert.match(main, /Visit &amp; &lt;b&gt;Site&lt;\/b&gt;/);
   assert.match(main, /Client &amp; &lt;i&gt;context&lt;\/i&gt;\./);
   assert.match(main, /Role body &amp; &lt;i&gt;text&lt;\/i&gt;\./);
@@ -163,7 +185,7 @@ test('gallery items render required alt, numeric width/height, safe src, loading
   assert.equal(items.length, 2);
   assert.match(
     items[0][0],
-    /<div class="media-frame"><img src="\/images\/case-studies\/example\/homepage-desktop\.webp" alt="Homepage hero on desktop" width="1440" height="810" loading="lazy"><\/div>/,
+    /<div class="media-frame"><img src="\/images\/case-studies\/example\/homepage-desktop\.webp" alt="Homepage hero on desktop" width="1440" height="810" loading="lazy" decoding="async"><\/div>/,
   );
   assert.doesNotMatch(items[0][0], /figcaption/);
   assert.match(items[1][0], /<figcaption>Mobile navigation<\/figcaption>/);

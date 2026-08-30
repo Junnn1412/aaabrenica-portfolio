@@ -39,6 +39,17 @@ test('findMissingAssets fails clearly for a path that does not exist on disk', (
   });
 });
 
+test('findMissingAssets reports an exact-case mismatch on case-insensitive and case-sensitive filesystems', () => {
+  withFixtureDir((dir) => {
+    fs.writeFileSync(path.join(dir, 'images', 'Portrait.JPG'), 'fake-bytes');
+    const problems = findMissingAssets(dir, ['/images/Portrait.jpg']);
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /incorrect casing/);
+    assert.match(problems[0], /expected segment "Portrait\.jpg"/);
+    assert.match(problems[0], /found "Portrait\.JPG" on disk/);
+  });
+});
+
 test('findMissingAssets rejects a path that would resolve outside the root directory', () => {
   withFixtureDir((dir) => {
     const problems = findMissingAssets(dir, ['/../outside-the-root.png']);

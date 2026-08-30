@@ -10,7 +10,8 @@
 // the file at public/images/case-studies/fes-challenger/fes-challenger-logo.png
 // as the approved asset (140x137px PNG, verified — see docs/CONTENT_INVENTORY.md).
 // alt is deliberately empty: the visible "FES Challenger" heading already
-// carries the identity; the logo is decorative alongside it.
+// carries the identity; the logo is decorative alongside it. width/height
+// are the verified physical PNG dimensions and render as intrinsic attributes.
 // `gallery` was added in PF-063: 4 of 7 captured production-site screenshots
 // were selected after individual inspection (see docs/CONTENT_INVENTORY.md
 // for the full audit, including the 3 declined files and why). Delivered as
@@ -19,6 +20,33 @@
 // explicit fallback instruction.
 // PF-064 — all narrative copy approved by AAA as final V1 copy, no longer
 // provisional; facts preserved exactly, not rewritten for stylistic variety.
+export const homepageHeroImage = {
+  src: '/images/case-studies/fes-challenger/gallery/homepage-hero-desktop.png',
+  alt: 'Screenshot of the FES Challenger homepage with navigation above an underwater diving hero image',
+  width: 2880,
+  height: 1388,
+};
+
+export const servicesPageImage = {
+  src: '/images/case-studies/fes-challenger/gallery/services-page-desktop.png',
+  alt: 'FES Challenger Services page showing marine salvage and underwater service categories',
+  width: 716,
+  height: 448,
+};
+
+export const projectsPageImage = {
+  src: '/images/case-studies/fes-challenger/gallery/projects-page-desktop.png',
+  alt: 'FES Challenger Projects page showing completed marine salvage project cards',
+  width: 718,
+  height: 447,
+};
+
+export const fesCarouselSlides = [
+  homepageHeroImage,
+  servicesPageImage,
+  projectsPageImage,
+];
+
 export default {
   title: 'FES Challenger',
   description:
@@ -30,7 +58,10 @@ export default {
   logo: {
     src: '/images/case-studies/fes-challenger/fes-challenger-logo.png',
     alt: '',
+    width: 140,
+    height: 137,
   },
+  heroMedia: homepageHeroImage,
   externalLink: {
     label: 'Visit the FES Challenger website',
     url: 'https://feschallenger.com/',
@@ -38,32 +69,12 @@ export default {
   gallery: {
     items: [
       {
-        src: '/images/case-studies/fes-challenger/gallery/homepage-hero-desktop.png',
-        alt: 'FES Challenger homepage hero section with a marine salvage vessel photo and headline',
-        width: 719,
-        height: 443,
-        caption: 'Homepage',
-      },
-      {
-        src: '/images/case-studies/fes-challenger/gallery/services-page-desktop.png',
-        alt: 'FES Challenger Services page showing marine salvage and underwater service categories',
-        width: 716,
-        height: 448,
+        ...servicesPageImage,
         caption: 'Services',
       },
       {
-        src: '/images/case-studies/fes-challenger/gallery/projects-page-desktop.png',
-        alt: 'FES Challenger Projects page showing completed marine salvage project cards',
-        width: 718,
-        height: 447,
+        ...projectsPageImage,
         caption: 'Projects',
-      },
-      {
-        src: '/images/case-studies/fes-challenger/gallery/homepage-mobile.png',
-        alt: 'FES Challenger homepage on a mobile viewport, showing the responsive hero and navigation menu',
-        width: 544,
-        height: 689,
-        caption: 'Mobile view',
       },
     ],
   },
@@ -135,9 +146,14 @@ export default {
   // in exactly one place, not a second independently-typed copy — not part
   // of the case-study page's own rendered content or schema.
   card: {
+    isVisible: true,
     category: 'Marine Services Corporate Website',
     summary:
       'A responsive custom WordPress website for a marine salvage and underwater recovery company, supported by a controlled staging-to-production deployment workflow.',
     tags: ['WordPress', 'Custom Theme'],
+    presentation: {
+      kind: 'carousel',
+      slides: fesCarouselSlides,
+    },
   },
 };

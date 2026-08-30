@@ -5,6 +5,7 @@
 // .process-steps__action link is rendered as a sibling *after* the closing
 // </ol>, never nested inside it, matching the approved contract.
 import { escapeHtml } from '../pages/escape.js';
+import { renderActionLink } from './action-link.js';
 
 function renderStep({ heading }, index) {
   return (
@@ -17,6 +18,6 @@ function renderStep({ heading }, index) {
 
 export function renderProcessSteps(steps, link) {
   const list = `<ol class="process-steps">${steps.map(renderStep).join('')}</ol>`;
-  const action = `<p class="process-steps__action"><a href="${escapeHtml(link.path)}">${escapeHtml(link.label)}</a></p>`;
+  const action = `<p class="process-steps__action">${renderActionLink({ label: link.label, href: link.path, variant: 'forward' })}</p>`;
   return list + action;
 }

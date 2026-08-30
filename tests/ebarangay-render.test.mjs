@@ -11,6 +11,8 @@ import assert from 'node:assert/strict';
 import { renderRoute } from '../src/pages/render.js';
 import { routes } from '../src/config/routes.js';
 import ebarangayContent from '../src/content/pages/work/ebarangay.js';
+import homeContent from '../src/content/pages/home.js';
+import workContent from '../src/content/pages/work/index.js';
 
 function ebarangayMain() {
   const route = routes.find((r) => r.key === 'work-ebarangay');
@@ -38,7 +40,7 @@ test('eBarangay: the holding copy states only development/shareability status, n
     main,
     /This case study is still in development and isn&#39;t ready to share yet\. In the meantime, take a look at my other projects\./,
   );
-  assert.match(main, /<a href="\/work\/">Back to Work<\/a>/);
+  assert.match(main, /class="action-link action-link--back" href="\/work\/"/);
   // No status/technology/completion language that would read as a real
   // narrative claim about the project itself.
   for (const forbidden of [
@@ -63,4 +65,30 @@ test("eBarangay: the content module's description states only development/sharea
   );
   assert.doesNotMatch(ebarangayContent.description, /placeholder/i);
   assert.doesNotMatch(ebarangayContent.description, /later task/i);
+});
+
+test('eBarangay: Home and Work reuse the exact deferred card presentation', () => {
+  const homeItem = homeContent.projects.items.find(
+    (item) => item.heading === 'eBarangay',
+  );
+  const workItem = workContent.projects.items.find(
+    (item) => item.heading === 'eBarangay',
+  );
+  assert.deepEqual(ebarangayContent.card, {
+    isVisible: false,
+    presentation: {
+      kind: 'deferred',
+      label: 'Case study in development',
+    },
+  });
+  assert.strictEqual(homeItem.presentation, ebarangayContent.card.presentation);
+  assert.strictEqual(workItem.presentation, ebarangayContent.card.presentation);
+  for (const item of [homeItem, workItem]) {
+    assert.deepEqual(Object.keys(item).sort(), [
+      'heading',
+      'isVisible',
+      'link',
+      'presentation',
+    ]);
+  }
 });

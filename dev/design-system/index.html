@@ -1042,7 +1042,7 @@
       <section class="preview-section preview-section--wide" id="project-cards">
         <h2>Project cards (PF-033)</h2>
         <p>
-          <code>.project-card</code> is CSS-only — there is no JS render function or content-data module yet.
+          Historical PF-033 note: <code>.project-card</code> began as CSS-only before its production renderer and content contract were added.
           <code>work/index.js</code> and all three case-study content files are still placeholders, so there is
           no real production template to call a renderer from; the same precedent as
           <code>.btn</code>/<code>.tag</code>/<code>.media-frame</code>/<code>.capability-card</code>. The cards
@@ -1050,7 +1050,7 @@
           call — and only exist on this dev-only page.
         </p>
         <p>
-          The three real projects below carry no summary, technology tags, or images — none of that content has
+          Historical PF-033 note (superseded): the three real projects originally carried no summary, technology tags, or images because none had
           been approved yet (<code>docs/DECISION_LOG.md</code>). This is the genuine current state, not a
           contrived gap: the category label appears only where the requirements doc gives an exact phrase that
           fits the tag slot (Business Workflow System only — eBarangay's own approved phrase, "Personal
@@ -1066,42 +1066,38 @@
           fixed 2-column grid instead, so the pair always balances — see <code>docs/DECISION_LOG.md</code>.
         </p>
 
-        <h3>The three real projects</h3>
-        <ul class="project-cards project-cards--featured-pair">
+        <h3>The currently published project</h3>
+        <p>
+          FES Challenger is currently the only project published on Home and Work. Business Workflow System and
+          eBarangay remain registered and validated but are filtered before rendering. The FES browser chrome is
+          an accessible three-slide carousel; empty media frames remain invalid.
+        </p>
+        <ul class="project-cards project-cards--single">
           <li class="project-card project-card--featured">
-            <div class="project-card__frame">
-              <span class="project-card__frame-dots" aria-hidden="true"></span>
-              <div class="media-frame project-card__media"></div>
-            </div>
+            <section class="project-card__frame project-carousel" data-project-carousel aria-roledescription="carousel" aria-label="FES Challenger project images">
+              <div class="project-carousel__controls">
+                <button class="project-carousel__arrow project-carousel__arrow--previous" type="button" data-project-carousel-previous aria-label="Previous project image" hidden><span aria-hidden="true">&#8592;</span></button>
+                <div class="project-carousel__indicators" role="group" aria-label="Choose project image" hidden>
+                  <button class="project-carousel__indicator" type="button" data-project-carousel-indicator="0" aria-label="Show project image 1 of 3" aria-pressed="true"></button>
+                  <button class="project-carousel__indicator" type="button" data-project-carousel-indicator="1" aria-label="Show project image 2 of 3" aria-pressed="false"></button>
+                  <button class="project-carousel__indicator" type="button" data-project-carousel-indicator="2" aria-label="Show project image 3 of 3" aria-pressed="false"></button>
+                </div>
+                <button class="project-carousel__arrow project-carousel__arrow--next" type="button" data-project-carousel-next aria-label="Next project image" hidden><span aria-hidden="true">&#8594;</span></button>
+              </div>
+              <div class="media-frame project-card__media">
+                <div class="project-carousel__slide is-active" data-project-carousel-slide role="group" aria-roledescription="slide" aria-label="1 of 3" aria-hidden="false"><img src="/images/case-studies/fes-challenger/gallery/homepage-hero-desktop.png" alt="Screenshot of the FES Challenger homepage with navigation above an underwater diving hero image" width="2880" height="1388" loading="lazy"></div>
+                <div class="project-carousel__slide" data-project-carousel-slide role="group" aria-roledescription="slide" aria-label="2 of 3" aria-hidden="true" hidden><img src="/images/case-studies/fes-challenger/gallery/services-page-desktop.png" alt="FES Challenger Services page showing marine salvage and underwater service categories" width="716" height="448" loading="lazy"></div>
+                <div class="project-carousel__slide" data-project-carousel-slide role="group" aria-roledescription="slide" aria-label="3 of 3" aria-hidden="true" hidden><img src="/images/case-studies/fes-challenger/gallery/projects-page-desktop.png" alt="FES Challenger Projects page showing completed marine salvage project cards" width="718" height="447" loading="lazy"></div>
+              </div>
+              <p class="visually-hidden" data-project-carousel-status role="status" aria-live="polite" aria-atomic="true"></p>
+            </section>
             <div class="project-card__content">
-              <span class="project-card__category tag">Internal Workflow System</span>
-              <h4 class="project-card__heading">
-                <a class="project-card__link" href="/work/business-workflow-system/">Business Workflow System</a>
-              </h4>
-              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
-            </div>
-          </li>
-          <li class="project-card">
-            <div class="project-card__frame">
-              <span class="project-card__frame-dots" aria-hidden="true"></span>
-              <div class="media-frame project-card__media"></div>
-            </div>
-            <div class="project-card__content">
+              <span class="project-card__category tag">Marine Services Corporate Website</span>
               <h4 class="project-card__heading">
                 <a class="project-card__link" href="/work/fes-challenger/">FES Challenger</a>
               </h4>
-              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
-            </div>
-          </li>
-          <li class="project-card">
-            <div class="project-card__frame">
-              <span class="project-card__frame-dots" aria-hidden="true"></span>
-              <div class="media-frame project-card__media"></div>
-            </div>
-            <div class="project-card__content">
-              <h4 class="project-card__heading">
-                <a class="project-card__link" href="/work/ebarangay/">eBarangay</a>
-              </h4>
+              <p class="project-card__summary">A responsive custom WordPress website for a marine salvage and underwater recovery company, supported by a controlled staging-to-production deployment workflow.</p>
+              <div class="project-card__tags"><span class="tag">WordPress</span><span class="tag">Custom Theme</span></div>
               <span class="project-card__action" aria-hidden="true">View Case Study →</span>
             </div>
           </li>
@@ -1109,22 +1105,11 @@
 
         <h3>Additional specimens</h3>
         <p>
-          Three demo-only cards, not counted among the three real projects above — they exist purely to prove
+          Three demo-only cards, not counted among the published project above — they exist purely to prove
           markup paths the real content doesn't happen to exercise yet.
         </p>
         <ul class="project-cards">
           <li class="project-card">
-            <div class="project-card__frame">
-              <span class="project-card__frame-dots" aria-hidden="true"></span>
-              <div class="media-frame project-card__media">
-                <svg viewBox="0 0 400 225" role="img" aria-label="Demo: original decorative composition standing in for a project screenshot" preserveAspectRatio="xMidYMid slice">
-                  <rect width="400" height="225" fill="var(--color-surface-2)"></rect>
-                  <circle cx="80" cy="70" r="46" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></circle>
-                  <circle cx="330" cy="170" r="70" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></circle>
-                  <path d="M0 180 L150 90 L260 140 L400 40" fill="none" stroke="var(--color-border-interactive)" stroke-width="2"></path>
-                </svg>
-              </div>
-            </div>
             <div class="project-card__content">
               <span class="project-card__category tag">Demo Category</span>
               <h4 class="project-card__heading">
@@ -1140,10 +1125,6 @@
             </div>
           </li>
           <li class="project-card">
-            <div class="project-card__frame">
-              <span class="project-card__frame-dots" aria-hidden="true"></span>
-              <div class="media-frame project-card__media"></div>
-            </div>
             <div class="project-card__content">
               <h4 class="project-card__heading">
                 <a class="project-card__link" href="/work/">Demo: A deliberately long project title to stress-test heading wrap</a>
@@ -1157,10 +1138,6 @@
             </div>
           </li>
           <li class="project-card">
-            <div class="project-card__frame">
-              <span class="project-card__frame-dots" aria-hidden="true"></span>
-              <div class="media-frame project-card__media"></div>
-            </div>
             <div class="project-card__content">
               <h4 class="project-card__heading">Demo: non-interactive (no destination)</h4>
               <p class="project-card__summary">

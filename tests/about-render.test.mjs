@@ -1,24 +1,44 @@
-// About profile-card task — dedicated renderer tests, mirroring
-// tests/standard-render.test.mjs's fixture style, plus real-content
-// assertions against the actual production about.js module (the pattern
-// every other real page's own -render test file already follows).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderAboutPage } from '../src/pages/templates/about.js';
 import { primaryNav } from '../src/config/navigation.js';
 import { site } from '../src/config/site.js';
 import aboutContent from '../src/content/pages/about.js';
+import { escapeHtml } from '../src/pages/escape.js';
 
-function baseContent(overrides = {}) {
-  return {
-    title: 'Title',
-    heading: 'About',
-    paragraphs: ['First paragraph.', 'Second paragraph.'],
-    ...overrides,
-  };
-}
+const APPROVED_PARAGRAPHS = [
+  'Since 2020, I’ve been designing and building software—from the interface someone actually clicks through, down to the backend logic, the database that stores everything, and the deployment that gets it live. I work as an independent developer, which means I’m the one person across the whole project, not one specialist in a rotating cast.',
+  'I start with the problem you’re trying to solve, not a specific technology or framework. My focus stays on what actually moves your business forward, and I stay directly involved from planning through launch and any agreed post-launch support, so you’re always working with the person who built it.',
+];
 
-function render(content) {
+const APPROVED_STACK = {
+  heading: 'Core Technologies',
+  groups: [
+    {
+      heading: 'Frontend',
+      items: ['Angular', 'TypeScript', 'JavaScript', 'HTML', 'SCSS/CSS'],
+    },
+    {
+      heading: 'Backend',
+      items: ['ASP.NET Core', 'C#', 'REST APIs'],
+    },
+    { heading: 'Data', items: ['Microsoft SQL Server', 'Dapper'] },
+    {
+      heading: 'CMS & Delivery',
+      items: ['WordPress', 'PHP', 'Git', 'GitHub Actions'],
+    },
+  ],
+};
+
+const APPROVED_STATEMENT =
+  'I build practical websites, internal systems, and workflow solutions.';
+const APPROVED_HIGHLIGHTS = [
+  'Problem-first planning shaped around business needs',
+  'Direct involvement from implementation through launch',
+  'Post-launch support when included in the agreed project scope',
+];
+
+function render(content = aboutContent) {
   return renderAboutPage({
     content,
     navItems: primaryNav,
@@ -27,205 +47,196 @@ function render(content) {
   });
 }
 
-const fixtureCard = {
-  name: 'Test Name',
-  role: 'Test Role',
-  statement: 'Test statement.',
-  highlights: ['Highlight one', 'Highlight two', 'Highlight three'],
-  cta: { label: 'Talk to me', path: '/contact/' },
-  portrait: {
-    src: '/images/profile/test.jpg',
-    alt: 'Portrait of Test Name',
-    width: 800,
-    height: 1000,
-  },
-};
-
-// --- Structural fixture tests ---
-
-test('renders exactly one <h1>, biography paragraphs, inside one page container', () => {
-  const { main } = render(baseContent());
-  assert.equal([...main.matchAll(/<h1[ >]/g)].length, 1);
-  assert.match(main, /<h1>About<\/h1>/);
-  assert.match(main, /<p>First paragraph\.<\/p><p>Second paragraph\.<\/p>/);
-  assert.match(main, /^<div class="container">/);
-});
-
-test('without profileCard, .about-layout has no --with-card modifier and no card markup renders (regression guard matching the prior standard.js behavior)', () => {
-  const { main } = render(baseContent());
-  assert.match(main, /<div class="about-layout">/);
-  assert.doesNotMatch(main, /about-layout--with-card/);
-  assert.doesNotMatch(main, /about-card/);
-});
-
-test('with profileCard present, .about-layout gets the --with-card modifier and the card renders after the biography content, in DOM order', () => {
-  const { main } = render(baseContent({ profileCard: fixtureCard }));
-  assert.match(main, /<div class="about-layout about-layout--with-card">/);
-  const contentIndex = main.indexOf('about-layout__content');
-  const cardIndex = main.indexOf('about-card');
-  assert.ok(
-    contentIndex < cardIndex,
-    'expected the biography content to precede the card in source order',
+function fullCardRegion(main) {
+  const match = main.match(
+    /<div class="profile-card profile-card--full"[^>]*>[\s\S]*?<\/div><\/div>/,
   );
-});
+  assert.ok(match, 'expected the full profile-card region');
+  return match[0];
+}
 
-test('the profile card renders name, role, statement, exactly 3 highlights, and one CTA', () => {
-  const { main } = render(baseContent({ profileCard: fixtureCard }));
-  assert.match(main, /<p class="about-card__name">Test Name<\/p>/);
-  assert.match(main, /<p class="about-card__role">Test Role<\/p>/);
-  assert.match(main, /<p class="about-card__statement">Test statement\.<\/p>/);
-  const highlightItems = main.match(
-    /<ul class="about-card__highlights">([\s\S]*?)<\/ul>/,
-  )[1];
-  assert.equal([...highlightItems.matchAll(/<li>/g)].length, 3);
-  assert.match(highlightItems, /<li>Highlight one<\/li>/);
-  assert.match(highlightItems, /<li>Highlight two<\/li>/);
-  assert.match(highlightItems, /<li>Highlight three<\/li>/);
+function stackRegion(main) {
+  const match = main.match(/<section class="about-stack"[\s\S]*?<\/section>/);
+  assert.ok(match, 'expected the Core Technologies section');
+  return match[0];
+}
+
+test('renders the exact approved biography, stack, card, Experience, and CTA in natural DOM order', () => {
+  const { main } = render();
+  assert.match(main, /^<div class="container about-page">/);
+  assert.deepEqual(aboutContent.paragraphs, APPROVED_PARAGRAPHS);
+  for (const paragraph of APPROVED_PARAGRAPHS) {
+    assert.ok(main.includes(escapeHtml(paragraph)));
+  }
+
+  const biographyEnd = main.indexOf(escapeHtml(APPROVED_PARAGRAPHS[1]));
+  const stackStart = main.indexOf('<section class="about-stack"');
+  const cardStart = main.indexOf('profile-card profile-card--full');
+  const experienceStart = main.indexOf('<section class="about-experience"');
+  const ctaStart = main.indexOf('<div class="cta"');
+  assert.ok(biographyEnd < stackStart);
+  assert.ok(stackStart < cardStart);
+  assert.ok(cardStart < experienceStart);
+  assert.ok(experienceStart < ctaStart);
   assert.match(
     main,
-    /<a class="btn btn--primary about-card__cta" href="\/contact\/">Talk to me<\/a>/,
+    /<\/div><\/div><\/div><section class="about-experience"/,
+    'Experience must follow the closed biography/profile-card layout',
   );
-});
-
-test('the portrait renders inside .media-frame.media-frame--portrait with the real configured src/alt/width/height', () => {
-  const { main } = render(baseContent({ profileCard: fixtureCard }));
   assert.match(
     main,
-    /<span class="media-frame media-frame--portrait"><img src="\/images\/profile\/test\.jpg" alt="Portrait of Test Name" width="800" height="1000"><\/span>/,
+    /<\/ol><\/div><\/section><div class="cta"/,
+    'the closing CTA must remain a separate sibling after Experience',
   );
 });
 
-test('no social icons (mailto/GitHub/LinkedIn) appear inside the card — those already live in the footer and Contact page', () => {
-  const { main } = render(baseContent({ profileCard: fixtureCard }));
-  const cardMatch = main.match(
-    /<div class="about-card">[\s\S]*?<\/div><\/div>/,
+test('renders the exact approved stack groups and technologies in order with no extras or duplicates', () => {
+  assert.deepEqual(aboutContent.technologyStack, APPROVED_STACK);
+  assert.equal(aboutContent.technologyStack.groups.length, 4);
+
+  const technologies = aboutContent.technologyStack.groups.flatMap(
+    (group) => group.items,
   );
-  assert.ok(cardMatch, 'expected an .about-card region');
-  assert.doesNotMatch(cardMatch[0], /mailto:/);
-  assert.doesNotMatch(cardMatch[0], /github\.com/);
-  assert.doesNotMatch(cardMatch[0], /linkedin\.com/);
+  assert.equal(technologies.length, 14);
+  assert.equal(new Set(technologies).size, technologies.length);
+
+  const stack = stackRegion(render().main);
+  const renderedHeadings = [...stack.matchAll(/<h3[^>]*>(.*?)<\/h3>/g)].map(
+    (match) => match[1],
+  );
+  const renderedTechnologies = [
+    ...stack.matchAll(
+      /<li class="about-stack__tag-item"><span class="tag">(.*?)<\/span><\/li>/g,
+    ),
+  ].map((match) => match[1]);
+  assert.deepEqual(
+    renderedHeadings,
+    APPROVED_STACK.groups.map((group) => escapeHtml(group.heading)),
+  );
+  assert.deepEqual(renderedTechnologies, technologies.map(escapeHtml));
 });
 
-test('no résumé link appears anywhere on the page', () => {
-  const { main } = render(baseContent({ profileCard: fixtureCard }));
-  assert.doesNotMatch(main, /[Rr]ésumé/);
+test('stack and card contain no unapproved technologies or proficiency-style claims', () => {
+  const content = `${JSON.stringify(aboutContent.technologyStack)} ${JSON.stringify(aboutContent.profileCard)}`;
+  assert.doesNotMatch(
+    content,
+    /React|Next\.js|Node\.js|Docker|Azure|AWS|certif|rating|proficien|percent|\b\d+\s*years?\b/i,
+  );
 });
 
-test("the card's own name/role text does not introduce a second heading — no <h1>-<h6> tag appears anywhere inside the card region", () => {
-  const { main } = render(baseContent({ profileCard: fixtureCard }));
-  const cardMatch = main.match(
-    /<div class="about-card">[\s\S]*?<\/div><\/div>/,
+test('full card renders approved identity, statement, and exactly three highlights with no action', () => {
+  const card = fullCardRegion(render().main);
+  assert.match(
+    card,
+    /<p class="profile-card__name">Antonio A\. Abrenica III<\/p>/,
   );
-  assert.ok(cardMatch, 'expected an .about-card region');
-  assert.doesNotMatch(cardMatch[0], /<h[1-6][ >]/);
+  assert.match(
+    card,
+    /<p class="profile-card__role">Full-Stack Software Developer<\/p>/,
+  );
+  assert.equal(aboutContent.profileCard.statement, APPROVED_STATEMENT);
+  assert.deepEqual(aboutContent.profileCard.highlights, APPROVED_HIGHLIGHTS);
+  assert.match(card, new RegExp(escapeHtml(APPROVED_STATEMENT)));
+  assert.equal([...card.matchAll(/<li>/g)].length, 3);
+  for (const highlight of APPROVED_HIGHLIGHTS) {
+    assert.match(card, new RegExp(`<li>${escapeHtml(highlight)}<\\/li>`));
+  }
+  assert.doesNotMatch(card, /about five years/i);
+  assert.doesNotMatch(card, /profile-card__action/);
+  assert.doesNotMatch(card, /href=/);
 });
 
-test('the existing closing CTA renders exactly as standard.js already proved, unmodified by the card', () => {
-  const { main } = render(
-    baseContent({
-      cta: {
-        heading: 'Talk it through?',
-        body: 'Share the details.',
-        action: { label: 'Contact', path: '/contact/' },
-      },
-    }),
+test('fixed experience duration is absent while Since 2020 appears exactly once in the biography', () => {
+  const { main } = render();
+  assert.doesNotMatch(main, /about five years/i);
+  assert.doesNotMatch(JSON.stringify(aboutContent), /about five years/i);
+  assert.doesNotMatch(fullCardRegion(main), /about five years/i);
+  assert.equal([...APPROVED_PARAGRAPHS[0].matchAll(/Since 2020/g)].length, 1);
+  assert.doesNotMatch(APPROVED_PARAGRAPHS[1], /Since 2020/);
+  assert.equal([...main.matchAll(/Since 2020/g)].length, 1);
+});
+
+test('About heading hierarchy includes stack groups, Experience roles, and closing CTA in order', () => {
+  const { main } = render();
+  const headings = [...main.matchAll(/<(h[1-3])[^>]*>(.*?)<\/\1>/g)].map(
+    ([, level, text]) => [level, text],
   );
-  assert.match(main, /<h2 class="cta__heading">Talk it through\?<\/h2>/);
-  assert.match(main, /<p class="cta__body">Share the details\.<\/p>/);
+  assert.deepEqual(headings, [
+    ['h1', 'About'],
+    ['h2', 'Core Technologies'],
+    ['h3', 'Frontend'],
+    ['h3', 'Backend'],
+    ['h3', 'Data'],
+    ['h3', 'CMS &amp; Delivery'],
+    ['h2', 'Experience'],
+    ['h3', 'Computer Programmer II'],
+    ['h3', 'Analyst Programmer'],
+    ['h3', 'Computer Programmer'],
+    ['h3', 'IT Support Specialist'],
+    ['h2', 'Have a project you want to talk through?'],
+  ]);
+});
+
+test('technology tags are static and introduce no links, controls, social destinations, or résumé copy', () => {
+  const stack = stackRegion(render().main);
+  assert.equal([...stack.matchAll(/class="tag"/g)].length, 14);
+  assert.doesNotMatch(
+    stack,
+    /<(?:a|button|input|select|textarea)\b|href=|mailto:|github\.com|linkedin\.com|[Rr]ésumé/,
+  );
+  assert.doesNotMatch(stack, /logo|icon|rating|proficien|percent|year/i);
+});
+
+test('About main contains exactly one Contact CTA and it is the unchanged page-level closing CTA', () => {
+  const { main } = render();
+  assert.equal([...main.matchAll(/href="\/contact\/"/g)].length, 1);
   assert.match(
     main,
-    /<a class="btn btn--primary" href="\/contact\/">Contact<\/a>/,
+    /<div class="cta"[^>]*><h2 class="cta__heading">Have a project you want to talk through\?<\/h2><p class="cta__body">Share what you&#39;re working on, and we can figure out a practical next step together\.<\/p><a class="btn btn--primary" href="\/contact\/">Let&#39;s Discuss Your Project<\/a><\/div>/,
   );
 });
 
-test('escapes every hostile string field, including every profileCard field', () => {
+test('full portrait preserves the approved path, alt, and intrinsic dimensions without lazy loading', () => {
+  const card = fullCardRegion(render().main);
+  const image = card.match(/<img[^>]+>/)?.[0];
+  assert.ok(image, 'expected a portrait image');
+  assert.match(
+    card,
+    /<span class="media-frame media-frame--portrait"><img[^>]+><\/span>/,
+  );
+  assert.match(image, /src="\/images\/profile\/aaa-portrait\.jpg"/);
+  assert.match(image, /alt="Portrait of Antonio A\. Abrenica III"/);
+  assert.match(image, /width="1665"/);
+  assert.match(image, /height="1464"/);
+  assert.doesNotMatch(image, /loading=/);
+});
+
+test('the profile card introduces no heading, social link, or résumé link', () => {
+  const card = fullCardRegion(render().main);
+  assert.doesNotMatch(card, /<h[1-6][ >]/);
+  assert.doesNotMatch(card, /mailto:|github\.com|linkedin\.com|[Rr]ésumé/);
+});
+
+test('the dedicated About template escapes hostile biography and technology strings', () => {
   const hostileContent = {
-    title: 'T',
-    heading: '<b>Bold</b> Heading',
-    paragraphs: ['P & <script>alert(1)</script>'],
-    profileCard: {
-      name: 'N & <b>ame</b>',
-      role: 'R & <b>ole</b>',
-      statement: 'S & <b>tatement</b>',
-      highlights: ['H1 & <b>one</b>', 'H2', 'H3'],
-      cta: { label: 'Go & <b>now</b>', path: '/contact/' },
-      portrait: {
-        src: '/images/profile/"><script>alert(1)</script>.jpg',
-        alt: 'Alt & <b>text</b>',
-        width: 10,
-        height: 10,
-      },
+    ...aboutContent,
+    heading: '<script>heading</script>',
+    paragraphs: ['Biography & <script>paragraph</script>'],
+    technologyStack: {
+      heading: '<script>stack</script>',
+      groups: [
+        {
+          heading: '<img src=x onerror=alert(1)>',
+          items: ['Angular & <script>item</script>'],
+        },
+      ],
     },
   };
   const { main } = render(hostileContent);
-  assert.doesNotMatch(main, /<script>/, 'no raw <script> tag should survive');
-  assert.match(main, /&lt;b&gt;Bold&lt;\/b&gt; Heading/);
-  assert.match(main, /P &amp; &lt;script&gt;alert\(1\)&lt;\/script&gt;/);
-  assert.match(main, /N &amp; &lt;b&gt;ame&lt;\/b&gt;/);
-  assert.match(main, /R &amp; &lt;b&gt;ole&lt;\/b&gt;/);
-  assert.match(main, /S &amp; &lt;b&gt;tatement&lt;\/b&gt;/);
-  assert.match(main, /H1 &amp; &lt;b&gt;one&lt;\/b&gt;/);
-  assert.match(main, /Go &amp; &lt;b&gt;now&lt;\/b&gt;/);
-  assert.doesNotMatch(main, /"><script>/);
-  assert.match(main, /Alt &amp; &lt;b&gt;text&lt;\/b&gt;/);
-});
-
-// --- Real production content ---
-
-test('the real production about.js content renders the exact AAA-approved card copy', () => {
-  const { main } = render(aboutContent);
-  assert.match(main, /<p class="about-card__name">AAA<\/p>/);
-  assert.match(
-    main,
-    /<p class="about-card__role">Full-Stack Software Developer<\/p>/,
-  );
-  assert.match(
-    main,
-    /<p class="about-card__statement">About AAA, an independent full-stack software developer with about five years of professional experience\.<\/p>/,
-  );
-  assert.match(
-    main,
-    /<li>About five years of professional software-development experience<\/li>/,
-  );
-  assert.match(
-    main,
-    /<li>Frontend, backend, database, and deployment capability<\/li>/,
-  );
-  assert.match(
-    main,
-    /<li>Direct involvement from planning through launch and agreed post-launch support<\/li>/,
-  );
-  assert.doesNotMatch(
-    main,
-    /Direct, end-to-end involvement on every project/,
-    'the rejected "every project" phrasing must never appear',
-  );
-  assert.match(
-    main,
-    /<a class="btn btn--primary about-card__cta" href="\/contact\/">Let&#39;s Discuss Your Project<\/a>/,
-  );
-});
-
-test('the real production portrait renders with the real inspected dimensions and the approved alt text', () => {
-  const { main } = render(aboutContent);
-  assert.match(
-    main,
-    /<img src="\/images\/profile\/aaa-portrait\.jpg" alt="Portrait of AAA" width="1665" height="1464">/,
-  );
-});
-
-test('the real production About page still contains its pre-existing approved biography paragraphs, unmodified', () => {
-  const { main } = render(aboutContent);
-  for (const paragraph of aboutContent.paragraphs) {
-    assert.ok(
-      main.includes(
-        `<p>${paragraph
-          .replace(/&/g, '&amp;')
-          .replace(/'/g, '&#39;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')}</p>`,
-      ),
-      `expected the existing approved paragraph to render unmodified: ${paragraph.slice(0, 40)}...`,
-    );
-  }
+  assert.doesNotMatch(main, /<script>/);
+  assert.match(main, /&lt;script&gt;heading&lt;\/script&gt;/);
+  assert.match(main, /Biography &amp; &lt;script&gt;paragraph&lt;\/script&gt;/);
+  assert.match(main, /&lt;script&gt;stack&lt;\/script&gt;/);
+  assert.match(main, /&lt;img src=x onerror=alert\(1\)&gt;/);
+  assert.match(main, /Angular &amp; &lt;script&gt;item&lt;\/script&gt;/);
 });

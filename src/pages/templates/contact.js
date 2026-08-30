@@ -1,7 +1,9 @@
 import { escapeHtml } from '../escape.js';
 import { renderHeader } from '../../components/partials/header.js';
 import { renderFooter } from '../../components/partials/footer.js';
+import { renderContactForm } from '../../components/contact-form.js';
 import { isSafeEmail, isSafeExternalUrl } from '../link-safety.js';
+import { contentRevealAttributes } from '../../components/content-reveal.js';
 
 // Sourced from `site`, not `content` — the same singleton-fact pattern
 // src/components/partials/footer.js already uses for these same three
@@ -37,7 +39,12 @@ export function renderContactPage({ content, navItems, activeKey, site }) {
     .join('');
   return {
     header: renderHeader(navItems, activeKey, site),
-    main: `<div class="container"><h1>${escapeHtml(content.heading)}</h1>${paragraphs}${renderContactMethods(site)}</div>`,
+    main:
+      `<div class="container"><div class="contact-intro"${contentRevealAttributes('fade-up')}><h1>${escapeHtml(content.heading)}</h1>${paragraphs}` +
+      `${renderContactMethods(site)}` +
+      `</div>` +
+      `${site.contactForm?.enabled === true ? renderContactForm({ content: content.form, action: site.contactForm.action, contactEmail: site.contactEmail }) : ''}` +
+      `</div>`,
     footer: renderFooter(navItems, site),
   };
 }

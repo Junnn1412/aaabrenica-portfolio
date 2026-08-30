@@ -10,7 +10,9 @@ import { renderFooter } from '../../components/partials/footer.js';
 import { renderSectionHeader } from '../../components/section-header.js';
 import { renderIcon } from '../../components/icon.js';
 import { renderCta } from '../../components/cta.js';
+import { renderActionLink } from '../../components/action-link.js';
 import { CAPABILITY_ICONS } from '../icon-registry.js';
+import { contentRevealAttributes } from '../../components/content-reveal.js';
 
 function renderIntro(content) {
   const paragraphs = content.paragraphs
@@ -44,7 +46,11 @@ function renderEvidence(evidence) {
   if (!evidence) return '';
   return (
     `<p class="solution-section__evidence">` +
-    `<a href="${escapeHtml(evidence.path)}">Related project: ${escapeHtml(evidence.label)}</a>` +
+    renderActionLink({
+      label: `Related project: ${evidence.label}`,
+      href: evidence.path,
+      variant: 'forward',
+    }) +
     `</p>`
   );
 }
@@ -54,40 +60,50 @@ function renderSolutionSection(section) {
 
   return (
     `<section id="${escapeHtml(section.id)}" class="page-section solution-section">` +
-    `<div class="container">` +
+    `<div class="container"><div class="solutions-page__container"${contentRevealAttributes('fade-up')}>` +
     `<div class="solution-section__heading-row">` +
     iconMarkup +
     renderSectionHeader({ heading: section.heading }) +
     `</div>` +
     `<dl class="solution-section__detail">` +
+    `<div class="solution-section__column">` +
     `<dt class="solution-section__label">The Problem</dt>` +
     `<dd>${escapeHtml(section.problem)}</dd>` +
     `<dt class="solution-section__label">Who It's For</dt>` +
     `<dd>${escapeHtml(section.audience)}</dd>` +
+    `</div>` +
+    `<div class="solution-section__column">` +
     `<dt class="solution-section__label">What I Can Build</dt>` +
     `<dd>${escapeHtml(section.build)}</dd>` +
     `<dt class="solution-section__label">Expected Benefit</dt>` +
     `<dd>${escapeHtml(section.benefit)}</dd>` +
+    `</div>` +
     `</dl>` +
+    `<div class="solution-section__links">` +
     renderEvidence(section.evidence) +
     `<p class="solution-section__action">` +
-    `<a href="${escapeHtml(section.cta.path)}">${escapeHtml(section.cta.label)}</a>` +
+    renderActionLink({
+      label: section.cta.label,
+      href: section.cta.path,
+      variant: 'forward',
+    }) +
     `</p>` +
-    `</div></section>`
+    `</div>` +
+    `</div></div></section>`
   );
 }
 
 function renderClosingCtaSection(cta) {
   return (
-    `<section class="page-section"><div class="container">` +
-    renderCta(cta) +
-    `</div></section>`
+    `<section class="page-section"><div class="container"><div class="solutions-page__container">` +
+    renderCta({ ...cta, reveal: 'fade-up' }) +
+    `</div></div></section>`
   );
 }
 
 export function renderSolutionsPage({ content, navItems, activeKey, site }) {
   const main =
-    `<div class="container">${renderIntro(content)}${renderJumpNav(content.sections)}</div>` +
+    `<div class="container"><div class="solutions-page__container"><div class="solutions-page__intro"${contentRevealAttributes('fade-up')}>${renderIntro(content)}${renderJumpNav(content.sections)}</div></div></div>` +
     content.sections.map(renderSolutionSection).join('') +
     renderClosingCtaSection(content.cta);
 

@@ -112,6 +112,9 @@ since every token is a real `:root` custom property, future JS reads via
 | `--color-accent-fill`                                                                                            | `color.adjust($palette-cobalt-500, $lightness: -8%)` → `#054eff`      | PF-021: `.btn--primary` fill, default. Independently defined from `--color-accent-active` despite an identical current value — same precedent as the capability accents below                                                                                                                       |
 | `--color-accent-fill-hover`                                                                                      | `color.adjust($palette-cobalt-500, $lightness: -14%)` → `#0043e6`     | PF-021: `.btn--primary` fill, hover                                                                                                                                                                                                                                                                 |
 | `--color-accent-fill-active`                                                                                     | `color.adjust($palette-cobalt-500, $lightness: -20%)` → `#003ac7`     | PF-021: `.btn--primary` fill, active                                                                                                                                                                                                                                                                |
+| `--color-primary-gradient-start` / `--color-primary-gradient-end`                                                | `#123a9f` / `#245fd6`                                                 | Current shared `.btn--primary` default gradient stops                                                                                                                                                                                                                                               |
+| `--color-primary-gradient-hover-start` / `--color-primary-gradient-hover-end`                                    | `#0e2f86` / `#1b49ad`                                                 | Current shared `.btn--primary` pointer-hover gradient stops                                                                                                                                                                                                                                         |
+| `--color-primary-gradient-active-start` / `--color-primary-gradient-active-end`                                  | `#0b276f` / `#123a9f`                                                 | Current shared `.btn--primary` active gradient stops                                                                                                                                                                                                                                                |
 | `--color-border-interactive`                                                                                     | `color.adjust($palette-slate-600, $lightness: 28%)` → `#5e70ab`       | PF-021: the interactive-boundary color for bordered/filled buttons and form controls — `--color-border` stays reserved for purely decorative dividers                                                                                                                                               |
 | `--status-success` / `--status-warning` / `--status-danger` / `--status-info`                                    | `#3ddc84` / `#f5b942` / `#f0576b` / `#22c3d6`                         | Status text/icon — always paired with an icon or text label, never color alone                                                                                                                                                                                                                      |
 | `--accent-lime` / `--accent-amber` / `--accent-coral` / `--accent-violet` / `--accent-cyan` / `--accent-magenta` | `#8dd941` / `#f5b942` / `#f0576b` / `#9b6bff` / `#22c3d6` / `#ef4fa0` | The six capability-card accents (PF-032) — used as each card's full solid background fill. `--accent-magenta` was added in PF-032: PF-020 reserved only five, PF-032 needed six. Independently defined, not aliased to status colors — a future change to one role never silently changes the other |
@@ -137,33 +140,39 @@ percentage form for `color.adjust()`-derived tokens, which PF-020's
 format was a real gap in the parser until PF-021 exercised it — or modern
 space-form `rgb(r g b / a%)`), and asserts each ratio meets its threshold.
 
-| Foreground                   | Background             | Type            | Ratio   | Target                     | Result                                                                                       |
-| ---------------------------- | ---------------------- | --------------- | ------- | -------------------------- | -------------------------------------------------------------------------------------------- |
-| `--color-text-primary`       | `--color-canvas`       | TEXT            | 16.58:1 | 4.5:1                      | Pass (AAA)                                                                                   |
-| `--color-text-primary`       | `--color-surface-1`    | TEXT            | 14.56:1 | 4.5:1                      | Pass (AAA)                                                                                   |
-| `--color-text-secondary`     | `--color-canvas`       | TEXT            | 8.82:1  | 4.5:1                      | Pass (AAA)                                                                                   |
-| `--color-text-secondary`     | `--color-surface-1`    | TEXT            | 7.75:1  | 4.5:1                      | Pass (AAA)                                                                                   |
-| `--color-text-muted`         | `--color-canvas`       | TEXT            | 5.75:1  | 4.5:1                      | Pass                                                                                         |
-| `--color-text-muted`         | `--color-surface-1`    | TEXT            | 5.05:1  | 4.5:1                      | Pass                                                                                         |
-| `--color-accent`             | `--color-canvas`       | LARGE-TEXT/UI   | 4.26:1  | 3.0:1 (large-text/UI only) | Pass — restricted role                                                                       |
-| `--color-accent`             | `--color-surface-1`    | LARGE-TEXT/UI   | 3.74:1  | 3.0:1                      | Pass — restricted role                                                                       |
-| `--color-accent-text`        | `--color-canvas`       | TEXT            | 7.13:1  | 4.5:1                      | Pass (AAA)                                                                                   |
-| `--color-accent-text`        | `--color-surface-1`    | TEXT            | 6.26:1  | 4.5:1                      | Pass                                                                                         |
-| `--status-success`           | `--color-canvas`       | TEXT            | 10.75:1 | 4.5:1                      | Pass                                                                                         |
-| `--status-warning`           | `--color-canvas`       | TEXT            | 10.88:1 | 4.5:1                      | Pass                                                                                         |
-| `--status-danger`            | `--color-canvas`       | TEXT            | 5.74:1  | 4.5:1                      | Pass                                                                                         |
-| `--status-danger`            | `--color-surface-1`    | TEXT            | 5.04:1  | 4.5:1                      | Pass                                                                                         |
-| `--status-info`              | `--color-canvas`       | TEXT            | 8.99:1  | 4.5:1                      | Pass                                                                                         |
-| `--color-accent-hover`       | `--color-canvas`       | TEXT            | 5.37:1  | 4.5:1                      | Pass — link hover text (PF-021)                                                              |
-| `--color-accent-hover`       | `--color-surface-1`    | TEXT            | 4.72:1  | 4.5:1                      | Pass — tighter margin, still real                                                            |
-| `--color-accent-fill`        | `--color-text-primary` | TEXT            | 5.12:1  | 4.5:1                      | Pass — `.btn--primary` label, default (PF-021)                                               |
-| `--color-accent-fill-hover`  | `--color-text-primary` | TEXT            | 6.17:1  | 4.5:1                      | Pass — `.btn--primary` label, hover                                                          |
-| `--color-accent-fill-active` | `--color-text-primary` | TEXT            | 7.46:1  | 4.5:1                      | Pass — `.btn--primary` label, active                                                         |
-| `--color-border-interactive` | `--color-canvas`       | NON-TEXT        | 4.01:1  | 3.0:1                      | Pass — button/form-control boundary (PF-021)                                                 |
-| `--color-border-interactive` | `--color-surface-1`    | NON-TEXT        | 3.53:1  | 3.0:1                      | Pass                                                                                         |
-| `--color-focus-ring`         | `--color-canvas`       | FOCUS-INDICATOR | 4.26:1  | 3.0:1                      | Pass — same value as `--color-accent`, asserted under its own name for traceability (PF-021) |
-| `--color-focus-ring`         | `--color-surface-1`    | FOCUS-INDICATOR | 3.74:1  | 3.0:1                      | Pass                                                                                         |
-| `--color-text-secondary`     | `--color-surface-2`    | TEXT            | 6.94:1  | 4.5:1                      | Pass — `.tag` label (PF-021)                                                                 |
+| Foreground                              | Background             | Type            | Ratio    | Target                     | Result                                                                                       |
+| --------------------------------------- | ---------------------- | --------------- | -------- | -------------------------- | -------------------------------------------------------------------------------------------- |
+| `--color-text-primary`                  | `--color-canvas`       | TEXT            | 16.58:1  | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-primary`                  | `--color-surface-1`    | TEXT            | 14.56:1  | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-secondary`                | `--color-canvas`       | TEXT            | 8.82:1   | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-secondary`                | `--color-surface-1`    | TEXT            | 7.75:1   | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-text-muted`                    | `--color-canvas`       | TEXT            | 5.75:1   | 4.5:1                      | Pass                                                                                         |
+| `--color-text-muted`                    | `--color-surface-1`    | TEXT            | 5.05:1   | 4.5:1                      | Pass                                                                                         |
+| `--color-accent`                        | `--color-canvas`       | LARGE-TEXT/UI   | 4.26:1   | 3.0:1 (large-text/UI only) | Pass — restricted role                                                                       |
+| `--color-accent`                        | `--color-surface-1`    | LARGE-TEXT/UI   | 3.74:1   | 3.0:1                      | Pass — restricted role                                                                       |
+| `--color-accent-text`                   | `--color-canvas`       | TEXT            | 7.13:1   | 4.5:1                      | Pass (AAA)                                                                                   |
+| `--color-accent-text`                   | `--color-surface-1`    | TEXT            | 6.26:1   | 4.5:1                      | Pass                                                                                         |
+| `--status-success`                      | `--color-canvas`       | TEXT            | 10.75:1  | 4.5:1                      | Pass                                                                                         |
+| `--status-warning`                      | `--color-canvas`       | TEXT            | 10.88:1  | 4.5:1                      | Pass                                                                                         |
+| `--status-danger`                       | `--color-canvas`       | TEXT            | 5.74:1   | 4.5:1                      | Pass                                                                                         |
+| `--status-danger`                       | `--color-surface-1`    | TEXT            | 5.04:1   | 4.5:1                      | Pass                                                                                         |
+| `--status-info`                         | `--color-canvas`       | TEXT            | 8.99:1   | 4.5:1                      | Pass                                                                                         |
+| `--color-accent-hover`                  | `--color-canvas`       | TEXT            | 5.37:1   | 4.5:1                      | Pass — link hover text (PF-021)                                                              |
+| `--color-accent-hover`                  | `--color-surface-1`    | TEXT            | 4.72:1   | 4.5:1                      | Pass — tighter margin, still real                                                            |
+| `--color-accent-fill`                   | `--color-text-primary` | TEXT            | 5.12:1   | 4.5:1                      | Pass — `.btn--primary` label, default (PF-021)                                               |
+| `--color-accent-fill-hover`             | `--color-text-primary` | TEXT            | 6.17:1   | 4.5:1                      | Pass — `.btn--primary` label, hover                                                          |
+| `--color-accent-fill-active`            | `--color-text-primary` | TEXT            | 7.46:1   | 4.5:1                      | Pass — `.btn--primary` label, active                                                         |
+| `--color-primary-gradient-start`        | `--color-text-primary` | TEXT            | 8.514:1  | 4.5:1                      | Pass — current primary-gradient default start                                                |
+| `--color-primary-gradient-end`          | `--color-text-primary` | TEXT            | 4.928:1  | 4.5:1                      | Pass — current primary-gradient default end                                                  |
+| `--color-primary-gradient-hover-start`  | `--color-text-primary` | TEXT            | 10.256:1 | 4.5:1                      | Pass — current primary-gradient hover start                                                  |
+| `--color-primary-gradient-hover-end`    | `--color-text-primary` | TEXT            | 6.972:1  | 4.5:1                      | Pass — current primary-gradient hover end                                                    |
+| `--color-primary-gradient-active-start` | `--color-text-primary` | TEXT            | 11.831:1 | 4.5:1                      | Pass — current primary-gradient active start                                                 |
+| `--color-primary-gradient-active-end`   | `--color-text-primary` | TEXT            | 8.514:1  | 4.5:1                      | Pass — current primary-gradient active end                                                   |
+| `--color-border-interactive`            | `--color-canvas`       | NON-TEXT        | 4.01:1   | 3.0:1                      | Pass — button/form-control boundary (PF-021)                                                 |
+| `--color-border-interactive`            | `--color-surface-1`    | NON-TEXT        | 3.53:1   | 3.0:1                      | Pass                                                                                         |
+| `--color-focus-ring`                    | `--color-canvas`       | FOCUS-INDICATOR | 4.26:1   | 3.0:1                      | Pass — same value as `--color-accent`, asserted under its own name for traceability (PF-021) |
+| `--color-focus-ring`                    | `--color-surface-1`    | FOCUS-INDICATOR | 3.74:1   | 3.0:1                      | Pass                                                                                         |
+| `--color-text-secondary`                | `--color-surface-2`    | TEXT            | 6.94:1   | 4.5:1                      | Pass — `.tag` label (PF-021)                                                                 |
 
 `--color-border` is outside this matrix — WCAG 1.4.11 exempts purely
 decorative dividers; real interactive boundaries use
@@ -172,16 +181,15 @@ is never communicated by color alone: status colors and `.field--error` must
 always be paired with an icon or text label when actually used, never color
 alone.
 
-**`.btn--primary`'s fill is not its own component boundary.** Verified
-during PF-021 planning: `--color-accent-fill`/`-hover`/`-active` against
-`--color-canvas`/`--color-surface-1` range from 3.24:1 down to 1.95:1,
-failing the 3:1 non-text floor in 5 of 6 state/background combinations. The
-persistent `--color-border-interactive` border — present in every fill
-state, not just added on hover — is the button's actual WCAG 1.4.11
-boundary instead. This is why `--color-accent-fill*` appears in the matrix
-only as a TEXT pair (the label on top of the fill), never as a NON-TEXT pair
-(the fill against the page behind it, which was deliberately not asserted
-since it would fail by design).
+**`.btn--primary`'s fill is not its own component boundary.** The current
+gradient is dimensional presentation; the persistent
+`--color-border-interactive` border — present in every enabled state — is the
+button's WCAG 1.4.11 boundary. It measures 4.002:1 against `--color-canvas` and
+3.516:1 against `--color-surface-1`. Every gradient stop is tested separately
+against `--color-text-primary`, so interpolation cannot introduce a lighter
+endpoint that silently breaks label contrast. The older
+`--color-accent-fill*` tokens remain documented because they still exist in
+the palette API, but `.btn--primary` no longer consumes them.
 
 ## Typography
 
@@ -914,7 +922,7 @@ of those pairings is already asserted, unmodified, in
 `tests/design-tokens.test.mjs`. No new contrast surface was introduced by
 this component.
 
-**Content: no invented summaries, technologies, outcomes, or images.**
+**Historical PF-033 content state (superseded for current cards): no invented summaries, technologies, outcomes, or images.**
 None of that content has been approved for any of the three real projects
 — `DEVELOPER_PORTFOLIO_INITIAL_REQUIREMENTS.md` only ever names them, it
 never supplies problem/outcome/tech copy. The three real showcase cards
@@ -929,7 +937,7 @@ omitted rather than paraphrased. FES Challenger has no category term at
 all. This makes the three real cards the genuine, non-contrived specimens
 for the missing-category/missing-summary/missing-tags states.
 
-**Missing-image treatment.** All three real cards need this today — the
+**Historical PF-033 missing-image treatment (superseded).** All three real cards needed this at PF-033 — the
 primary state this milestone ships, not a rare edge case. An empty
 `.media-frame` (its existing `background-color: var(--color-surface-1)`,
 no `<img>`) is a clean, honest, visibly-empty "viewport," not a disguised
@@ -941,6 +949,19 @@ with an original inline-SVG abstract composition (not a screenshot).
 **"Browser or device frame created with HTML and CSS"** (§7.2): an
 original `.project-card__frame-dots` chrome bar (three CSS radial-gradient
 dots, no new asset) sits above the existing `.media-frame`.
+
+**Current project-card presentation contract (2026-08-19).** Every real
+card must declare exactly one closed `presentation.kind`: `image`,
+`text-only`, or `deferred`. Missing/unknown kinds and malformed image data
+fail both schema and renderer validation. Only `image` emits
+`.project-card__frame`, browser dots, `.media-frame`, and `<img>`; the image
+uses truthful intrinsic dimensions, non-empty alt text, and lazy loading.
+`text-only` emits no media subtree. `deferred` likewise emits no media
+subtree and adds its explicit status in `.project-card__status`. FES
+Challenger is the sole current image card and reuses the approved gallery
+screenshot descriptor (2880×1388). Business Workflow System is deliberate
+text-only. eBarangay is deferred with the exact visible status "Case study
+in development." Empty frames are no longer valid markup.
 
 **One shared list, not two.** Featured and secondary cards are `<li>`
 siblings of the same `<ul class="project-cards">` — `.project-card--featured`
@@ -2016,7 +2037,7 @@ audit; this section documents the resulting contract.
 unchanged universal base fields and the required `backLink`:
 
 ```
-content.logo             optional  { src, alt? }
+content.logo             optional  { src, alt?, width, height }
 content.client           optional  { body: string[] }
 content.problem          optional  { body: string[] }
 content.role             optional  { body: string[], responsibilities: string[] }
@@ -2067,12 +2088,18 @@ already-separate `{ header, main, footer }` return shape;
 already use) against the real content module's `externalLink.url`, so the
 check is generic across any case-study route, not FES-specific.
 
-**Logo — decorative by default.** `content.logo.alt` defaults to `''` at
-the template level; the visible `<h1>` stays the real accessible identity,
-matching AAA's own stated preference for FES ("prefer keeping the visible
-text heading and using the logo decoratively"). A future case study that
-needs the logo to _replace_ visible text identity somewhere would set a
-real `alt` on that specific `<img>` — not a schema change.
+**Logo — intrinsic, responsive, and decorative by default.** A present
+`content.logo` requires positive-integer `width`/`height`; the shared template
+renders those native attributes from content so the browser knows the source
+ratio before the image loads. `content.logo.alt` defaults to `''`; the visible
+`<h1>` stays the real accessible identity. The FES mark retains its verified
+140×137 ratio through `width: auto` and `object-fit: contain`, with a 3.5rem
+default height and 4.5rem height from the existing 48em breakpoint. The logo
+is nonshrinking. Its horizontal row keeps `align-items: center` and
+`gap: var(--space-3)`; the row owns the existing `var(--space-4)` post-heading
+spacing while its scoped `<h1>` margin is zero, so alignment uses the visible
+heading box rather than the generic heading margin. Logo absence remains valid
+and emits no image or empty wrapper.
 
 **Gallery/media semantics.** `gallery.items[]`: `src` a safe root-relative
 path (recommended convention: `public/images/case-studies/<slug>/
@@ -2110,13 +2137,14 @@ AAA-reviewed and corrected before implementation, still subject to the
 PF-064 final polish pass, the same status every other dedicated page's
 copy carries.
 
-## Footer redesign
+## Historical footer redesign (superseded 2026-08-21)
 
-A focused follow-up to the header/nav polish restructured the footer from a
+A focused follow-up to the header/nav polish originally restructured the footer from a
 single flat block into three labeled columns — Brand, Quick Links, Connect
 — plus a bottom row (copyright, Privacy). Full rationale in
 `docs/DECISION_LOG.md`'s dated entry; this section covers the resulting
-component contract.
+historical component contract. The compact centered footer section below is
+the current contract and supersedes this entire historical section.
 
 **Layout — no `.container` wrapper, matching the header exactly.**
 `.site-footer__columns` is a single-column CSS Grid at mobile/tablet
@@ -2158,7 +2186,7 @@ bottom row's two paragraphs (asymmetric bottom margin inside an
 merged.** Email uses the existing Lucide `Mail` icon via `icon.js`'s
 `renderIcon()` (stroke-based, `stroke="currentColor" fill="none"`).
 GitHub/LinkedIn use a new, separate `src/components/social-icons.js` —
-Simple Icons' official monochrome brand marks (MIT License, `simple-icons`
+Simple Icons' official monochrome brand marks (CC0-1.0, `simple-icons`
 v16.28.0, fetched live 2026-08-18; exact source URLs recorded in that
 file's own header comment), single filled `<path>` per mark
 (`fill="currentColor"`). These are structurally different icon shapes
@@ -2259,3 +2287,302 @@ rendered result and are reset, the same fix shape already used for
 
 **Homepage About preview untouched**, confirmed by a dedicated regression
 test — this task's scope was the About page only.
+
+### Current shared profile-card contract (2026-08-19)
+
+This current contract supersedes the About-only scope, `.about-card` names,
+internal card CTA, optional-card behavior, and "homepage untouched" statements
+in the historical implementation notes above.
+
+`src/components/profile-card.js` and
+`src/styles/components/_profile-card.scss` now serve two proven callers.
+Shared identity and portrait metadata live in `site.profile`; route content
+supplies only variant-specific data:
+
+- `full` — About only: portrait, name, role, approved statement, exactly
+  three highlights, no action, and no `loading` attribute because the image
+  is above the fold.
+- `compact` — homepage About only: portrait, name, role, exactly one
+  `Read My Full Story` action to `/about/`, no statement or highlights, and
+  `loading="lazy"` because the image is below the fold. The existing approved
+  homepage paragraph stays once in the preceding copy column.
+
+Both variants preserve `.media-frame--portrait`'s 4:5 ratio,
+`object-fit: cover`, centered cropping, the neutral card surface, and the
+single static electric-blue bracket. About and Home stack copy before card
+by default and use the established 64em 58/42 composition without CSS
+`order`. About additionally uses a real grid wrapper with
+`gap: var(--space-8)` between `.about-layout` and its unchanged closing CTA.
+The full card has no action, leaving exactly one Contact CTA in About main.
+
+## Project-card visibility and carousel addendum (2026-08-19)
+
+The current closed card presentation set is `image`, `carousel`, `text-only`,
+and `deferred`. `carousel` requires exactly three complete image descriptors.
+FES is the only currently visible Home/Work card; BWS and eBarangay remain
+valid source records but are filtered before markup is produced.
+
+The FES control bar is a balanced three-column grid: a 44×44px Previous button,
+three centered 44×44px indicator targets, and a 44×44px Next button. The active
+indicator changes size and fill, so color is not its only signal. The carousel
+uses a stable 16:9 media box, centered `object-fit: contain`, a short opacity
+transition, and an explicit no-transition reduced-motion override.
+
+Project-card media resolves to `border-radius: 0`; `.project-card` retains
+`var(--radius-lg)` and outer clipping, eliminating rounded internal seams
+without changing generic `.media-frame`. `.project-cards--single` guarantees
+one actual track when only FES is visible. Home's project list and Explore
+action use a scoped grid with `gap: var(--space-6)`.
+
+## About core-technologies addendum (2026-08-21)
+
+The About left column now contains an About-owned `.about-stack` section after
+the two biography paragraphs. Its semantic contract is one H2 (`Core
+Technologies`), followed by four H3 group headings and one list of static tags
+per group. Each technology is a `<span class="tag">` inside a list item; tags
+remain noninteractive and inherit the existing neutral tag treatment with no
+hover state.
+
+`.about-stack__groups` is a one-column grid by default and becomes a compact
+two-column grid at the existing 40em breakpoint. Both states use flexible
+tracks. `.about-stack__tags` resets the generic prose-list maximum width,
+margin, padding, list style, and item margin, then uses `flex-wrap: wrap` with
+existing spacing tokens. Scoped `min-width: 0`/`max-width: 100%` constraints
+prevent flex/grid min-content growth without changing the shared `.tag`.
+
+The section has spacing but no border or background, so it does not compete
+with the unchanged full profile-card surface. It introduces no icons, logos,
+links, ratings, years, percentages, proficiency levels, animation, or
+hover-only information. At every width the source and visual order is biography
+then technology stack, full profile card, Experience, and closing CTA; CSS
+`order` is not used.
+
+## About Experience timeline addendum (2026-08-21)
+
+Experience is a full-width About section between the intro/profile composition
+and closing CTA. Its header reuses the established `.section-header` object:
+`PROFESSIONAL JOURNEY` is the eyebrow, `Experience` is the labelled H2, and the
+approved introductory line is the lede. The renderer supplies a fixed H2 ID via
+the section-header renderer's optional `headingId`; existing callers omit it and
+retain their exact markup.
+
+The timeline is an `<ol class="experience-timeline">`. Each list item contains
+one `.experience-card` article labelled by its role H3. Employers remain plain
+paragraph text. Date ranges use real `<time datetime="YYYY-MM">` elements where
+a concrete month exists; the visible range remains the accessible text.
+Responsibilities remain semantic lists and technology values reuse static `.tag`
+spans.
+
+The axis and nodes are `.experience-timeline::before` and
+`.experience-timeline__item::before`; pseudo-elements provide no accessibility
+tree content. Both use `--color-accent` and real borders. Cards reuse the neutral
+surface, border, radius, typography, and spacing tokens—no employer brand colors,
+logos, links, gradients, glow, blur, large shadow, animation, hover state, or
+whole-card interaction.
+
+Mobile is the default: identity, employer, then dates stack naturally; cards
+have no fixed height; long employer/technology values wrap; and the timeline
+offset stays separate from content. At the existing 48em breakpoint only the
+card header changes to `minmax(0, 1fr) auto`, moving dates upper-right. The
+existing 64em About intro/profile split is untouched. No CSS `order` is used.
+
+AAA's supplied mobile view is accepted. The supplied desktop view rejected the
+initial narrow result: despite correct sibling DOM placement, both the shared
+section header and timeline still won a 68ch reading-width cap. The corrected
+About-only composition adds `.about-experience__inner` with `width: 100%`, a
+centered `70rem` maximum, and no change to the 80rem main container. Seventy rem
+is deliberately scoped because the existing 80rem/90rem container tokens are
+wider than the approved 64–72rem range. The Experience-specific header reset and
+timeline reset let both share the inner boundary; the lede, summaries, and
+responsibility lists retain readable text measures.
+
+Each card keeps role/employer/dates first, then a minimal
+`.experience-card__main` wrapper around summary and responsibilities, followed
+by technology tags. The wrapper is one flexible track by default and becomes
+`minmax(0, 2fr) minmax(0, 3fr)` only from 64em. Desktop cards use `--space-7`
+padding and timeline gaps; role H3/body/tag typography stays on existing tokens.
+The visual result remains left-aligned within the centered composition. Mobile
+axis, nodes, card flow, date placement, wrapping, and widths are unchanged.
+
+## Current compact navigation and footer contract (2026-08-21)
+
+The primary navigation owns five ordinary destinations in exact order: Home,
+Solutions, Process, Work, and About. The shared `Start a Project` primary CTA
+is the sixth and sole navbar path to Contact. Its content-owned key is
+`contact`, so `/contact/` applies `aria-current="page"` to the CTA through the
+same renderer logic used by ordinary current items. Desktop and collapsed
+mobile navigation share this source order; removing the duplicate ordinary
+Contact item does not change toggle state or breakpoint behavior.
+
+AAA rejected the initial centered brand/social/copyright result: the footer
+brand repeated the persistent sticky-navbar identity and made the footer too
+tall. The current footer emits only copyright followed by one list of Email,
+GitHub, LinkedIn, and Facebook icon links. There is no footer image, brand link,
+brand wrapper, hidden brand content, heading, navigation, Contact link, or
+Privacy link.
+
+`.site-footer__inner` also carries the established `.container` class. Mobile is
+a compact copyright-first/social-second flex column with centered text and a
+token gap. At the existing 48em breakpoint it becomes one vertically centered
+row using `justify-content: space-between`: copyright left and social links
+right. DOM order never changes and CSS `order` is absent. The footer keeps its
+surface and top divider but reduces block padding to `--space-3`.
+
+The icon list resets the generic prose-list maximum, margin, padding, list
+style, and item margin, then wraps safely. The copyright resets the generic
+paragraph measure and margin. Flexible content uses `min-width: 0`; no global or
+footer overflow-hiding workaround exists.
+
+Each icon anchor is a distinct 44px-minimum keyboard stop with a single
+anchor-owned `aria-label`; its SVG is decorative and unfocusable. Email keeps
+the Lucide Mail glyph and a local `mailto:` target. GitHub, LinkedIn, and
+Facebook use the closed Simple Icons map, HTTPS host allowlists, and
+`target="_blank" rel="noopener noreferrer"`. The Facebook path is the official
+pinned `simple-icons` v16.28.0 monochrome glyph, licensed CC0-1.0, and the
+rendered URL is `https://www.facebook.com/Junnabrenica/`. Pointer hover changes
+only the restrained surface/border treatment; the global focus indicator and
+explicit forced-colors boundary remain.
+
+The absent footer Privacy link is a temporary disabled-Contact presentation
+decision, not removal of the `/privacy/` route. Contact activation requires a
+clearly discoverable public Privacy link and approved published Contact Privacy
+copy in the coordinated release; runtime configuration cannot override that
+gate. PF-072 owns the deployment decision.
+
+## Current shared primary-button gradient (2026-08-21)
+
+`.btn--primary` is the single centralized selector for primary anchor and
+native-button variants. It uses a static `linear-gradient(135deg, ...)` backed
+by six semantic color tokens:
+
+- default: `#123a9f` → `#245fd6` (warm-white contrast 8.514:1 → 4.928:1);
+- pointer hover: `#0e2f86` → `#1b49ad` (10.256:1 → 6.972:1);
+- active: `#0b276f` → `#123a9f` (11.831:1 → 8.514:1).
+
+The persistent `--color-border-interactive` (`#5e70ab`) boundary measures
+4.002:1 against canvas and 3.516:1 against surface-1. Hover is present only in
+the existing fine-pointer media query; focus-visible remains the shared global
+ring. Disabled buttons remove the gradient and use the established readable
+surface/muted-text treatment. Forced-colors replaces the image with
+`ButtonFace`/`ButtonText`; reduced-motion has no gradient movement to suppress.
+Secondary/ghost/icon controls, tags, links, active-nav indicators, timeline
+nodes, and focus rings do not inherit the gradient. No page-specific gradient,
+continuous animation, glow, scale, glass highlight, or large shadow exists.
+
+## Current personal identity and Home hero visual (2026-08-21)
+
+The shared identity contract distinguishes two deliberate names. `Antonio
+Abrenica` is the concise public identity used by the visible navbar name,
+metadata/title composition, copyright, and Home compact profile card. `Antonio
+A. Abrenica III` is the formal identity used by the About full profile card and
+its exact portrait alternative, `Portrait of Antonio A. Abrenica III`. Card
+variants choose these fields explicitly; templates do not duplicate name
+strings and no heuristic chooses a value.
+
+The current navbar PNG is still a temporary legacy placeholder, not the final
+personal/SBTech-inspired logo. Its pixels are unchanged. It stays decorative
+with `alt=""` inside the one brand link; visible `Antonio Abrenica` text is the
+only accessible brand name.
+
+The Home hero visual is separate brand-neutral artwork. Its complete inline
+400×400 SVG renders statically before enhancement: thin blue-gray connection
+geometry, a restrained electric-blue overlay/signal, one large and one smaller
+circular node, and four points. It preserves the prior `width: 100%`, `max-width:
+28rem`, and automatic height. The media flex item has `min-width: 0`; SVG
+overflow is clipped to its own viewport and pointer events are disabled. The SVG
+is decorative and contributes no focus stop or accessible description.
+
+Only validated enhanced state adds motion. The overlay reveals once in 800ms,
+then a short signal dash traverses the path every 6s. The primary node breathes
+to at most 1.02 scale and the destination pulse reaches at most 1.035. The
+always-visible base path prevents important geometry from disappearing. There
+is no rotation, bounce, glow, filter, parallax, pointer response, sound, or
+layout-property animation. Narrow viewports remove idle breathing while
+retaining the restrained reveal/signal treatment.
+
+`.is-paused` freezes every scoped CSS animation when the visual is offscreen or
+the tab is hidden. Reduced motion removes every animation and leaves the final
+static geometry immediately visible; JavaScript also withholds enhancement
+state and handles preference changes. The approved primary-button gradient is
+unchanged. The corrected compact footer and hero motion still await browser
+approval.
+
+## Standalone action-link component (PF-064)
+
+`renderActionLink({ label, href, variant })` is the production renderer for
+icon-assisted standalone text actions. Its closed variants are `forward`
+(label, Arrow Right), `back` (Arrow Left, label), and `external` (label,
+External Link). The caller chooses the variant explicitly. Icons come through
+the existing closed Lucide registry and static icon renderer and always carry
+`aria-hidden="true"` and `focusable="false"`; the label span is the anchor's
+complete accessible name.
+
+`.action-link` is scoped and does not alter generic `<a>` behavior. It uses
+`inline-flex`, the minimum touch-target height, existing accent/spacing/motion
+tokens, and a transparent bottom boundary that becomes visible on hover/active.
+Only fine pointers translate the icon by 0.1875rem in its direction. Reduced
+motion removes transition and translation. The global focus-visible ring stays
+authoritative, and forced colors expose a LinkText boundary. The link gains no
+button fill, glow, scale, bounce, or whole-link movement.
+
+## Rich case-study layout and media (PF-064)
+
+`.container.case-study` has a scoped 72rem maximum because the existing 80rem
+and 90rem container tokens do not match the approved editorial width. Paragraphs
+and section headers retain the 68ch reading measure inside that wider boundary.
+At the existing 80em desktop breakpoint, only
+`.case-study-hero--with-media` gains flexible 0.85fr/1.15fr
+tracks, and only complete two-member narrative pairs gain two equal flexible
+tracks. Defaults are one track, so copy stays first and media second without CSS
+`order`; missing media or pair members cannot leave empty columns.
+
+FES hero media uses the normal `.media-frame` clipping/radius surface with an
+intrinsic-height contained image. Containment preserves the complete verified
+desktop screenshot; cropping would remove navigation and project evidence.
+Role and Outcomes lists use balanced flexible tracks at desktop, Technology
+Stack remains a wrapping tag row, and the gallery is a full-width responsive
+grid. Sections use borders and spacing tokens rather than nested heavy cards.
+
+## Scoped Solutions and Process editorial layouts (PF-064)
+
+The Solutions and Process templates retain the shared 80rem `.container` but
+add an internal, centered 72rem page boundary. This is page-specific and does
+not alter `--width-reading` or generic paragraph/list rules.
+
+Solutions keeps one semantic `<dl>` per service. Its two direct group wrappers
+preserve source order while desktop CSS places Problem/Audience and
+What-I-Can-Build/Expected-Benefit in balanced flexible columns. The optional
+evidence/action row is a normal flow block, so missing evidence cannot create
+an empty grid cell. Tablet/mobile uses one column.
+
+Process keeps the ordered seven-stage list and places each stage identity beside
+its facts on desktop. The restrained rail and nodes are CSS-only. Fact groups
+are flexible two-column items; an odd final group spans both columns. Mobile
+and tablet use one natural column, and Working Together reuses the same facts
+contract. No CSS `order`, fixed stage height, or decorative surface card is
+introduced.
+
+## Progressive content reveal (PF-064)
+
+`contentRevealAttributes()` is the closed renderer contract for explicit
+`fade-up` and `fade-in` variants. It permits only a 0–3 stagger index; timing
+stays in `--motion-duration-reveal` (560ms) and `--motion-stagger-reveal`
+(80ms), using the dedicated `cubic-bezier(.22,1,.36,1)` easing. The default `[data-content-reveal]` rule only establishes a custom
+property and never sets opacity, visibility, display, or transform. The
+transient animation class is added by the progressive script after successful
+initialization, then removed at animation completion.
+
+One IntersectionObserver handles all marked groups. Initial viewport targets
+receive a restrained introduction; approaching below-fold targets are observed
+and revealed once. Completed targets are never replayed on resize, focus,
+history, viewport re-entry, or unrelated component activity. Hidden tabs and
+runtime reduced-motion changes complete targets immediately. Focus and hash
+navigation reveal the destination before normal reading/scroll positioning.
+The system has no timer/frame loop, dependency, scale, blur, rotation, glow,
+parallax, or animated gradient.
+
+Eligible groups are page intros, meaningful sections, stage/solution groups,
+case-study editorial sections/media, About biography/profile/stack/Experience,
+and Home groups/CTA. Header/navbar, mobile navigation, footer, skip link,
+tags, action-link icons, carousel slides/controls, form feedback, and the Home
+hero SVG internals remain outside the contract.

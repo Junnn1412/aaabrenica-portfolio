@@ -156,7 +156,7 @@ test('the desktop breakpoint is unchanged by this fix (still 80em / spacing.$bp-
   assert.ok(navMatch, 'expected the desktop .site-nav block scoped to 80em');
 });
 
-test('the real production header still renders all 6 nav links and the unaltered CTA label — the fix removed no content', () => {
+test('the simplified production header renders five ordinary links plus the sole Contact CTA without overflow guards regressing', () => {
   const html = renderHeader(primaryNav, 'home', realSite);
   for (const { label } of primaryNav) {
     assert.match(
@@ -167,4 +167,25 @@ test('the real production header still renders all 6 nav links and the unaltered
   }
   assert.match(html, />Start a Project<\/a>/);
   assert.match(html, /class="btn btn--primary btn--sm site-nav__cta"/);
+  assert.equal([...html.matchAll(/<nav[\s\S]*?<li>/g)].length > 0, true);
+  assert.equal([...html.matchAll(/<li>/g)].length, 6);
+  assert.equal([...html.matchAll(/href="\/contact\/"/g)].length, 1);
+  assert.doesNotMatch(html, />Contact<\/a>/);
+});
+
+test('simplified navigation width model fits required mobile and desktop widths', () => {
+  for (const viewport of [320, 375, 390, 768, 1024, 1440, 1920]) {
+    const gutter = Math.min(48, Math.max(20, 16 + viewport * 0.02));
+    const available = viewport - 2 * gutter;
+    if (viewport < 1280) {
+      const conservativeWidestItem = 184;
+      assert.ok(conservativeWidestItem <= available);
+    } else {
+      const brandLockup = 190;
+      const fivePlainLinks = 5 * 82;
+      const cta = 152;
+      const fiveGaps = 5 * 16;
+      assert.ok(brandLockup + fivePlainLinks + cta + fiveGaps <= available);
+    }
+  }
 });

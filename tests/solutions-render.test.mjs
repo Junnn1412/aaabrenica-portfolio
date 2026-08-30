@@ -23,7 +23,7 @@ function solutionsMain() {
 
 function extractSectionById(main, id) {
   const re = new RegExp(
-    `<section id="${id}" class="page-section solution-section">[\\s\\S]*?<\\/section>`,
+    `<section id="${id}" class="page-section solution-section"(?: [^>]*)?>[\\s\\S]*?<\\/section>`,
   );
   const match = main.match(re);
   assert.ok(match, `section id="${id}" not found`);
@@ -56,7 +56,7 @@ test('solutions: jump nav has exactly 6 links, set-equal to the 6 section ids on
 
   const sectionIds = [
     ...main.matchAll(
-      /<section id="([^"]+)" class="page-section solution-section">/g,
+      /<section id="([^"]+)" class="page-section solution-section"(?: [^>]*)?>/g,
     ),
   ].map((m) => m[1]);
   assert.equal(sectionIds.length, 6, 'expected exactly 6 anchored sections');
@@ -96,19 +96,19 @@ test('solutions: exactly 3 evidence links, each in its matching section, pointin
   );
   assert.match(
     workflowSection,
-    /<p class="solution-section__evidence"><a href="\/work\/business-workflow-system\/">Related project: Business Workflow System<\/a><\/p>/,
+    /<p class="solution-section__evidence"><a class="action-link action-link--forward" href="\/work\/business-workflow-system\/">[\s\S]*?<span class="action-link__label">Related project: Business Workflow System<\/span>[\s\S]*?<\/a><\/p>/,
   );
 
   const corporateSection = extractSectionById(main, 'corporate-websites');
   assert.match(
     corporateSection,
-    /<p class="solution-section__evidence"><a href="\/work\/fes-challenger\/">Related project: FES Challenger<\/a><\/p>/,
+    /<p class="solution-section__evidence"><a class="action-link action-link--forward" href="\/work\/fes-challenger\/">[\s\S]*?<span class="action-link__label">Related project: FES Challenger<\/span>[\s\S]*?<\/a><\/p>/,
   );
 
   const wordpressSection = extractSectionById(main, 'wordpress-development');
   assert.match(
     wordpressSection,
-    /<p class="solution-section__evidence"><a href="\/work\/fes-challenger\/">Related project: FES Challenger<\/a><\/p>/,
+    /<p class="solution-section__evidence"><a class="action-link action-link--forward" href="\/work\/fes-challenger\/">[\s\S]*?<span class="action-link__label">Related project: FES Challenger<\/span>[\s\S]*?<\/a><\/p>/,
   );
 
   for (const id of [
@@ -132,9 +132,11 @@ test("solutions: exactly 6 per-section action links, each matching the content m
 
   for (const section of solutionsContent.sections) {
     const sectionHtml = extractSectionById(main, section.id);
-    const expected = `<p class="solution-section__action"><a href="${section.cta.path}">${section.cta.label}</a></p>`;
-    assert.ok(
-      sectionHtml.includes(expected),
+    assert.match(
+      sectionHtml,
+      new RegExp(
+        `<p class="solution-section__action"><a class="action-link action-link--forward" href="${section.cta.path}">[\\s\\S]*?<span class="action-link__label">${section.cta.label}<\\/span>[\\s\\S]*?<\\/a><\\/p>`,
+      ),
       `expected section "${section.id}" to carry its own cta action link`,
     );
   }
@@ -150,6 +152,47 @@ test('solutions: exactly 6 decorative section icons', () => {
     .map((m) => m[1])
     .join('');
   expectDecorativeIcons(icons, { count: 6 });
+});
+
+test('solutions: each detail list preserves left Problem/Audience then right Build/Benefit DOM grouping', () => {
+  const main = solutionsMain();
+  for (const section of solutionsContent.sections) {
+    const html = extractSectionById(main, section.id);
+    const detail = html.match(
+      /<dl class="solution-section__detail">([\s\S]*?)<\/dl>/,
+    )?.[1];
+    assert.ok(detail);
+    assert.equal(
+      [...detail.matchAll(/<div class="solution-section__column">/g)].length,
+      2,
+    );
+    const labels = [
+      ...detail.matchAll(/<dt class="solution-section__label">([^<]+)<\/dt>/g),
+    ].map((match) => match[1]);
+    assert.deepEqual(labels, [
+      'The Problem',
+      "Who It's For",
+      'What I Can Build',
+      'Expected Benefit',
+    ]);
+  }
+});
+
+test('solutions: absent evidence creates no empty element or layout track', () => {
+  const main = solutionsMain();
+  for (const id of [
+    'custom-business-systems',
+    'existing-system-improvements',
+    'support-maintenance',
+  ]) {
+    const html = extractSectionById(main, id);
+    const links = html.match(
+      /<div class="solution-section__links">([\s\S]*?)<\/div>/,
+    )?.[1];
+    assert.ok(links);
+    assert.doesNotMatch(links, /solution-section__evidence/);
+    assert.equal([...links.matchAll(/solution-section__action/g)].length, 1);
+  }
 });
 
 test('solutions: exactly one closing CTA panel with one interactive element', () => {

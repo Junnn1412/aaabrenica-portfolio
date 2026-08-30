@@ -54,7 +54,7 @@ header {
 }
 
 // Header/nav visual-polish task — a deliberate horizontal lockup
-// (temporary/placeholder mark + "AAA Portfolio" text), one link, one
+// (temporary/placeholder mark + concise public-name text), one link, one
 // keyboard stop. `text-decoration: none` is scoped to this one class only
 // — elements/_links.scss's global underline is untouched, and
 // generic/_reset.scss's `header a { color: inherit }` already keeps this

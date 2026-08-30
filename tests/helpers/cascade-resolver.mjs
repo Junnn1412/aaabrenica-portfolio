@@ -15,10 +15,10 @@
 // nested one level inside a single @media block (`min-width`/`width >=`
 // forms only). Each selector in a comma-separated list is either a bare
 // tag name (`ul`), a single class (`.capability-cards`), or a tag+class/
-// class+class compound with no combinator — the only forms this codebase's
-// real element/component selectors use for the rules relevant here. Good
-// enough to prove real cascade outcomes for this project without building
-// a general CSS engine.
+// class+class compound, or a descendant chain of those compounds. The
+// descendant support lets callers describe real production ancestry for
+// nested media and component elements without building a general CSS
+// engine.
 
 export function remToPx(rem) {
   return rem * 16; // this project's root font-size is the browser default, never overridden
@@ -41,6 +41,18 @@ export function compareSpecificity(a, b) {
   return a[1] - b[1];
 }
 
+function elementMatchesCompoundSelector(element, compoundSelector) {
+  const trimmed = compoundSelector.trim();
+  const tagMatch = trimmed.match(/^[a-zA-Z][a-zA-Z0-9-]*/);
+  const tag = tagMatch ? tagMatch[0] : null;
+  const classes = [...trimmed.matchAll(/\.([a-zA-Z0-9_-]+)/g)].map((m) => m[1]);
+  if (tag && tag !== element.tag) return false;
+  for (const c of classes) {
+    if (!element.classes.includes(c)) return false;
+  }
+  return true;
+}
+
 export function elementMatchesSimpleSelector(element, simpleSelector) {
   const trimmed = simpleSelector.trim();
   // Pseudo-elements (::selection, ::before, ::after, ...) target a
@@ -61,12 +73,25 @@ export function elementMatchesSimpleSelector(element, simpleSelector) {
   if (/:(hover|active|focus|focus-visible|focus-within|has)\(?/.test(trimmed)) {
     return false;
   }
-  const tagMatch = trimmed.match(/^[a-zA-Z][a-zA-Z0-9-]*/);
-  const tag = tagMatch ? tagMatch[0] : null;
-  const classes = [...trimmed.matchAll(/\.([a-zA-Z0-9_-]+)/g)].map((m) => m[1]);
-  if (tag && tag !== element.tag) return false;
-  for (const c of classes) {
-    if (!element.classes.includes(c)) return false;
+  const compounds = trimmed.split(/\s+/);
+  const targetCompound = compounds.pop();
+  if (!elementMatchesCompoundSelector(element, targetCompound)) return false;
+
+  const ancestors = element.ancestors ?? [];
+  let ancestorIndex = ancestors.length - 1;
+  for (let i = compounds.length - 1; i >= 0; i--) {
+    let matched = false;
+    while (ancestorIndex >= 0) {
+      if (
+        elementMatchesCompoundSelector(ancestors[ancestorIndex], compounds[i])
+      ) {
+        matched = true;
+        ancestorIndex--;
+        break;
+      }
+      ancestorIndex--;
+    }
+    if (!matched) return false;
   }
   return true;
 }
@@ -108,10 +133,11 @@ export function parseRules(cssText) {
 }
 
 // Resolves the real cascade-winning value for `property` on `element`
-// ({ tag, classes }), using every matching rule in `cssText`, ordered by
-// specificity then source position — exactly the two tie-break axes that
-// matter for normal-priority declarations with no !important involved
-// (true of every rule in this stylesheet).
+// ({ tag, classes, ancestors? }), using every matching rule in `cssText`,
+// ordered by specificity then source position — exactly the two tie-break
+// axes that matter for normal-priority declarations with no !important
+// involved (true of every rule in this stylesheet). `ancestors`, when
+// present, is ordered outermost to innermost.
 export function resolveProperty(cssText, element, property) {
   const rules = parseRules(cssText);
   const candidates = [];

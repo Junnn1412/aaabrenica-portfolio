@@ -40,11 +40,11 @@ test('work: exactly 2 <h2>s total (Projects section header, plus the closing CTA
   assert.equal(sectionH2s + ctaH2s, 2, 'expected 2 <h2>s total');
 });
 
-test('work: exactly 3 <h3 class="project-card__heading">, zero <h4 class="project-card__heading">, zero <h3 class="cta__heading">', () => {
+test('work: exactly 1 visible project-card h3, zero project-card h4, and zero CTA h3', () => {
   const main = workMain();
   const h3s = [...main.matchAll(/<h3 class="project-card__heading">/g)].length;
   const h4s = [...main.matchAll(/<h4 class="project-card__heading">/g)].length;
-  assert.equal(h3s, 3, 'expected 3 project-card <h3>s');
+  assert.equal(h3s, 1, 'expected 1 visible project-card <h3>');
   assert.equal(h4s, 0, 'expected zero project-card <h4>s');
   assert.equal(
     [...main.matchAll(/<h3 class="cta__heading">/g)].length,
@@ -53,33 +53,32 @@ test('work: exactly 3 <h3 class="project-card__heading">, zero <h4 class="projec
   );
 });
 
-test('work: exactly 3 project cards, in DOM order FES Challenger (featured), Business Workflow System, eBarangay', () => {
+test('work: only FES renders; BWS and eBarangay never enter emitted HTML', () => {
   const main = workMain();
   const blocks = cardBlocks(main);
-  assert.equal(blocks.length, 3, 'expected exactly 3 project cards');
+  assert.equal(blocks.length, 1, 'expected exactly 1 visible project card');
   assert.match(blocks[0], /project-card--featured/);
   assert.match(blocks[0], />FES Challenger</);
-  assert.doesNotMatch(blocks[1], /project-card--featured/);
-  assert.match(blocks[1], />Business Workflow System</);
-  assert.doesNotMatch(blocks[2], /project-card--featured/);
-  assert.match(blocks[2], />eBarangay</);
+  assert.doesNotMatch(main, /Business Workflow System|eBarangay/);
+  assert.doesNotMatch(main, /<li class="project-card[^>]*hidden/);
 });
 
-test('work: the real project-cards list carries the .project-cards--featured-pair modifier', () => {
+test('work: one visible project emits one explicit track and no featured-pair modifier', () => {
   const main = workMain();
   assert.match(
     main,
-    /<ul class="project-cards project-cards--featured-pair">/,
-    'expected the real 1-featured+2-secondary project list to opt into the fixed 2-column modifier',
+    /<ul class="project-cards project-cards--single">/,
+    'expected the one-card state to use the explicit single-track modifier',
   );
+  assert.doesNotMatch(main, /project-cards--featured-pair/);
 });
 
-test('work: every project-card link matches a real, registered case-study route', () => {
+test('work: the visible card link is registered while raw content retains the exact route set', () => {
   const main = workMain();
   const links = [
     ...main.matchAll(/<a class="project-card__link" href="([^"]*)">/g),
   ].map((m) => m[1]);
-  assert.equal(links.length, 3);
+  assert.deepEqual(links, ['/work/fes-challenger/']);
   const registeredCaseStudyPaths = new Set(
     routes.filter((r) => r.template === 'case-study').map((r) => r.path),
   );
@@ -89,7 +88,8 @@ test('work: every project-card link matches a real, registered case-study route'
       `project-card link "${link}" does not match a registered case-study route`,
     );
   }
-  assert.deepEqual(new Set(links), registeredCaseStudyPaths);
+  const rawLinks = workContent.projects.items.map((item) => item.link);
+  assert.deepEqual(new Set(rawLinks), registeredCaseStudyPaths);
 });
 
 // PF-060/PF-061: FES Challenger's and Business Workflow System's cards now
@@ -98,29 +98,20 @@ test('work: every project-card link matches a real, registered case-study route'
 // tests/business-workflow-system-render.test.mjs's consistency checks), so
 // neither is the "no category" specimen anymore. eBarangay remains the
 // only card with none (PF-062 still blocked/untouched).
-test("work: category badge present on FES Challenger's and Business Workflow System's cards, absent on eBarangay's", () => {
+test('work: the visible FES card retains its approved category', () => {
   const main = workMain();
   const blocks = cardBlocks(main);
   assert.match(
     blocks[0],
     /<span class="project-card__category tag">Marine Services Corporate Website<\/span>/,
   );
-  assert.match(
-    blocks[1],
-    /<span class="project-card__category tag">Internal Workflow System<\/span>/,
-  );
-  assert.doesNotMatch(blocks[2], /project-card__category/);
 });
 
-test("work: summary and tags present on FES Challenger's and Business Workflow System's cards, absent on eBarangay's", () => {
+test('work: the visible FES card retains its approved summary and tags', () => {
   const main = workMain();
   const blocks = cardBlocks(main);
   assert.match(blocks[0], /project-card__summary/);
   assert.match(blocks[0], /project-card__tags/);
-  assert.match(blocks[1], /project-card__summary/);
-  assert.match(blocks[1], /project-card__tags/);
-  assert.doesNotMatch(blocks[2], /project-card__summary/);
-  assert.doesNotMatch(blocks[2], /project-card__tags/);
 });
 
 // PF-061 — the prohibited-wording guard also applies to the Work index's
@@ -148,12 +139,18 @@ test('work: no prohibited identifying wording appears anywhere in the rendered W
   }
 });
 
-test('work: all three cards use an empty .media-frame (no fabricated screenshot)', () => {
+test('work: FES renders the three-slide carousel and no decorative frame dots', () => {
   const main = workMain();
-  const emptyFrames = [
-    ...main.matchAll(/<div class="media-frame project-card__media"><\/div>/g),
-  ].length;
-  assert.equal(emptyFrames, 3);
+  const blocks = cardBlocks(main);
+  assert.doesNotMatch(blocks[0], /project-card__frame-dots/);
+  assert.equal(
+    [...blocks[0].matchAll(/data-project-carousel-slide/g)].length,
+    3,
+  );
+  assert.equal(
+    [...blocks[0].matchAll(/data-project-carousel-indicator="\d"/g)].length,
+    3,
+  );
 });
 
 test('work: exactly one closing CTA panel with one interactive element', () => {
@@ -197,13 +194,17 @@ test('renderWorkPage escapes every string field, including every project-card fa
       items: [
         {
           featured: true,
+          isVisible: true,
           heading: 'One & <b>markup</b>',
           category: 'Cat & <b>egory</b>',
           link: '/work/one/',
+          presentation: { kind: 'text-only' },
         },
         {
+          isVisible: false,
           heading: 'Two & <b>markup</b>',
           link: '/work/two/',
+          presentation: { kind: 'text-only' },
         },
       ],
     },

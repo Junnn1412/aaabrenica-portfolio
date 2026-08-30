@@ -1,86 +1,76 @@
-// PF-060 — the real case-study template, shared by every case-study route.
-// Every named section is independently optional (src/pages/content-schema.js
-// enforces the same shape) and rendered only when present — never an empty
-// heading, frame, or "coming soon" placeholder. FES Challenger is the first
-// real caller; PF-061/062 reuse this unchanged and simply omit whatever
-// sections they don't have verified content for.
+// PF-060/PF-064 — the shared case-study renderer. Optional named sections
+// are omitted cleanly. Editorial pairing is derived from section presence,
+// never from a route/content key, so partial cases acquire no empty tracks.
 import { escapeHtml } from '../escape.js';
 import { renderHeader } from '../../components/partials/header.js';
 import { renderFooter } from '../../components/partials/footer.js';
 import { renderSectionHeader } from '../../components/section-header.js';
 import { renderCta } from '../../components/cta.js';
+import { renderActionLink } from '../../components/action-link.js';
+import { contentRevealAttributes } from '../../components/content-reveal.js';
 
-function renderIntro(content) {
+function renderHero(content) {
   const paragraphs = content.paragraphs
-    .map((p) => `<p class="text-lead">${escapeHtml(p)}</p>`)
+    .map((paragraph) => `<p class="text-lead">${escapeHtml(paragraph)}</p>`)
     .join('');
   const logo = content.logo
-    ? `<img class="case-study-hero__logo" src="${escapeHtml(content.logo.src)}" alt="${escapeHtml(content.logo.alt ?? '')}">`
+    ? `<img class="case-study-hero__logo" src="${escapeHtml(content.logo.src)}" alt="${escapeHtml(content.logo.alt ?? '')}" width="${content.logo.width}" height="${content.logo.height}">`
     : '';
   const heading = `<div class="case-study-hero__heading-row">${logo}<h1>${escapeHtml(content.heading)}</h1></div>`;
   const externalLink = content.externalLink
     ? `<p><a class="btn btn--secondary" href="${escapeHtml(content.externalLink.url)}">${escapeHtml(content.externalLink.label)}</a></p>`
     : '';
-  return `<div class="container">${heading}${paragraphs}${externalLink}</div>`;
-}
+  const media = content.heroMedia
+    ? `<div class="media-frame case-study-hero__media"${contentRevealAttributes('fade-in')}><img src="${escapeHtml(content.heroMedia.src)}" alt="${escapeHtml(content.heroMedia.alt)}" width="${content.heroMedia.width}" height="${content.heroMedia.height}" loading="eager" fetchpriority="high" decoding="async"></div>`
+    : '';
+  const modifier = content.heroMedia ? ' case-study-hero--with-media' : '';
 
-function renderMarkedList(items) {
-  return `<ul class="list--marked">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`;
-}
-
-function renderProseSection(heading, body) {
-  const paragraphs = body.map((p) => `<p>${escapeHtml(p)}</p>`).join('');
   return (
-    `<section class="page-section"><div class="container">` +
-    renderSectionHeader({ heading }) +
-    paragraphs +
-    `</div></section>`
+    `<section class="case-study-hero${modifier}">` +
+    `<div class="case-study-hero__copy"${contentRevealAttributes('fade-up')}>${heading}${paragraphs}${externalLink}</div>` +
+    media +
+    `</section>`
   );
 }
 
-// body is required; items is optional (e.g. solution.features may be
-// absent) — the list is simply omitted, never rendered empty, when so.
-function renderProseWithListSection(heading, body, items) {
-  const paragraphs = body.map((p) => `<p>${escapeHtml(p)}</p>`).join('');
-  const list = items && items.length > 0 ? renderMarkedList(items) : '';
+function renderMarkedList(items, { balanced = false } = {}) {
+  const modifier = balanced ? ' case-study-list--balanced' : '';
+  return `<ul class="list--marked case-study-list${modifier}">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+}
+
+function renderSection({ key, heading, body = [], items, balanced = false }) {
+  const paragraphs = body
+    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .join('');
+  const list = items?.length ? renderMarkedList(items, { balanced }) : '';
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section case-study-section case-study-section--${key}"${contentRevealAttributes('fade-up')}>` +
     renderSectionHeader({ heading }) +
     paragraphs +
     list +
-    `</div></section>`
+    `</section>`
   );
 }
 
-function renderListOnlySection(heading, items) {
-  return (
-    `<section class="page-section"><div class="container">` +
-    renderSectionHeader({ heading }) +
-    renderMarkedList(items) +
-    `</div></section>`
-  );
+function renderPair(sections, pairName) {
+  const present = sections.filter(Boolean);
+  if (present.length === 0) return '';
+  const modifier = present.length === 1 ? ' case-study-pair--single' : '';
+  return `<div class="case-study-pair case-study-pair--${pairName}${modifier}">${present.join('')}</div>`;
 }
 
-// Deliberately a plain tag row, not a <ul>/<li> list — mirrors
-// .project-card__tags' existing precedent for the same "short technology
-// labels" shape rather than introducing a second pattern for it.
-function renderTagsSection(heading, items) {
+function renderTagsSection(items) {
   const tags = items
-    .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
+    .map((technology) => `<span class="tag">${escapeHtml(technology)}</span>`)
     .join('');
   return (
-    `<section class="page-section"><div class="container">` +
-    renderSectionHeader({ heading }) +
+    `<section class="page-section case-study-section case-study-section--technology"${contentRevealAttributes('fade-up')}>` +
+    renderSectionHeader({ heading: 'Technology Stack' }) +
     `<div class="case-study-tech-stack">${tags}</div>` +
-    `</div></section>`
+    `</section>`
   );
 }
 
-// Omitted entirely (not an empty grid or "coming soon" placeholder) when no
-// gallery is present — real, reviewed screenshots only (docs/DECISION_LOG.md).
-// width/height are pre-validated positive integers by content-schema.js, so
-// they're interpolated directly, matching this project's existing precedent
-// for other schema-guaranteed values.
 function renderGallerySection(gallery) {
   if (gallery == null) return '';
   const items = gallery.items
@@ -90,76 +80,95 @@ function renderGallerySection(gallery) {
         : '';
       return (
         `<li class="case-study-gallery__item"><figure>` +
-        `<div class="media-frame"><img src="${escapeHtml(item.src)}" alt="${escapeHtml(item.alt)}" width="${item.width}" height="${item.height}" loading="lazy"></div>` +
+        `<div class="media-frame"><img src="${escapeHtml(item.src)}" alt="${escapeHtml(item.alt)}" width="${item.width}" height="${item.height}" loading="lazy" decoding="async"></div>` +
         caption +
         `</figure></li>`
       );
     })
     .join('');
   return (
-    `<section class="page-section"><div class="container">` +
+    `<section class="page-section case-study-section case-study-section--gallery"${contentRevealAttributes('fade-in')}>` +
     renderSectionHeader({ heading: 'Project Gallery' }) +
     `<ul class="case-study-gallery">${items}</ul>` +
-    `</div></section>`
+    `</section>`
   );
 }
 
-function renderClosingCtaSection(cta) {
+function renderNarrative(content) {
+  const client = content.client
+    ? renderSection({
+        key: 'client',
+        heading: 'Client & Business Context',
+        body: content.client.body,
+      })
+    : '';
+  const problem = content.problem
+    ? renderSection({
+        key: 'problem',
+        heading: 'The Challenge',
+        body: content.problem.body,
+      })
+    : '';
+  const role = content.role
+    ? renderSection({
+        key: 'role',
+        heading: 'My Role',
+        body: content.role.body,
+        items: content.role.responsibilities,
+        balanced: true,
+      })
+    : '';
+  const solution = content.solution
+    ? renderSection({
+        key: 'solution',
+        heading: 'What I Built',
+        body: content.solution.body,
+        items: content.solution.features,
+      })
+    : '';
+  const decisions = content.decisions
+    ? renderSection({
+        key: 'decisions',
+        heading: 'Key Decisions',
+        items: content.decisions.items,
+      })
+    : '';
+  const technology = content.technologyStack
+    ? renderTagsSection(content.technologyStack.items)
+    : '';
+  const outcomes = content.outcomes
+    ? renderSection({
+        key: 'outcomes',
+        heading: 'Outcomes',
+        items: content.outcomes.items,
+        balanced: true,
+      })
+    : '';
+
   return (
-    `<section class="page-section"><div class="container">` +
-    renderCta({ ...cta, headingLevel: 2 }) +
-    `</div></section>`
+    `<div class="case-study-narrative">` +
+    renderPair([client, problem], 'context') +
+    role +
+    renderPair([solution, decisions], 'delivery') +
+    technology +
+    outcomes +
+    renderGallerySection(content.gallery) +
+    `</div>`
   );
 }
 
 export function renderCaseStudyPage({ content, navItems, activeKey, site }) {
-  const sections = [];
-
-  if (content.client) {
-    sections.push(
-      renderProseSection('Client & Business Context', content.client.body),
-    );
-  }
-  if (content.problem) {
-    sections.push(renderProseSection('The Challenge', content.problem.body));
-  }
-  if (content.role) {
-    sections.push(
-      renderProseWithListSection(
-        'My Role',
-        content.role.body,
-        content.role.responsibilities,
-      ),
-    );
-  }
-  if (content.solution) {
-    sections.push(
-      renderProseWithListSection(
-        'What I Built',
-        content.solution.body,
-        content.solution.features,
-      ),
-    );
-  }
-  if (content.technologyStack) {
-    sections.push(
-      renderTagsSection('Technology Stack', content.technologyStack.items),
-    );
-  }
-  if (content.decisions) {
-    sections.push(
-      renderListOnlySection('Key Decisions', content.decisions.items),
-    );
-  }
-  if (content.outcomes) {
-    sections.push(renderListOnlySection('Outcomes', content.outcomes.items));
-  }
-  sections.push(renderGallerySection(content.gallery));
-
-  const backLink = `<div class="container"><p><a href="${escapeHtml(content.backLink.path)}">${escapeHtml(content.backLink.label)}</a></p></div>`;
-  const closingCta = content.cta ? renderClosingCtaSection(content.cta) : '';
-
-  const main = renderIntro(content) + sections.join('') + backLink + closingCta;
+  const backLink = `<p class="case-study-back">${renderActionLink({ label: content.backLink.label, href: content.backLink.path, variant: 'back' })}</p>`;
+  const closingCta = content.cta
+    ? `<section class="page-section case-study-closing">${renderCta({ ...content.cta, headingLevel: 2, reveal: 'fade-up' })}</section>`
+    : '';
+  const main =
+    `<div class="container case-study">` +
+    renderHero(content) +
+    renderNarrative(content) +
+    backLink +
+    closingCta +
+    `</div>`;
 
   return {
     header: renderHeader(navItems, activeKey, site),

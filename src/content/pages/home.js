@@ -19,11 +19,12 @@
 // scoped per project, not automatic or indefinite.
 import fesChallenger from './work/fes-challenger.js';
 import businessWorkflowSystem from './work/business-workflow-system.js';
+import ebarangay from './work/ebarangay.js';
 
 export default {
   title: 'Practical Software Solutions for Growing Businesses',
   description:
-    'AAA helps organizations identify inefficient, repetitive, or difficult processes and turn them into practical websites, workflow solutions, internal systems, and custom software.',
+    'Antonio Abrenica helps organizations identify inefficient, repetitive, or difficult processes and turn them into practical websites, workflow solutions, internal systems, and custom software.',
   heading: 'Turn Business Challenges Into Practical Software Solutions.',
   paragraphs: [
     'I help growing businesses improve their operations through websites, internal systems, workflow solutions, and custom software—from requirements gathering and planning to development, deployment, and agreed post-launch support.',
@@ -127,6 +128,7 @@ export default {
       {
         heading: 'eBarangay',
         link: '/work/ebarangay/',
+        ...ebarangay.card,
       },
     ],
     link: { label: 'Explore All Work', path: '/work/' },
@@ -156,9 +158,11 @@ export default {
     eyebrow: 'About',
     heading: "Who You'll Be Working With",
     paragraphs: [
-      "I'm AAA, an independent software developer with about five years of experience building websites, internal systems, and custom software. I work across the full stack—frontend, backend, database, and deployment—and stay directly involved in every project from planning through launch and support.",
+      "I'm Antonio Abrenica, an independent software developer with about five years of experience building websites, internal systems, and custom software. I work across the full stack—frontend, backend, database, and deployment—and stay directly involved in every project from planning through launch and support.",
     ],
-    link: { label: 'Read My Full Story', path: '/about/' },
+    profileCard: {
+      action: { label: 'Read My Full Story', path: '/about/' },
+    },
   },
   cta: {
     heading:

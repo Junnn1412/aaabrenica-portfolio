@@ -1,159 +1,306 @@
-// About profile-card task — proves the compiled cascade for the two-column
-// layout, the card surface, the corner-accent decoration, and the specific
-// generic-cascade resets that genuinely matter here. CSS *rendering* still
-// requires manual browser review; this only proves the compiled
-// declarations are sound.
-//
-// Per AAA's explicit instruction: no `max-width: none` reset/test is added
-// for .about-card__highlights — .about-card is already narrower than
-// elements/_body-copy.scss's generic `ul, ol { max-width:
-// var(--width-reading); }` (68ch) at every supported width, since it's
-// itself capped to `flex: 1 1 42%` of a container whose own max-width is
-// --container-max (80rem/1280px); 42% of 1280px is ~538px, already under
-// 544px before subtracting any padding/gutters, so the leak this project
-// has twice found elsewhere (.site-nav ul, the same generic rule) cannot
-// occur on this element for a real, structural reason, not by luck.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as sass from 'sass';
 import { fileURLToPath } from 'node:url';
+import { resolveProperty } from './helpers/cascade-resolver.mjs';
 
 const mainScssPath = fileURLToPath(
   new URL('../src/styles/main.scss', import.meta.url),
 );
 const { css } = sass.compile(mainScssPath);
 
-// Anchored to start-of-line (Dart Sass's expanded output puts each
-// top-level or comma-separated selector on its own line) so a bare class
-// like `.about-card` can't accidentally match as the tail of a longer
-// compound selector such as `.about-layout--with-card .about-card` — a
-// real bug caught while writing this file (it silently returned the
-// desktop override's body instead of the base rule's).
 function ruleBody(selector) {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`));
+  const match = css.match(
+    new RegExp(`(?:^|\\n)\\s*${escaped}\\s*\\{([^}]*)\\}`),
+  );
   assert.ok(match, `rule not found: ${selector}`);
   return match[1];
 }
 
-// --- Two-column layout, DOM-order-only ---
-
-test('mobile-default: .about-layout is a single-column flex stack', () => {
-  const body = ruleBody('.about-layout');
-  assert.match(body, /display:\s*flex;/);
-  assert.match(body, /flex-direction:\s*column;/);
+test('.about-page uses a real grid layout with a consistent space-8 gap between full-row siblings', () => {
+  const body = ruleBody('.about-page');
+  assert.match(body, /display:\s*grid;/);
+  assert.match(body, /gap:\s*var\(--space-8\);/);
 });
 
-test("desktop: .about-layout--with-card switches to a row at width >= 64em (matching .hero__inner's own breakpoint) — the modifier class only applies with a real card present", () => {
-  const match = css.match(
-    /@media \(width >= 64em\) \{\s*\.about-layout--with-card\s*\{([^}]*)\}/,
-  );
-  assert.ok(match, 'expected a desktop .about-layout--with-card override');
-  assert.match(match[1], /flex-direction:\s*row;/);
+test('Experience wins a full-width, centered 70rem composition boundary shared by its header and timeline', () => {
+  const page = { tag: 'div', classes: ['container', 'about-page'] };
+  const section = {
+    tag: 'section',
+    classes: ['about-experience'],
+    ancestors: [page],
+  };
+  const inner = {
+    tag: 'div',
+    classes: ['about-experience__inner'],
+    ancestors: [page, section],
+  };
+  const header = {
+    tag: 'div',
+    classes: ['section-header'],
+    ancestors: [page, section, inner],
+  };
+  const timeline = {
+    tag: 'ol',
+    classes: ['experience-timeline'],
+    ancestors: [page, section, inner],
+  };
+  const card = {
+    tag: 'article',
+    classes: ['experience-card'],
+    ancestors: [page, section, inner, timeline],
+  };
+
+  assert.equal(resolveProperty(css, section, 'width'), '100%');
+  assert.equal(resolveProperty(css, inner, 'width'), '100%');
+  assert.equal(resolveProperty(css, inner, 'max-width'), '70rem');
+  assert.equal(resolveProperty(css, inner, 'margin-inline'), 'auto');
+  assert.equal(resolveProperty(css, header, 'width'), '100%');
+  assert.equal(resolveProperty(css, header, 'max-width'), 'none');
+  assert.equal(resolveProperty(css, timeline, 'width'), '100%');
+  assert.equal(resolveProperty(css, timeline, 'max-width'), 'none');
+  assert.equal(resolveProperty(css, card, 'width'), '100%');
 });
 
-test('desktop: biography content and card split the row (58%/42%), matching source order — no CSS `order` property is used anywhere in the stylesheet for these selectors', () => {
-  const contentMatch = css.match(
-    /\.about-layout--with-card \.about-layout__content\s*\{([^}]*)\}/,
+test('About stacks naturally by default and switches to the established 64em two-column composition', () => {
+  const mobile = ruleBody('.about-layout');
+  assert.match(mobile, /display:\s*flex;/);
+  assert.match(mobile, /flex-direction:\s*column;/);
+
+  const desktop = css.match(
+    /@media \(width >= 64em\) \{[\s\S]*?\.about-layout--with-card\s*\{([^}]*)\}/,
   );
-  const cardMatch = css.match(
-    /\.about-layout--with-card \.about-card\s*\{([^}]*)\}/,
-  );
-  assert.ok(contentMatch && cardMatch);
-  assert.match(contentMatch[1], /flex:\s*1 1 58%;/);
-  assert.match(cardMatch[1], /flex:\s*1 1 42%;/);
-  assert.doesNotMatch(contentMatch[1], /order:/);
-  assert.doesNotMatch(cardMatch[1], /order:/);
+  assert.ok(desktop);
+  assert.match(desktop[1], /flex-direction:\s*row;/);
+  assert.match(desktop[1], /gap:\s*var\(--space-9\);/);
 });
 
-test('no rule anywhere in the compiled stylesheet sets the CSS `order` property on any about-* selector', () => {
-  const aboutRules = [...css.matchAll(/\.about-[a-z_-]+[^{]*\{([^}]*)\}/g)];
-  assert.ok(aboutRules.length > 0, 'expected at least one .about-* rule');
-  for (const [, body] of aboutRules) {
-    // Negative lookbehind excludes "border:"/"-order:"-style false
-    // positives — this checks for the bare CSS `order` property only.
-    assert.doesNotMatch(body, /(?<![a-z-])order:/);
+test('About desktop split preserves biography first and full profile card second without CSS order', () => {
+  const content = ruleBody('.about-layout--with-card .about-layout__content');
+  const card = ruleBody('.about-layout--with-card .profile-card');
+  assert.match(content, /flex:\s*1 1 58%;/);
+  assert.match(card, /flex:\s*1 1 42%;/);
+  assert.doesNotMatch(content, /(?<![a-z-])order:/);
+  assert.doesNotMatch(card, /(?<![a-z-])order:/);
+});
+
+test('About stack uses flexible one-column tracks by default and two columns only where space permits', () => {
+  const groups = ruleBody('.about-stack__groups');
+  assert.match(groups, /display:\s*grid;/);
+  assert.match(groups, /grid-template-columns:\s*minmax\(0, 1fr\);/);
+
+  const wider = css.match(
+    /@media \(width >= 40em\) \{\s*\.about-stack__groups\s*\{([^}]*)\}/,
+  );
+  assert.ok(wider);
+  assert.match(
+    wider[1],
+    /grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/,
+  );
+});
+
+test('About stack resets the prose-list cascade and keeps static tags naturally wrapping', () => {
+  const content = ruleBody('.about-layout__content');
+  const group = ruleBody('.about-stack__group');
+  const tags = ruleBody('.about-stack__tags');
+  const item = ruleBody('.about-stack__tag-item');
+  const tag = ruleBody('.about-stack__tag-item .tag');
+
+  assert.match(content, /min-width:\s*0;/);
+  assert.match(group, /min-width:\s*0;/);
+  assert.match(tags, /display:\s*flex;/);
+  assert.match(tags, /flex-wrap:\s*wrap;/);
+  assert.match(tags, /max-width:\s*none;/);
+  assert.match(tags, /margin:\s*0;/);
+  assert.match(tags, /padding:\s*0;/);
+  assert.match(tags, /list-style:\s*none;/);
+  assert.match(item, /min-width:\s*0;/);
+  assert.match(item, /margin:\s*0;/);
+  assert.match(tag, /max-width:\s*100%;/);
+});
+
+test('About stack width model cannot overflow at 320, 375, or 390px', () => {
+  const longestTechnology = 'Microsoft SQL Server';
+  const conservativeLabelWidth = longestTechnology.length * 10 + 48;
+
+  for (const viewport of [320, 375, 390]) {
+    const minimumInlineGutters = 2 * 20;
+    const availableWidth = viewport - minimumInlineGutters;
+    assert.ok(
+      conservativeLabelWidth <= availableWidth,
+      `${longestTechnology} must fit within the ${viewport}px one-column stack`,
+    );
   }
 });
 
-// --- Card surface, dark premium theme, reused tokens ---
+test('all About page rules avoid CSS order and animation properties', () => {
+  const relevantRules = [
+    ...css.matchAll(/\.(?:about|experience)[a-z0-9_ .:-]*\s*\{([^}]*)\}/g),
+  ];
+  assert.ok(relevantRules.length > 0);
+  for (const [, body] of relevantRules) {
+    assert.doesNotMatch(body, /(?<![a-z-])order:/);
+    assert.doesNotMatch(body, /animation:|transition:/);
+  }
+});
 
-test('.about-card uses existing surface/border/radius/spacing tokens — no new color or shape values invented', () => {
-  const body = ruleBody('.about-card');
-  assert.match(body, /background-color:\s*var\(--color-surface-1\);/);
+test('Experience timeline uses CSS-only electric-blue line and nodes beside neutral cards', () => {
+  const timeline = ruleBody('.experience-timeline');
+  const line = ruleBody('.experience-timeline::before');
+  const node = ruleBody('.experience-timeline__item::before');
+  const card = ruleBody('.experience-card');
+
+  assert.match(timeline, /position:\s*relative;/);
+  assert.match(timeline, /width:\s*100%;/);
+  assert.match(timeline, /max-width:\s*none;/);
+  assert.match(timeline, /list-style:\s*none;/);
+  assert.match(line, /border-left:\s*2px solid var\(--color-accent\);/);
+  assert.match(node, /border:\s*2px solid var\(--color-accent\);/);
+  assert.match(node, /border-radius:\s*var\(--radius-full\);/);
+  assert.match(node, /background-color:\s*var\(--color-canvas\);/);
   assert.match(
-    body,
+    card,
     /border:\s*var\(--border-width\) solid var\(--color-border\);/,
   );
-  assert.match(body, /border-radius:\s*var\(--radius-lg\);/);
-  assert.match(body, /padding:\s*var\(--space-6\);/);
+  assert.match(card, /border-radius:\s*var\(--radius-lg\);/);
+  assert.match(card, /background-color:\s*var\(--color-surface-1\);/);
+  assert.doesNotMatch(card, /gradient|box-shadow|filter|blur|height:/i);
 });
 
-test(".about-card__name, .about-card__role, .about-card__statement reset the generic p margin, so .about-card__body's own flex gap is the single source of vertical spacing", () => {
-  const match = css.match(
-    /\.about-card__name,\s*\n\.about-card__role,\s*\n\.about-card__statement\s*\{([^}]*)\}/,
+test('Experience card main content stays one-column by default and becomes a balanced flexible grid only at 64em', () => {
+  const mobileMain = ruleBody('.experience-card__main');
+  assert.match(mobileMain, /display:\s*grid;/);
+  assert.match(mobileMain, /grid-template-columns:\s*minmax\(0, 1fr\);/);
+  assert.match(mobileMain, /min-width:\s*0;/);
+
+  const desktop = css.match(
+    /@media \(width >= 64em\) \{\s*\.about-layout--with-card\s*\{[\s\S]*?\.experience-card__main\s*\{([^}]*)\}/,
   );
-  assert.ok(match, 'expected the combined name/role/statement margin reset');
-  assert.match(match[1], /margin:\s*0;/);
-});
-
-test('.about-card__highlights and its li items reset margin/padding/list-style against the generic ul/ol/li rules, so the flex gap is the single source of spacing between highlights', () => {
-  const listBody = ruleBody('.about-card__highlights');
-  assert.match(listBody, /margin:\s*0;/);
-  assert.match(listBody, /padding:\s*0;/);
-  assert.match(listBody, /list-style:\s*none;/);
-  const liBody = ruleBody('.about-card__highlights li');
-  assert.match(liBody, /margin:\s*0;/);
-});
-
-// --- Corner accent: restrained, static, decorative, forced-colors-safe ---
-
-test('the corner accent is a single ::after pseudo-element (never exposed to the accessibility tree — no aria-hidden needed or possible on a generated box)', () => {
-  assert.match(css, /\.about-card__portrait::after\s*\{/);
-  // Exactly one accent rule — not a second branch/element.
-  const matches = [...css.matchAll(/\.about-card__portrait::after\s*\{/g)];
-  assert.equal(matches.length, 1);
-});
-
-test('the corner accent uses --color-accent (electric blue), not orange or any other new color', () => {
-  const body = ruleBody('.about-card__portrait::after');
-  assert.match(body, /var\(--color-accent\)/);
-  assert.doesNotMatch(body, /orange/i);
-  assert.doesNotMatch(body, /#f[0-9a-f]{2}[0-9a-f]{0,3}\b/i); // no ad-hoc orange-ish hex literal
-});
-
-test('the corner accent is a single L-shaped bracket (two border sides only), not a multi-branch circuit pattern, and uses real border properties so forced-colors mode can recolor it — not box-shadow or a gradient', () => {
-  const body = ruleBody('.about-card__portrait::after');
-  assert.match(body, /border-right:\s*2px solid var\(--color-accent\);/);
-  assert.match(body, /border-bottom:\s*2px solid var\(--color-accent\);/);
-  assert.doesNotMatch(body, /border-top:/);
-  assert.doesNotMatch(body, /border-left:/);
-  assert.doesNotMatch(body, /box-shadow:/);
-  assert.doesNotMatch(body, /gradient/);
-});
-
-test('the corner accent has no glow (no blur/filter) and is small relative to the portrait frame (visually subordinate)', () => {
-  const body = ruleBody('.about-card__portrait::after');
-  assert.doesNotMatch(body, /filter:/);
-  assert.doesNotMatch(body, /blur/);
-  assert.match(body, /width:\s*var\(--space-7\);/);
-  assert.match(body, /height:\s*var\(--space-7\);/);
-});
-
-test('the corner accent is static — no transition, no animation — consistent with "no broader animation now, site-wide motion is a later pass"', () => {
-  const body = ruleBody('.about-card__portrait::after');
-  assert.doesNotMatch(body, /transition:/);
-  assert.doesNotMatch(body, /animation:/);
-});
-
-// --- Portrait frame ---
-
-test('.media-frame--portrait uses a 4:5 aspect ratio and inherits object-fit: cover from the base .media-frame rule (no distortion, a safe center-crop of the real ~1.14:1 source)', () => {
-  const body = ruleBody('.media-frame--portrait');
-  assert.match(body, /aspect-ratio:\s*4\s*\/\s*5;/);
-  const baseImgRule = css.match(
-    /\.media-frame img,\s*\n\.media-frame video\s*\{([^}]*)\}/,
+  assert.ok(desktop);
+  assert.match(
+    desktop[1],
+    /grid-template-columns:\s*minmax\(0, 2fr\) minmax\(0, 3fr\);/,
   );
-  assert.ok(baseImgRule, 'expected the base .media-frame img/video rule');
-  assert.match(baseImgRule[1], /object-fit:\s*cover;/);
+  assert.match(desktop[1], /gap:\s*var\(--space-7\);/);
+});
+
+test('Experience role and narrative text retain heading/body hierarchy and readable measures', () => {
+  const page = { tag: 'div', classes: ['container', 'about-page'] };
+  const section = {
+    tag: 'section',
+    classes: ['about-experience'],
+    ancestors: [page],
+  };
+  const inner = {
+    tag: 'div',
+    classes: ['about-experience__inner'],
+    ancestors: [page, section],
+  };
+  const timeline = {
+    tag: 'ol',
+    classes: ['experience-timeline'],
+    ancestors: [page, section, inner],
+  };
+  const card = {
+    tag: 'article',
+    classes: ['experience-card'],
+    ancestors: [page, section, inner, timeline],
+  };
+  const role = {
+    tag: 'h3',
+    classes: ['experience-card__role'],
+    ancestors: [page, section, inner, timeline, card],
+  };
+  const summary = {
+    tag: 'p',
+    classes: ['experience-card__summary'],
+    ancestors: [page, section, inner, timeline, card],
+  };
+  const responsibilities = {
+    tag: 'ul',
+    classes: ['experience-card__responsibilities'],
+    ancestors: [page, section, inner, timeline, card],
+  };
+
+  assert.equal(resolveProperty(css, role, 'font-size'), 'var(--font-size-h3)');
+  assert.equal(
+    resolveProperty(css, summary, 'font-size'),
+    'var(--font-size-body)',
+  );
+  assert.equal(
+    resolveProperty(css, responsibilities, 'font-size'),
+    'var(--font-size-body)',
+  );
+  assert.equal(
+    resolveProperty(css, summary, 'max-width'),
+    'var(--width-reading)',
+  );
+  assert.equal(
+    resolveProperty(css, responsibilities, 'max-width'),
+    'var(--width-reading)',
+  );
+});
+
+test('Experience dates stack below identity by default and move upper-right at the existing 48em breakpoint', () => {
+  const mobileHeader = ruleBody('.experience-card__header');
+  const mobileDates = ruleBody('.experience-card__dates');
+  assert.match(mobileHeader, /display:\s*flex;/);
+  assert.match(mobileHeader, /flex-direction:\s*column;/);
+  assert.match(mobileDates, /flex-wrap:\s*wrap;/);
+
+  const desktop = css.match(
+    /@media \(width >= 48em\) \{\s*\.experience-card\s*\{[^}]*\}\s*\.experience-card__header\s*\{([^}]*)\}\s*\.experience-card__dates\s*\{([^}]*)\}/,
+  );
+  assert.ok(desktop);
+  assert.match(desktop[1], /display:\s*grid;/);
+  assert.match(desktop[1], /grid-template-columns:\s*minmax\(0, 1fr\) auto;/);
+  assert.match(desktop[2], /justify-self:\s*end;/);
+  assert.match(desktop[2], /white-space:\s*nowrap;/);
+});
+
+test('Experience cards and tags retain mobile-safe min-width and wrapping rules', () => {
+  const timelineItem = ruleBody('.experience-timeline__item');
+  const card = ruleBody('.experience-card');
+  const header = ruleBody('.experience-card__header');
+  const identity = ruleBody('.experience-card__identity');
+  const technologies = ruleBody('.experience-card__technologies');
+  const tagItem = ruleBody('.experience-card__tag-item');
+  const tag = ruleBody('.experience-card__tag-item .tag');
+
+  for (const body of [timelineItem, card, header, identity, tagItem]) {
+    assert.match(body, /min-width:\s*0;/);
+  }
+  assert.match(technologies, /display:\s*flex;/);
+  assert.match(technologies, /flex-wrap:\s*wrap;/);
+  assert.match(technologies, /max-width:\s*none;/);
+  assert.match(technologies, /padding:\s*0;/);
+  assert.match(tag, /max-width:\s*100%;/);
+  assert.match(tag, /overflow-wrap:\s*anywhere;/);
+});
+
+test('Experience width model cannot overflow at required mobile, tablet, and desktop widths', () => {
+  for (const viewport of [320, 375, 390, 768, 1024, 1440, 1920]) {
+    const gutter = Math.min(48, Math.max(20, 16 + viewport * 0.02));
+    const containerWidth = Math.min(viewport, 1280) - 2 * gutter;
+    const experienceWidth = Math.min(containerWidth, 70 * 16);
+    const timelineOffset = 48;
+    const cardWidth = experienceWidth - timelineOffset;
+    const cardInlinePadding =
+      viewport >= 1024 ? 2 * 48 : viewport >= 768 ? 2 * 32 : 2 * 24;
+    const contentWidth = cardWidth - cardInlinePadding;
+    assert.ok(experienceWidth <= containerWidth);
+    assert.ok(cardWidth > 0, `expected a positive card width at ${viewport}px`);
+    assert.ok(
+      contentWidth >= 176,
+      `expected at least 176px of wrapping space at ${viewport}px`,
+    );
+
+    if (viewport >= 1024) {
+      const desktopGap = 48;
+      const columnSpace = contentWidth - desktopGap;
+      assert.ok(columnSpace * (2 / 5) >= 280);
+      assert.ok(columnSpace * (3 / 5) >= 420);
+    }
+  }
 });

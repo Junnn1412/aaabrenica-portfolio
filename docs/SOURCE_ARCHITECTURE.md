@@ -41,6 +41,12 @@ scripts/                         — Node-only build tooling, deliberately outsi
 └── work-project-routes.mjs       — PF-052: pure, exported `findWorkProjectRouteProblems(projectLinks, caseStudyRoutePaths)` — the Work directory's exact-set-equality check against every registered `case-study` route (no missing, duplicate, or unregistered destination). A separate tiny module, not a named export added to `validate-routes.mjs` itself, because that script's own top level runs its full check sequence (including a possible `process.exit(1)`) unconditionally on import — this module has no top-level side effects, so it is safe to import directly from tests
 ```
 
+`project-card-assets.mjs` collects only `presentation.kind: 'image'`
+sources; the pre-build and post-build validators pass that list through the
+shared root-safe, exact-case asset checker. `project-card.js` independently
+enforces the closed `image`/`text-only`/`deferred` renderer contract, while
+`content-schema.js` rejects the same invalid shapes before rendering.
+
 `src/assets/` is not created yet — no images/static assets exist. Every
 ITCSS layer under `src/styles/` now has real content: `settings/`,
 `generic/`, `elements/`, `objects/`, `components/`, and `utilities/` since
@@ -193,15 +199,12 @@ it isn't part of a normal site section. Verified in
 dedicated `not-found` template — this task confirmed the existing policy
 still holds end-to-end, it did not need new enforcement.
 
-`scripts/verify-build-output.mjs` also carries a PF-054 region-scoped check
-for the three real configured contact links (`site.contactEmail`/
-`social.github`/`social.linkedin`): each must appear exactly once inside
-every route's `<footer>...</footer>` substring, and — on the `contact`
-route specifically — exactly once inside `<main>...</main>` as well. This
-replaced a PF-011-era "never appears anywhere" check once the fields
-became real, non-null values; a single whole-document "exactly once" count
-would have been wrong for `contact`, which legitimately renders each link
-twice (once in its own contact-methods list, once in the shared footer).
+`scripts/verify-build-output.mjs` carries region-scoped contact checks. Email,
+GitHub, and LinkedIn must appear exactly once in every footer and exactly once
+inside Contact main; Facebook is footer-only. This preserves Contact's three
+approved direct methods while allowing the compact global footer to own its
+four-link social/contact set. A whole-document count would be wrong for the
+three links intentionally rendered in both regions.
 
 ## SCSS layering
 
@@ -267,3 +270,239 @@ rationale.
   `footer.js`'s conditional rendering (PF-031) are already built and
   tested against fixture data, ready for the real values whenever they
   arrive.
+
+## Profile-card and exact-case asset addendum (2026-08-19)
+
+This addendum supersedes earlier statements in this document that no static
+assets exist or that omit the dedicated About template from the template
+inventory.
+
+- `src/config/site.js` owns shared `profile` identity and portrait metadata
+  used by Home and About.
+- `src/components/profile-card.js` is a shared build-time renderer with closed
+  `full` and `compact` variants. About content owns statement/highlights; Home
+  content owns its relocated `/about/` action.
+- `src/styles/components/_profile-card.scss` owns the shared surface, portrait,
+  and bracket rules. Page files own only their surrounding composition:
+  `_about.scss` adds the explicit grid gap before the closing CTA, and
+  `_home.scss` adds the homepage copy/card layout.
+- `scripts/asset-existence.mjs` retains the existing root-containment and
+  existence behavior while additionally comparing every requested path
+  segment with real directory entries. Both pre-build `public/` and post-build
+  `dist/` checks therefore reject case-only URL mismatches on Windows too.
+
+## Project-card publication and carousel addendum (2026-08-19)
+
+- `src/content/project-card-visibility.js` is the shared, strict pre-render
+  publication filter for Home and Work. It never changes the raw content
+  arrays used by schema or route validation.
+- Each project module owns its canonical `card.isVisible`; no page template
+  contains project-name filters.
+- `src/components/project-card.js` owns the closed `carousel` markup contract.
+  `src/scripts/project-carousel-state.js` owns pure three-slide state, while
+  `src/scripts/project-carousel.js` performs atomic DOM enhancement.
+- `fes-challenger.js` owns the three canonical desktop descriptors reused by
+  both gallery and carousel. `scripts/project-card-assets.mjs` collects every
+  carousel slide path; `scripts/registered-assets.mjs` retains the normalized
+  cross-consumer deduplication boundary used by public and dist checks.
+- `_project-card.scss` owns card/carousel layout and clipping. `_home.scss`
+  owns only the Home list/action composition gap.
+
+## Disabled Contact-form addendum (2026-08-21)
+
+**Implemented and disabled; not yet operationally enabled.**
+
+- `site.contactForm.enabled` is the build-time presentation gate and remains
+  `false`; direct Email, GitHub, and LinkedIn methods remain the rendered
+  Contact page. The Function has a separate dashboard-owned runtime gate,
+  `CONTACT_FORM_ENABLED`, and cannot be enabled by source configuration alone.
+- `src/contact/form-contract.js` is the shared field/normalization/validation
+  contract. `src/components/contact-form.js` owns static progressive markup;
+  `src/contact/form-client.js` owns request/response behavior; and
+  `src/scripts/contact-form.js` attaches enhancement only when a real form is
+  rendered.
+- `functions/api/contact.js` is the authoritative Cloudflare Pages Function.
+  It accepts POST only and applies request/body validation, safe response and
+  email generation, honeypot behavior, runtime gating, idempotency, safe logs,
+  and generic provider/configuration failures.
+- `functions/_shared/email-delivery.js` is the replaceable delivery boundary;
+  its current adapter performs one Resend API request with an 8-second native
+  abort timeout and no retry. Same-origin enforcement, when an `Origin` header
+  is present, lives in the authoritative Function and complements rather than
+  replaces its validation and the external WAF prerequisite. No Worker, Durable
+  Object, KV/D1/database, Turnstile, local/in-memory limiter, or additional
+  package exists.
+- `public/_routes.json` is repository-owned and invokes Pages Functions only
+  for `/api/contact`.
+- An external exact-path Cloudflare WAF rate-limiting rule is an operational
+  prerequisite, not repository functionality. Setup and network verification
+  live in `docs/CONTACT_FORM_OPERATIONS.md`. Proposed Privacy copy is held
+  unpublished in `docs/CONTACT_FORM_PRIVACY_DRAFT.md`.
+
+## About technology-stack addendum (2026-08-21)
+
+- `src/content/pages/about.js` owns the About-only heading, four group objects,
+  and ordered technology strings. The stack does not belong to `site.profile`,
+  whose shared Home/About responsibility remains identity and portrait data.
+- `src/pages/templates/about.js` contains the single-purpose stack renderer.
+  It emits escaped H2/H3 headings and escaped noninteractive tag lists directly
+  after the biography. No shared component was created for one consumer.
+- `src/pages/content-schema.js` owns the generic closed stack shape: exact
+  section heading, exactly four groups, closed stack/group keys, non-empty
+  strings and item arrays, and case-insensitive duplicate rejection. Exact
+  production group/item copy and order remain real-content test assertions,
+  rather than reusable-validator constants.
+- `src/styles/pages/_about.scss` owns only page composition and stack grouping.
+  It reuses the shared `.tag` visual contract without changing that component.
+  Home's compact profile-card content, renderer, and styling are unchanged and
+  protected by regression coverage.
+
+## About Experience addendum (2026-08-21)
+
+- `src/content/pages/about.js` owns the four reverse-chronological Experience
+  entries and their display strings. Employment data does not belong to
+  `site.profile` and is never imported by Home.
+- The dedicated About template contains the sole Experience renderer. It emits
+  one labelled section, an ordered list, article/H3 role relationships, escaped
+  plain-text employers and copy, semantic responsibility/tag lists, and real
+  date elements. No shared Experience component exists for one caller.
+- `renderSectionHeader()` accepts an optional renderer-owned `headingId` so the
+  Experience section can be labelled by its existing H2. The option is omitted
+  by every prior caller and does not alter their output.
+- `src/pages/content-schema.js` owns the closed reusable shape. It validates
+  structure, types, month values, duplicate entry identities, and duplicate
+  technologies without hardcoding production employer names or entry count.
+- `src/styles/pages/_about.scss` owns the page-only timeline, responsive date
+  layout, surface, and overflow safeguards. The line and nodes are CSS-only;
+  shared `.tag`, profile-card, header/footer, and Home styles are unchanged.
+- Browser review proved the section was already a sibling after the closed
+  `.about-layout`; its narrow desktop result came from winning reading-width
+  caps, not template nesting. The About renderer now adds only two layout hooks:
+  `.about-experience__inner` groups the existing header/timeline under one
+  centered 70rem boundary, and `.experience-card__main` groups summary and
+  responsibilities for the 64em 2fr/3fr card grid. Their DOM content order is
+  unchanged. These hooks and their resets remain About-only; shared section
+  header, prose, Home, and non-About templates are unmodified.
+
+## Compact navigation/footer and primary-button addendum (2026-08-21)
+
+- `src/config/navigation.js` now owns exactly five ordinary primary links.
+  Contact remains a registered route, but its only navbar entry is
+  `site.primaryCta`. The CTA's `key: 'contact'` participates in route-key
+  validation and current-page rendering; there is no second Contact nav item.
+- `src/components/partials/footer.js` retains its injected `(navItems, site)`
+  signature for template compatibility but intentionally does not render
+  `navItems`. Its amended closed output contract is copyright followed by the
+  optional safe icon-link list. Persistent identity remains solely in the shared
+  header; the footer emits no image, brand link, wrapper, or hidden brand copy.
+  `src/styles/components/_site-footer.scss` owns the compact mobile column and
+  48em container-bound space-between row plus scoped generic-list/paragraph/
+  min-content resets.
+- `site.social.facebook` owns the exact approved profile URL.
+  `src/pages/link-safety.js` adds the closed Facebook HTTPS host policy.
+  `src/components/social-icons.js` adds Facebook to the existing closed filled
+  brand-mark renderer; it does not accept content-supplied SVG. The exact path
+  comes from pinned official Simple Icons v16.28.0 `icons/facebook.svg`, whose
+  package metadata and license identify CC0-1.0.
+- `src/styles/settings/_colors.scss` owns the six semantic gradient stops.
+  `src/styles/components/_button.scss` is their sole component consumer through
+  shared `.btn--primary` default, pointer-hover, and active rules. All primary
+  anchors and native buttons therefore receive the same gradient without a
+  page-specific declaration. Disabled and forced-colors rules remove it.
+- `scripts/validate-routes.mjs` validates the CTA key/path and Facebook URL.
+  `scripts/verify-build-output.mjs` checks one header/footer landmark per built
+  route, exact region-scoped footer links, footer exclusions, and Contact-route
+  CTA current semantics. `/privacy/` remains registered and built even though
+  its footer link is temporarily absent.
+- `site.contactForm.enabled` remains the source/UI rendering gate and false.
+  `CONTACT_FORM_ENABLED` remains the server/runtime delivery gate. Production
+  activation must coordinate the WAF, Resend configuration, both gates,
+  publication of approved Privacy copy, restoration of discoverable Privacy
+  access, and operational testing; the runtime gate cannot waive another
+  prerequisite. PF-072 owns that deployment boundary.
+
+## Personal identity and Home hero addendum (2026-08-21)
+
+- `src/config/site.js` owns one frozen `{ displayName, formalName }` object.
+  `site.siteName` and `site.profile.identity` reference that contract rather
+  than duplicating names in templates. `scripts/site-profile-validation.mjs`
+  validates the closed identity object and rejects missing, blank, or unknown
+  fields.
+- `src/components/profile-card.js` is still the one shared full/compact card
+  renderer. Its closed variant deliberately maps compact to `displayName` and
+  full to `formalName`; all selected text remains escaped. Home/About templates
+  retain their existing card composition and action/content ownership.
+- `src/components/hero-visual.js` owns only the complete static, decorative SVG
+  markup. `src/pages/templates/home.js` places it in the existing hero media
+  position. No other template imports it, and built non-Home routes reject its
+  markers.
+- `src/styles/components/_hero.scss` owns static geometry, responsive sizing,
+  the 800ms reveal, 6s signal/node cycle, paused state, mobile simplification,
+  and defensive reduced-motion state. The complete base diagram is never
+  conditional on JavaScript.
+- `src/scripts/hero-visual.js` validates exact geometry before enhancement,
+  owns only viewport/tab/motion lifecycle classes, and initializes only when
+  `[data-hero-visual]` exists. `IntersectionObserver` pauses offscreen motion;
+  `visibilitychange` pauses hidden-tab motion. With no observer, it chooses a
+  safe running enhancement. It creates no timer/frame loop and imports no
+  motion dependency. `src/scripts/main.js` adds only this side-effect module.
+- `scripts/verify-build-output.mjs` checks the approved public/formal identity,
+  decorative temporary mark, exact copyright, Home SVG contract, and absence
+  of old identity/Home animation markers from inappropriate routes.
+
+## PF-064 action-link and case-study architecture (2026-08-21)
+
+- `src/components/action-link.js` is a centralized, escaping renderer with a
+  closed explicit variant set. `src/pages/icon-registry.js` owns its three
+  selectively imported Lucide nodes; templates cannot supply arbitrary icon
+  data or infer a variant from an href.
+- Current callers are Home standalone actions, Solutions evidence/inquiry
+  actions, case-study Back actions, the 404 recovery list, and the optional
+  standard-page standalone link contract. Excluded anchors keep their existing
+  component/template ownership.
+- `src/pages/templates/case-study.js` owns one generic editorial composition.
+  Presence of named fields determines the two narrative pairs and optional hero
+  media; no route/content identity appears in its layout decisions. The
+  `heroMedia` contract is optional so logo-free/media-free cases remain valid.
+- `src/pages/content-schema.js` validates `heroMedia` as a closed object with
+  only a safe internal `src`, non-empty factual `alt`, and positive-integer
+  `width`/`height`. Unknown and malformed media fail before rendering.
+- `src/content/pages/work/fes-challenger.js` owns one canonical Homepage image
+  descriptor. `heroMedia` and the three-slide project-card carousel reference
+  that same object; the lower gallery references only canonical Services and
+  Projects descriptors.
+- `scripts/case-study-assets.mjs` collects logo, hero, and gallery paths.
+  `scripts/registered-assets.mjs` combines them with project-card consumers,
+  normalizes physical paths once, and merges provenance. The shared Homepage
+  binary therefore produces one filesystem check with route and project-card
+  sources rather than duplicate checks.
+- `scripts/verify-build-output.mjs` understands the one-container case-study
+  architecture and verifies FES build HTML: Homepage once in the hero,
+  Services/Projects-only gallery, and no Mobile View or reserved filenames.
+
+## PF-064 Solutions, Process, and content reveal architecture
+
+- `src/pages/templates/solutions.js` owns the Solutions editorial wrappers;
+  `src/styles/pages/_solutions.scss` owns only the scoped 72rem boundary,
+  grouped detail grid, optional-link row, and existing accent treatment. The
+  closed Solutions content schema and all visitor-facing facts are unchanged.
+- `src/pages/templates/process.js` owns semantic fact-group wrappers;
+  `src/styles/pages/_process.scss` owns the scoped 72rem boundary, stage
+  identity/fact grid, CSS-only rail, responsive collapse, and communication
+  section treatment. The seven-stage content contract remains closed and in
+  its original order.
+- `src/components/content-reveal.js` is the sole renderer for reveal metadata;
+  it contains no content facts or timing values. `src/scripts/content-reveal.js`
+  owns one observer, once-only state, visibility/focus/hash/reduced-motion
+  lifecycle, and graceful observer failure. `src/styles/components/_content-reveal.scss`
+  owns the transient keyframes and no-JavaScript-safe default. `main.js`
+  imports the existing Hero initializer once and the content initializer once;
+  the two lifecycles do not share selectors or state.
+- Template application is explicit across all 11 routes. The renderer adds
+  attributes only to meaningful parent groups; navbar/footer, mobile nav,
+  skip link, buttons, tags, carousel controls/slides, form feedback, action
+  icons, and Hero SVG internals remain unmarked. Content modules never receive
+  animation classes or timing values.
+- `src/components/cta.js` and `src/components/profile-card.js` accept optional
+  renderer-owned reveal variants while retaining their established shared
+  contracts. Home compact profile identity/action content is unchanged.

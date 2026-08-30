@@ -31,6 +31,89 @@ test('renderRoute("privacy") falls back to site.defaultDescription end-to-end', 
   );
 });
 
+test('renderRoute("home") emits production canonical, social, and structured-data metadata', () => {
+  const { head } = renderRoute(routeByKey('home'));
+
+  assert.equal(site.baseUrl, 'https://aaabrenica.site');
+  assert.match(
+    head,
+    /<link rel="canonical" href="https:\/\/aaabrenica\.site\/">/,
+  );
+  assert.match(head, /<meta property="og:type" content="website">/);
+  assert.match(
+    head,
+    /<meta property="og:title" content="Practical Software Solutions for Growing Businesses — Antonio Abrenica">/,
+  );
+  assert.match(
+    head,
+    /<meta property="og:description" content="Antonio Abrenica helps organizations identify inefficient, repetitive, or difficult processes and turn them into practical websites, workflow solutions, internal systems, and custom software\.">/,
+  );
+  assert.match(
+    head,
+    /<meta property="og:site_name" content="Antonio Abrenica">/,
+  );
+  assert.match(
+    head,
+    /<meta property="og:url" content="https:\/\/aaabrenica\.site\/">/,
+  );
+  assert.match(head, /<meta name="twitter:card" content="summary">/);
+  assert.match(
+    head,
+    /<meta name="twitter:title" content="Practical Software Solutions for Growing Businesses — Antonio Abrenica">/,
+  );
+  assert.match(
+    head,
+    /<meta name="twitter:description" content="Antonio Abrenica helps organizations identify inefficient, repetitive, or difficult processes and turn them into practical websites, workflow solutions, internal systems, and custom software\.">/,
+  );
+  assert.match(head, /<script type="application\/ld\+json">/);
+  const script = head.match(
+    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+  )?.[1];
+  assert.ok(script, 'expected a JSON-LD script block');
+  const data = JSON.parse(script);
+  assert.equal(data['@graph'][0]['@type'], 'WebSite');
+  assert.equal(data['@graph'][1]['@type'], 'Person');
+  assert.equal('sameAs' in data['@graph'][0], false);
+  assert.ok(Array.isArray(data['@graph'][1].sameAs));
+});
+
+test('every canonical-eligible route exposes exactly the expected canonical URL and 404 omits canonical metadata', () => {
+  for (const route of routes) {
+    const { head } = renderRoute(route);
+    const canonicalMatches = [
+      ...head.matchAll(/<link rel="canonical" href="([^"]+)"/g),
+    ];
+
+    if (route.key === 'not-found') {
+      assert.equal(
+        canonicalMatches.length,
+        0,
+        `404 route must not emit canonical metadata`,
+      );
+      continue;
+    }
+
+    assert.equal(
+      canonicalMatches.length,
+      1,
+      `route "${route.key}" should emit exactly one canonical URL`,
+    );
+    const expectedCanonical = new URL(route.path, site.baseUrl).toString();
+    assert.equal(
+      canonicalMatches[0][1],
+      expectedCanonical,
+      `route "${route.key}" canonical href must match the route registry`,
+    );
+  }
+});
+
+test('renderRoute("not-found") omits canonical and social metadata for the 404 page', () => {
+  const { head } = renderRoute(routeByKey('not-found'));
+  assert.doesNotMatch(head, /<link rel="canonical"/);
+  assert.doesNotMatch(head, /<meta property="og:url"/);
+  assert.doesNotMatch(head, /<script type="application\/ld\+json">/);
+});
+
 // PF-053 — end-to-end sanity check that the real about.js content renders
 // through the 'standard' template's new optional cta field correctly.
 test('renderRoute("about") renders exactly one closing cta heading, linking to /contact/', () => {

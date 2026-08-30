@@ -245,10 +245,25 @@ for (const route of routes) {
     add(`route "${route.key}": found an empty href or content attribute`);
   }
 
-  if (/<link rel="canonical"/.test(html)) {
-    add(
-      `route "${route.key}": unexpected canonical link (site.baseUrl is null in PF-011)`,
-    );
+  const canonicalLinks = [
+    ...html.matchAll(/<link rel="canonical" href="([^"]+)"/g),
+  ];
+  const expectedCanonical =
+    route.key !== 'not-found'
+      ? new URL(route.path, site.baseUrl).toString()
+      : null;
+  if (expectedCanonical) {
+    if (canonicalLinks.length !== 1) {
+      add(
+        `route "${route.key}": expected exactly one canonical link for the production domain`,
+      );
+    } else if (canonicalLinks[0][1] !== expectedCanonical) {
+      add(
+        `route "${route.key}": expected canonical href "${expectedCanonical}" but found "${canonicalLinks[0][1]}"`,
+      );
+    }
+  } else if (canonicalLinks.length > 0) {
+    add(`route "${route.key}": canonical links must be omitted for 404 output`);
   }
 
   // Footer redesign — the footer's own contact links now carry
@@ -502,6 +517,83 @@ for (const route of routes) {
       }
     }
   }
+}
+
+const sitemapPath = path.join(distRootPath, 'sitemap.xml');
+const robotsPath = path.join(distRootPath, 'robots.txt');
+
+if (!fs.existsSync(sitemapPath)) {
+  add('dist/sitemap.xml is missing');
+} else {
+  const sitemapXml = fs.readFileSync(sitemapPath, 'utf8');
+  const expectedUrls = routes
+    .filter((route) => route.key !== 'not-found')
+    .map((route) => new URL(route.path, site.baseUrl).toString());
+  const locs = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+    (match) => match[1],
+  );
+
+  if (
+    !/^<\?xml version="1\.0" encoding="UTF-8"\?>\s*<urlset/.test(sitemapXml)
+  ) {
+    add('dist/sitemap.xml does not use the expected XML sitemap structure');
+  }
+
+  if (locs.some((loc) => !expectedUrls.includes(loc))) {
+    add(
+      'dist/sitemap.xml contains an unexpected URL not present in the approved route registry',
+    );
+  }
+
+  for (const expected of expectedUrls) {
+    if (!locs.includes(expected)) {
+      add(`dist/sitemap.xml is missing the approved public route ${expected}`);
+    }
+  }
+
+  if (locs.includes(new URL('/404.html', site.baseUrl).toString())) {
+    add('dist/sitemap.xml must not include the 404 route');
+  }
+
+  if (
+    locs.some(
+      (loc) =>
+        /\/dev\//.test(new URL(loc).pathname) ||
+        /design-system|preview/i.test(new URL(loc).pathname),
+    )
+  ) {
+    add(
+      'dist/sitemap.xml must not contain development-only or component-showcase routes',
+    );
+  }
+
+  if (new Set(locs).size !== locs.length) {
+    add('dist/sitemap.xml contains duplicate URLs');
+  }
+}
+
+if (!fs.existsSync(robotsPath)) {
+  add('dist/robots.txt is missing');
+} else {
+  const robotsTxt = fs.readFileSync(robotsPath, 'utf8');
+  const expectedRobots = `User-agent: *\nAllow: /\nSitemap: ${site.baseUrl}/sitemap.xml\n`;
+  if (robotsTxt !== expectedRobots) {
+    add(
+      'dist/robots.txt does not match the required PF-070 production contract',
+    );
+  }
+}
+
+if (problems.length > 0) {
+  console.log(
+    '[verify-build-output] ' + problems.length + ' problem(s) found:',
+  );
+  for (const problem of problems) {
+    console.log(`  - ${problem}`);
+  }
+  process.exitCode = 1;
+} else {
+  console.log('[verify-build-output] all checks passed.');
 }
 
 // Bounded to dist/ itself — our own regenerated build output, not the

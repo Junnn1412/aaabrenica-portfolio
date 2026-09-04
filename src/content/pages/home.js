@@ -111,8 +111,8 @@ export default {
     ],
   },
   projects: {
-    eyebrow: 'Selected Work',
-    heading: 'A Sample of Recent Projects',
+    eyebrow: 'FEATURED WORK',
+    heading: 'Recent Projects',
     items: [
       {
         featured: true,

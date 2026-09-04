@@ -22,6 +22,8 @@ export const site = {
   },
   // Production domain for canonical URLs, social metadata, and sitemap output.
   baseUrl: 'https://aaabrenica.site',
+  socialImageUrl:
+    'https://aaabrenica.site/images/brand/aaabrenica-og-image.png',
   // No résumé asset exists yet — deferred by explicit product decision
   // (PF-053/054 scope); stays null until a later milestone approves and
   // adds one.

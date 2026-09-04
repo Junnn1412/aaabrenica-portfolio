@@ -1,0 +1,33 @@
+* {
+  box-sizing: border-box;
+}
+
+// The one justified use of !important in this project. Proven necessary,
+// not assumed: CSS cascade origin ordering only makes a normal-priority
+// author rule beat a normal-priority user-agent rule — it does NOT protect
+// [hidden] from a LATER author rule of equal or higher specificity, which
+// is resolved by source order, not by which rule "should" apply. A real
+// PF-031 bug demonstrated this exactly: `.site-header__menu-toggle {
+// display: inline-flex; }`, loaded after this reset, silently defeated the
+// browser's native `[hidden] { display: none }` behavior, making a
+// hidden-by-design mobile-menu toggle stay visible at every width. This
+// rule guarantees [hidden] always wins, project-wide, even if a future
+// component makes the same mistake — components should still scope their
+// own display rules with :not([hidden]) as the primary fix (see
+// components/_site-header.scss), this is defense in depth, not a
+// substitute.
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+}
+
+// Scoped to the structural chrome landmarks only (unstyled until PF-031's
+// nav/header/footer work) — NOT a blanket `body a`, so it can't silently
+// cancel elements/_links.scss's real link styling for content links.
+header a,
+footer a {
+  color: inherit;
+}

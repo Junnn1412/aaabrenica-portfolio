@@ -1,0 +1,157 @@
+// Process-page-only editorial layout. The scoped 72rem maximum follows the
+// established rich-case-study precedent; global paragraphs and lists retain
+// their 68ch reading measure.
+@use '../settings/spacing';
+
+.process-page__container {
+  max-width: 72rem;
+}
+
+.process-page__intro {
+  min-width: 0;
+}
+
+.process-detail {
+  --process-rail-axis: 1.25rem;
+
+  position: relative;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// The rail and nodes are CSS-only decoration. Real sequence semantics come
+// from the ol/li structure, and the visible number is aria-hidden.
+.process-detail::before {
+  content: '';
+  position: absolute;
+  top: var(--space-5);
+  bottom: var(--space-5);
+  left: var(--process-rail-axis);
+  border-left: var(--border-width) solid var(--color-border-interactive);
+}
+
+.process-detail__stage {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding-block: var(--space-7);
+}
+
+.process-detail__stage:first-child {
+  padding-top: 0;
+}
+
+.process-detail__stage + .process-detail__stage {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.process-detail__heading-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+
+.process-detail__number {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-2);
+  color: var(--color-accent-text);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  font-weight: 600;
+}
+
+.process-detail__heading {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-heading);
+  overflow-wrap: anywhere;
+}
+
+.process-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  max-width: none;
+  margin: var(--space-6) 0 0;
+}
+
+.process-detail__stage .process-facts {
+  margin-left: calc(2.5rem + var(--space-4));
+}
+
+.process-facts__item {
+  min-width: 0;
+}
+
+.process-facts__term {
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent-text);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing-label);
+  text-transform: uppercase;
+}
+
+.process-facts__detail {
+  max-width: var(--width-reading);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (forced-colors: active) {
+  .process-detail__number {
+    border: 1px solid CanvasText;
+    background-color: transparent;
+  }
+
+  .process-detail::before {
+    border-color: CanvasText;
+  }
+}
+
+// Desktop: stage identity occupies a restrained timeline column; semantic
+// dt/dd groups share two flexible detail columns. An odd final group spans
+// the row instead of leaving a conspicuous empty companion cell. Tablet and
+// mobile keep the one-column source order above.
+@media (min-width: spacing.$bp-lg) {
+  .process-detail__stage {
+    display: grid;
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+    gap: var(--gap-lg);
+  }
+
+  .process-detail__heading-row {
+    align-self: start;
+    margin: 0;
+  }
+
+  .process-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--space-6) var(--gap-lg);
+  }
+
+  .process-detail__stage .process-facts {
+    margin: 0;
+  }
+
+  .process-facts__item:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}

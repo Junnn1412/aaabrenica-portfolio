@@ -1,0 +1,6 @@
+# Local Cloudflare Pages Function variables. Copy to .dev.vars and fill locally.
+# Never commit real credentials or environment-specific values.
+RESEND_API_KEY=
+CONTACT_FROM_EMAIL=
+CONTACT_TO_EMAIL=
+CONTACT_FORM_ENABLED=

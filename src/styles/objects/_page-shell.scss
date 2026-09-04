@@ -1,0 +1,9 @@
+// PF-040 — flex: 1 lets #main-content absorb the leftover space in body's
+// flex column (generic/_document.scss), pinning the footer to the viewport
+// bottom on short routes. padding-block gives every route consistent
+// vertical rhythm using a token reserved for exactly this since PF-020 but
+// unused until now.
+#main-content {
+  flex: 1;
+  padding-block: var(--space-section);
+}

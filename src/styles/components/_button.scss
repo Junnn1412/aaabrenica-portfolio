@@ -1,0 +1,163 @@
+// PF-021 — works on <button type="button"> (in-page actions) or <a href>
+// (navigation). The border (--color-border-interactive), not the fill, is
+// the qualifying WCAG 1.4.11 component boundary for --primary/--secondary —
+// verified against every fill state in tests/design-tokens.test.mjs; the
+// fill alone fails 3:1 against the page background in most states. --ghost
+// has no fill or border and relies on its already-verified text contrast,
+// the same as a plain link.
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-target-min);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  line-height: var(--line-height-body);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-fast) var(--motion-easing-standard),
+    border-color var(--motion-duration-fast) var(--motion-easing-standard),
+    color var(--motion-duration-fast) var(--motion-easing-standard),
+    transform var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.btn svg {
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+// Hover lift only where hover is a genuine pointer capability — never on
+// touch, and never attached to :focus-visible (a keyboard user must never
+// see a control move when it receives focus).
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    transform: translateY(calc(-1 * var(--motion-distance-sm)));
+  }
+}
+
+// Returns to rest on press, including immediately after a hover lift.
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn--primary {
+  border-color: var(--color-border-interactive);
+  background-color: var(--color-primary-gradient-start);
+  background-image: linear-gradient(
+    135deg,
+    var(--color-primary-gradient-start),
+    var(--color-primary-gradient-end)
+  );
+  color: var(--color-text-primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover {
+    background-color: var(--color-primary-gradient-hover-start);
+    background-image: linear-gradient(
+      135deg,
+      var(--color-primary-gradient-hover-start),
+      var(--color-primary-gradient-hover-end)
+    );
+  }
+}
+
+.btn--primary:active {
+  background-color: var(--color-primary-gradient-active-start);
+  background-image: linear-gradient(
+    135deg,
+    var(--color-primary-gradient-active-start),
+    var(--color-primary-gradient-active-end)
+  );
+}
+
+.btn--secondary {
+  border-color: var(--color-border-interactive);
+  background-color: transparent;
+  color: var(--color-accent-text);
+}
+
+.btn--secondary:hover {
+  background-color: var(--color-surface-1);
+}
+
+.btn--secondary:active {
+  background-color: var(--color-surface-2);
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--color-accent-text);
+}
+
+.btn--ghost:hover {
+  background-color: var(--color-surface-1);
+}
+
+.btn--ghost:active {
+  background-color: var(--color-surface-2);
+}
+
+// :disabled only ever matches a real <button disabled> — never an <a>, even
+// one with a stray disabled attribute — so there is no reachable
+// disabled-anchor pattern. Flat colors, no opacity trick, so the muted
+// label stays legible; text-muted on surface-1 already clears 4.5:1.
+.btn:disabled {
+  border-color: var(--color-border);
+  background-color: var(--color-surface-1);
+  background-image: none;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  transform: translateY(0);
+}
+
+.btn:disabled:hover,
+.btn:disabled:active {
+  background-color: var(--color-surface-1);
+  background-image: none;
+  transform: translateY(0);
+}
+
+.btn--sm {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-4);
+  font-size: var(--font-size-small);
+}
+
+.btn--lg {
+  padding-block: var(--space-4);
+  padding-inline: var(--space-6);
+  font-size: var(--font-size-body-lg);
+}
+
+// Icon-only controls: square hit area, no visible text — caller must
+// provide aria-label; the icon itself stays aria-hidden.
+.btn--icon {
+  min-width: var(--touch-target-min);
+  padding-inline: 0;
+}
+
+@media (forced-colors: active) {
+  .btn--primary {
+    border-color: ButtonText;
+    background-color: ButtonFace;
+    background-image: none;
+    color: ButtonText;
+  }
+
+  .btn:disabled {
+    border-color: GrayText;
+    background-color: Canvas;
+    background-image: none;
+    color: GrayText;
+  }
+}

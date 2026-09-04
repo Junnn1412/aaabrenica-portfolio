@@ -208,4 +208,3 @@ Use the completion-report format in `CLAUDE.md` and additionally include:
 - Git branch and remote status
 - Whether any files remain untracked or modified
 - Checks not performed and why
-

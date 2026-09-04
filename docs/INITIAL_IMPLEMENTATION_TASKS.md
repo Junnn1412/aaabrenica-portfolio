@@ -1,7 +1,7 @@
 # Initial Implementation Tasks
 
 **Status:** Ready for execution  
-**Version:** 1.0  
+**Version:** 1.0
 
 ## 1. Execution policy
 
@@ -15,17 +15,17 @@ Task statuses:
 
 ## 2. Milestone overview
 
-| Milestone | Outcome | Gate |
-|---|---|---|
-| M0 Documentation and inventory | Reliable project instructions and known content gaps | Requirements confirmed |
-| M1 Project foundation | Working multi-page Vite project | Production build approved |
-| M2 Design system | Approved visual and interaction foundation | Token and typography approval |
-| M3 Component showcase | Approved reusable UI components | Visual component approval |
-| M4 Global shell and homepage | Complete concise sales overview | Homepage approval |
-| M5 Dedicated pages | Supporting detail for solutions, process, work, about, and contact | Page-content approval |
-| M6 Case studies and assets | Credible, safe project evidence | Confidentiality approval |
-| M7 Quality, deployment, and launch | Production-ready Version 1 | Release approval |
-| M8 Starter extraction | Reusable client portfolio starter | Post-launch validation |
+| Milestone                          | Outcome                                                            | Gate                          |
+| ---------------------------------- | ------------------------------------------------------------------ | ----------------------------- |
+| M0 Documentation and inventory     | Reliable project instructions and known content gaps               | Requirements confirmed        |
+| M1 Project foundation              | Working multi-page Vite project                                    | Production build approved     |
+| M2 Design system                   | Approved visual and interaction foundation                         | Token and typography approval |
+| M3 Component showcase              | Approved reusable UI components                                    | Visual component approval     |
+| M4 Global shell and homepage       | Complete concise sales overview                                    | Homepage approval             |
+| M5 Dedicated pages                 | Supporting detail for solutions, process, work, about, and contact | Page-content approval         |
+| M6 Case studies and assets         | Credible, safe project evidence                                    | Confidentiality approval      |
+| M7 Quality, deployment, and launch | Production-ready Version 1                                         | Release approval              |
+| M8 Starter extraction              | Reusable client portfolio starter                                  | Post-launch validation        |
 
 ## 3. M0 — Documentation and content inventory
 
@@ -198,7 +198,7 @@ Provide the homepage preview variants and ensure they can expand into dedicated-
 
 ### PF-035 Approve the component system
 
-**Status:** Blocked until PF-031 through PF-034 are reviewable
+**Status:** Complete — Gate C approved by AAA on 2026-08-16, no exceptions (see `docs/COMPONENT_APPROVAL.md`)
 
 AAA reviews all components at the six required widths, keyboard states, touch behavior, reduced motion, realistic long content, and original graphics. Record approved corrections before full-page assembly.
 
@@ -206,7 +206,7 @@ AAA reviews all components at the six required widths, keyboard states, touch be
 
 ### PF-040 Build the global page shell
 
-**Status:** Ready after PF-035  
+**Status:** Ready  
 **Branch:** `feature/global-shell`
 
 Implement shared metadata structure, header, main landmark, footer, page container, navigation state, base scripts, and page-specific hooks.
@@ -291,6 +291,21 @@ Use sanitized real screenshots inside original browser/device compositions. Deco
 
 Every case study must distinguish verified outcomes from qualitative improvements and must not invent metrics.
 
+### PF-064 V1 content and visual polish pass
+
+**Status:** Blocked by final content and asset approval across all pages
+
+Review and finalize every Version 1 page after its structural implementation is complete, once real case-study content (PF-060–063) and any remaining page facts are approved. Scope:
+
+- **Final copy sign-off** — replace remaining provisional copy (About, Contact, Solutions, Process, Work, and any others still marked provisional in `docs/DECISION_LOG.md`) with AAA-approved final copy.
+- **Visual hierarchy** — confirm heading weight/size, section rhythm, and emphasis read correctly page-to-page, not just within each page in isolation.
+- **Spacing and rhythm** — confirm consistent vertical rhythm and section spacing across all pages, including any drift introduced by pages implemented at different times.
+- **Page-specific presentation** — correct any narrow, page-scoped visual gaps found only during real browser review (the kind of correction PF-055's 404 recovery links already required after their initial default-list presentation read as unfinished) rather than leaving them as known issues.
+- **Real asset integration** — incorporate any assets that become available after structural implementation (photograph, résumé, case-study screenshots) once approved.
+- **Cross-page consistency** — a final pass confirming consistent typography, component usage, and tone across the whole site before Version 1 quality assurance and deployment (M7) begin.
+
+Not yet started; not to be marked complete until every item above has been explicitly reviewed and confirmed by AAA.
+
 ## 10. M7 — Quality, deployment, and launch
 
 ### PF-070 Complete SEO and social assets
@@ -343,4 +358,3 @@ The first coding task should be **PF-010: Initialize Git and Vite**, but only af
 - Whether the current documentation directory will become the repository root
 
 Claude should begin in Plan mode, inspect these documents, propose the exact initialization commands and file structure, and wait for approval before editing.
-

@@ -1,0 +1,21 @@
+// PF-021 — content links only. header/footer chrome links are exempted via
+// generic/_reset.scss's `header a, footer a { color: inherit; }` and are
+// unstyled until PF-031's nav/header/footer work.
+// :focus-visible is intentionally not redeclared here — generic/_document.scss
+// already applies a global ring to every focusable element.
+// No distinct :visited style — deliberate (see docs/DECISION_LOG.md).
+a {
+  color: var(--color-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+a:hover,
+a:active {
+  color: var(--color-accent-hover);
+}
+
+.link--plain {
+  text-decoration: none;
+}

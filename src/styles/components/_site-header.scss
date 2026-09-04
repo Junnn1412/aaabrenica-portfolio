@@ -1,0 +1,231 @@
+@use '../settings/spacing';
+
+header {
+  display: flex;
+
+  // Mobile-default: brand + toggle fit line 1 on their own (their
+  // combined width is far under 100%); .site-nav's own flex-basis: 100%
+  // (below) can't fit alongside them, so it wraps to a full-width line 2
+  // — the brand/toggle row stays stable and compact, nav grows the
+  // header vertically instead of squeezing into a narrow leftover
+  // column. justify-content applies per line in a wrapped flex
+  // container, so line 1 still gets brand-left/toggle-right, and line
+  // 2's single 100%-wide item needs no distribution. Reverted to a
+  // single non-wrapping row at desktop, where only brand + nav are ever
+  // visible together.
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  padding-inline: var(--gutter);
+  background-color: var(--color-surface-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+
+  // Sticky only at desktop. The collapsible mobile nav holds 6 links + the
+  // CTA (7 rows) — a *pinned* header containing the fully expanded menu
+  // could equal or exceed a short viewport's height (e.g. a landscape
+  // phone), trapping the page with no way to scroll past it. At desktop
+  // the nav is always a short horizontal row, so sticky there carries
+  // none of that risk.
+  // Header/nav overflow-defect follow-up (round 2) — this breakpoint
+  // moved from spacing.$bp-lg (1024px, round 1's fix) to spacing.$bp-xl
+  // (1280px), together with the matching desktop block in
+  // components/_site-nav.scss and src/scripts/nav-toggle.js's
+  // `desktopQuery`, all three of which must stay in sync. Round 1's
+  // 1024px estimate turned out to have too thin a real-world margin: its
+  // fixed (token-derived, exact) overhead math was correct, but the text
+  // portion of the required width was estimated from an average
+  // character-width heuristic that undershot Inter's real rendered width
+  // — a real browser test at 1024px still overflowed. 1280px was not
+  // picked by trial and error: recomputing the same fixed-overhead
+  // formula against a wider, explicitly-labeled *generous* text-width
+  // estimate (see tests/site-header-overflow.test.mjs) shows 1024px still
+  // falls short while 1280px clears it with genuine (150px+) margin, and
+  // that margin only grows at 1440/1920px. See docs/DECISION_LOG.md for
+  // the full derivation and the reasoning for why exact text width can't
+  // be proven without a real browser.
+  @media (min-width: spacing.$bp-xl) {
+    flex-wrap: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky-nav);
+  }
+}
+
+// Header/nav visual-polish task — a deliberate horizontal lockup
+// (temporary/placeholder mark + concise public-name text), one link, one
+// keyboard stop. `text-decoration: none` is scoped to this one class only
+// — elements/_links.scss's global underline is untouched, and
+// generic/_reset.scss's `header a { color: inherit }` already keeps this
+// link from picking up the global link color.
+.site-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.site-header__brand:hover {
+  opacity: 0.8;
+}
+
+// Fixed visual bounds, not the source image's own dimensions — the same
+// "replaceable slot" contract a future SBTech PH emblem (almost certainly
+// a different aspect ratio than today's temporary placeholder) can drop
+// into without any markup or layout change. object-fit: contain guarantees
+// no distortion and no overflow regardless of the real source aspect
+// ratio; width: auto + max-width caps it horizontally for a wide source
+// image without forcing a square crop.
+.site-brand__mark {
+  display: block;
+  height: 2.25rem;
+  width: auto;
+  max-width: 3rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+// Visibility is owned entirely by the real `hidden` DOM property
+// (src/scripts/nav-toggle.js) — no CSS here shows or hides this element,
+// so there is exactly one authoritative state, never two that could
+// diverge (see docs/DECISION_LOG.md).
+// `display` is scoped to `:not([hidden])`, not applied unconditionally.
+// An earlier draft set `display: inline-flex` directly on
+// `.site-header__menu-toggle`, which — despite the comment above stating
+// the intent — silently defeated the browser's native `[hidden] { display:
+// none }` behavior: author-origin CSS always wins over user-agent-origin
+// CSS regardless of specificity, so the button stayed visible at every
+// width and in every state, in turn crowding the desktop nav row into
+// wrapping. Scoping the rule this way means no author `display` competes
+// with `[hidden]` for this element at all.
+// Mobile-toggle redesign — icon-only, no visible "Menu"/"Close" text.
+// `justify-content: center` matters now that there's no padding-inline: a
+// single small icon child inside a fixed touch-target-sized box needs
+// explicit centering, the same reasoning the existing `.btn--icon`
+// component already documents. `font-size` stays set (rather than being
+// removed along with the old visible label) purely as the `em` sizing
+// anchor for `.site-header__menu-icon` below — nothing renders it as text.
+.site-header__menu-toggle {
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  padding-inline: 0;
+  border: var(--border-width) solid var(--color-border-interactive);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-small);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-fast)
+    var(--motion-easing-standard);
+}
+
+.site-header__menu-toggle:not([hidden]) {
+  display: inline-flex;
+}
+
+// Restrained hover feedback, the same pointer-gated pattern already used
+// by .site-nav's link hover — no lift/movement, a subtle surface change
+// only.
+@media (hover: hover) and (pointer: fine) {
+  .site-header__menu-toggle:hover {
+    background-color: var(--color-surface-2);
+  }
+}
+
+// A quiet "currently open" signal beyond the icon shape alone, reusing the
+// same accent-border convention the active nav-route indicator already
+// established — a real `border-color`, not a background/glow, so it stays
+// visually quieter than `.btn--primary` and auto-recolors correctly in
+// forced-colors mode.
+.site-header__menu-toggle[aria-expanded='true'] {
+  border-color: var(--color-accent);
+}
+
+// The three hamburger bars morph into an X purely from `aria-expanded` —
+// the same attribute nav-toggle.js already sets, so there is exactly one
+// canonical source of truth for both the accessible state and the icon's
+// visual state; no separate JS-driven icon.hidden bookkeeping exists
+// anymore. The wrapper carries `aria-hidden="true"` in the markup
+// (src/components/partials/header.js) — these lines are decorative only,
+// never a second, duplicate accessible name alongside the button's own
+// `aria-label`.
+.site-header__menu-icon {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.site-header__menu-bar {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: currentcolor;
+  border-radius: var(--radius-full);
+  transition:
+    transform var(--motion-duration-fast) var(--motion-easing-standard),
+    opacity var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+.site-header__menu-bar:nth-child(1) {
+  top: 0;
+}
+
+.site-header__menu-bar:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.site-header__menu-bar:nth-child(3) {
+  bottom: 0;
+}
+
+.site-header__menu-toggle[aria-expanded='true']
+  .site-header__menu-bar:nth-child(1) {
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.site-header__menu-toggle[aria-expanded='true']
+  .site-header__menu-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.site-header__menu-toggle[aria-expanded='true']
+  .site-header__menu-bar:nth-child(3) {
+  top: 50%;
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+// Forced-colors safety net, explicit rather than assumed. `currentColor`
+// generally tracks the forced text color automatically, but `background-
+// color` on a plain decorative `<span>` (not a real `border`/`outline`
+// property) isn't guaranteed to survive forced-colors mode the way the
+// button's own border already does — `CanvasText` is the standard,
+// spec-recommended system color keyword for exactly this "keep a
+// decorative-but-meaningful graphic visible" case. Not yet confirmed in an
+// actual forced-colors browser session — see docs/TESTING_AND_QA.md.
+@media (forced-colors: active) {
+  .site-header__menu-bar {
+    background-color: CanvasText;
+  }
+}
+
+// Keeps the skip-link/focus target clear of the desktop-only sticky
+// header (--header-offset, settings/_spacing.scss). Scoped to this one
+// selector, not a global [id] rule — the showcase loads the same
+// compiled CSS but has no sticky header of its own, so a global rule
+// would incorrectly offset its unrelated TOC-anchor jumps.
+#main-content {
+  scroll-margin-top: var(--header-offset);
+}

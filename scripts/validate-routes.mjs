@@ -1,0 +1,402 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { routes } from '../src/config/routes.js';
+import { primaryNav } from '../src/config/navigation.js';
+import { site } from '../src/config/site.js';
+import { templates } from '../src/pages/templates/index.js';
+import { contentByKey } from '../src/content/pages/index.js';
+import { validateContent } from '../src/pages/content-schema.js';
+import { getMarkerProblems } from '../src/pages/compose.js';
+import { normalizePath, resolveEntryPath } from '../src/pages/paths.js';
+import {
+  isSafeInternalPath,
+  isSafeEmail,
+  isSafeExternalUrl,
+} from '../src/pages/link-safety.js';
+import { findWorkProjectRouteProblems } from './work-project-routes.mjs';
+import { findSiteProfileProblems } from './site-profile-validation.mjs';
+import {
+  collectRegisteredAssetEntries,
+  findRegisteredAssetProblems,
+} from './registered-assets.mjs';
+
+const projectRootUrl = new URL('../', import.meta.url);
+const publicRootUrl = new URL('../public/', import.meta.url);
+
+const APPROVED_PATHS = [
+  '/',
+  '/solutions/',
+  '/process/',
+  '/work/',
+  '/work/fes-challenger/',
+  '/work/business-workflow-system/',
+  '/work/ebarangay/',
+  '/about/',
+  '/contact/',
+  '/privacy/',
+  '/404.html',
+];
+
+// Exactly the 10 directories that can hold a route entry. Never recursed
+// into automatically — each is listed explicitly (the 3 case-study folders
+// are not discovered by recursing into work/), and readdirSync is called
+// non-recursively on each, so this never touches node_modules, dist, .git,
+// or src.
+const ROUTE_PARENT_DIRS = [
+  '.',
+  'solutions',
+  'process',
+  'work',
+  'work/fes-challenger',
+  'work/business-workflow-system',
+  'work/ebarangay',
+  'about',
+  'contact',
+  'privacy',
+];
+
+const problems = [];
+const add = (msg) => problems.push(msg);
+
+function checkDuplicates() {
+  const byKey = new Map();
+  const byPath = new Map();
+  const byEntry = new Map();
+  for (const route of routes) {
+    const entryAbs = resolveEntryPath(projectRootUrl, route.entry);
+    if (byKey.has(route.key)) add(`duplicate route key "${route.key}"`);
+    else byKey.set(route.key, true);
+    if (byPath.has(route.path))
+      add(
+        `duplicate route path "${route.path}" (routes "${byPath.get(route.path)}" and "${route.key}")`,
+      );
+    else byPath.set(route.path, route.key);
+    if (byEntry.has(entryAbs))
+      add(
+        `duplicate route entry "${route.entry}" (routes "${byEntry.get(entryAbs)}" and "${route.key}")`,
+      );
+    else byEntry.set(entryAbs, route.key);
+  }
+}
+
+function checkRegistries() {
+  for (const route of routes) {
+    if (!(route.template in templates))
+      add(`route "${route.key}": unknown template "${route.template}"`);
+    if (!(route.content in contentByKey))
+      add(
+        `route "${route.key}": missing content module for key "${route.content}"`,
+      );
+  }
+}
+
+function checkContentShape() {
+  for (const route of routes) {
+    const content = contentByKey[route.content];
+    if (!content) continue; // already reported by checkRegistries
+    for (const problem of validateContent(route, content)) {
+      add(`route "${route.key}": ${problem}`);
+    }
+  }
+}
+
+function checkSiteConfig() {
+  if (
+    typeof site.defaultDescription !== 'string' ||
+    site.defaultDescription.length === 0
+  ) {
+    add('site.defaultDescription must be a non-empty string');
+  }
+
+  // primaryCta (PF-031) is real, approved content — required, not
+  // PF-003/PF-053-gated — so its shape is enforced unconditionally, same
+  // pattern as primaryNav below.
+  if (
+    typeof site.primaryCta?.key !== 'string' ||
+    site.primaryCta.key.length === 0
+  ) {
+    add('site.primaryCta.key must be a non-empty string');
+  }
+  if (
+    typeof site.primaryCta?.label !== 'string' ||
+    site.primaryCta.label.length === 0
+  ) {
+    add('site.primaryCta.label must be a non-empty string');
+  }
+  if (!isSafeInternalPath(site.primaryCta?.path)) {
+    add('site.primaryCta.path must be a safe internal path');
+  } else if (!routes.some((r) => r.path === site.primaryCta.path)) {
+    add(
+      `site.primaryCta.path "${site.primaryCta.path}" does not match a registered route`,
+    );
+  }
+
+  // Optional, PF-003/PF-053-gated fields — validated only when populated;
+  // staying null is valid and expected today.
+  if (site.resumePath != null && !isSafeInternalPath(site.resumePath)) {
+    add('site.resumePath, when set, must be a safe internal path');
+  }
+  if (
+    site.social?.github != null &&
+    !isSafeExternalUrl(site.social.github, 'github')
+  ) {
+    add(
+      'site.social.github, when set, must be an HTTPS github.com/www.github.com URL',
+    );
+  }
+  if (
+    site.social?.linkedin != null &&
+    !isSafeExternalUrl(site.social.linkedin, 'linkedin')
+  ) {
+    add(
+      'site.social.linkedin, when set, must be an HTTPS linkedin.com/www.linkedin.com URL',
+    );
+  }
+  if (
+    site.social?.facebook != null &&
+    !isSafeExternalUrl(site.social.facebook, 'facebook')
+  ) {
+    add(
+      'site.social.facebook, when set, must be an HTTPS facebook.com/www.facebook.com URL',
+    );
+  }
+  if (site.contactEmail != null && !isSafeEmail(site.contactEmail)) {
+    add('site.contactEmail, when set, must be a valid email address');
+  }
+  if (typeof site.contactForm?.enabled !== 'boolean') {
+    add('site.contactForm.enabled must be a boolean');
+  }
+  if (site.contactForm?.action !== '/api/contact') {
+    add('site.contactForm.action must be exactly "/api/contact"');
+  }
+  if (site.brandMark?.src != null && !isSafeInternalPath(site.brandMark.src)) {
+    add(
+      `site.brandMark.src must be a safe internal path, got "${site.brandMark.src}"`,
+    );
+  }
+
+  for (const problem of findSiteProfileProblems(site.profile)) {
+    add(problem);
+  }
+}
+
+// Cross-route link resolution — requires the full manifest, so this lives
+// only here, not in the single-route content-schema.js checks.
+function checkNavigation() {
+  for (const item of primaryNav) {
+    if (!isSafeInternalPath(item.path)) {
+      add(
+        `navigation item "${item.key}": path "${item.path}" is not a safe internal path`,
+      );
+      continue;
+    }
+    const matchingRoutes = routes.filter((r) => r.navKey === item.key);
+    if (matchingRoutes.length === 0) {
+      add(`navigation item "${item.key}": no route has navKey "${item.key}"`);
+      continue;
+    }
+    // Several routes may share one navKey (e.g. the 3 case studies also
+    // highlight "Work"), but at least one of them must be the item's own
+    // anchor route — otherwise the nav item points nowhere real.
+    if (!matchingRoutes.some((route) => route.path === item.path)) {
+      add(
+        `navigation item "${item.key}" path "${item.path}" matches no route with navKey "${item.key}" ` +
+          `(candidates: ${matchingRoutes.map((r) => r.path).join(', ')})`,
+      );
+    }
+  }
+  for (const route of routes) {
+    if (
+      route.navKey != null &&
+      !primaryNav.some((i) => i.key === route.navKey) &&
+      site.primaryCta?.key !== route.navKey
+    ) {
+      add(
+        `route "${route.key}": navKey "${route.navKey}" has no matching navigation item or primary CTA`,
+      );
+    }
+  }
+
+  const ctaRoutes = routes.filter(
+    (route) => route.navKey === site.primaryCta?.key,
+  );
+  if (!ctaRoutes.some((route) => route.path === site.primaryCta?.path)) {
+    add('site.primaryCta key/path must match a registered route nav target');
+  }
+}
+
+function checkWorkProjectLinks() {
+  const workContent = contentByKey.work;
+  if (!workContent?.projects?.items) return; // already reported by checkContentShape
+  const projectLinks = workContent.projects.items.map((item) => item.link);
+  const caseStudyRoutePaths = routes
+    .filter((r) => r.template === 'case-study')
+    .map((r) => r.path);
+  for (const problem of findWorkProjectRouteProblems(
+    projectLinks,
+    caseStudyRoutePaths,
+  )) {
+    add(`work project directory: ${problem}`);
+  }
+}
+
+function checkSingletons() {
+  const roots = routes.filter((r) => r.path === '/');
+  if (roots.length !== 1)
+    add(`expected exactly one route with path "/", found ${roots.length}`);
+  const notFounds = routes.filter((r) => r.path === '/404.html');
+  if (notFounds.length !== 1)
+    add(
+      `expected exactly one route with path "/404.html", found ${notFounds.length}`,
+    );
+}
+
+function checkFormats() {
+  const DIR_PATH_RE = /^\/([a-z0-9-]+\/)*$/;
+  for (const route of routes) {
+    if (route.path === '/404.html') {
+      if (route.entry !== '404.html')
+        add(`route "${route.key}": path "/404.html" must use entry "404.html"`);
+      continue;
+    }
+    if (!DIR_PATH_RE.test(route.path)) {
+      add(
+        `route "${route.key}": path "${route.path}" does not match the expected directory-route format`,
+      );
+    }
+    if (!route.entry.endsWith('index.html')) {
+      add(
+        `route "${route.key}": entry "${route.entry}" must end in "index.html"`,
+      );
+    }
+  }
+}
+
+function checkApprovedRoutes() {
+  const actual = routes.map((r) => r.path);
+  for (const p of APPROVED_PATHS) {
+    if (!actual.includes(p))
+      add(`approved route "${p}" is missing from routes.js`);
+  }
+  for (const p of actual) {
+    if (!APPROVED_PATHS.includes(p))
+      add(`route path "${p}" is not one of the 11 approved Version 1 routes`);
+  }
+}
+
+function checkPhysicalFilesExist() {
+  for (const route of routes) {
+    const abs = resolveEntryPath(projectRootUrl, route.entry);
+    if (!fs.existsSync(abs))
+      add(
+        `route "${route.key}": entry file does not exist on disk: ${route.entry}`,
+      );
+  }
+}
+
+function discoverPhysicalHtmlFiles() {
+  const found = [];
+  for (const relDir of ROUTE_PARENT_DIRS) {
+    const absDir = resolveEntryPath(
+      projectRootUrl,
+      relDir === '.' ? '.' : `${relDir}/`,
+    );
+    let entries;
+    try {
+      entries = fs.readdirSync(absDir, { withFileTypes: true });
+    } catch {
+      continue; // surfaced separately via checkPhysicalFilesExist
+    }
+    for (const entry of entries) {
+      if (entry.isFile() && entry.name.endsWith('.html')) {
+        found.push(normalizePath(path.join(absDir, entry.name)));
+      }
+    }
+  }
+  return found;
+}
+
+function checkNoUnexpectedFiles() {
+  const manifestEntries = new Set(
+    routes.map((r) => resolveEntryPath(projectRootUrl, r.entry)),
+  );
+  for (const found of discoverPhysicalHtmlFiles()) {
+    if (!manifestEntries.has(found)) {
+      add(
+        `unexpected HTML file not represented in the route manifest: ${found}`,
+      );
+    }
+  }
+}
+
+function checkMarkers() {
+  for (const route of routes) {
+    const abs = resolveEntryPath(projectRootUrl, route.entry);
+    if (!fs.existsSync(abs)) continue; // already reported
+    const html = fs.readFileSync(abs, 'utf8');
+    for (const problem of getMarkerProblems(html, route)) add(problem);
+  }
+}
+
+// The skip link (PF-031) targets #main-content; without tabindex="-1" the
+// browser scrolls it into view but does not move keyboard focus there.
+// Checked here (source skeleton, pre-build) and again in
+// verify-build-output.mjs (composed dist/ output) — same dual-layer
+// pattern already used for route content.
+// PF-060 logo-integration follow-up — a case-study route's `logo.src`/
+// `gallery.items[].src` are safe-path-validated by checkContentShape
+// already, but "syntactically safe" doesn't mean "the file actually
+// exists." A route referencing a local asset that was never committed (a
+// typo'd filename, a forgotten `git add`, a follow-up that adds the field
+// before the file lands) must fail loudly here, before it can silently
+// ship a broken <img> in production.
+function checkRegisteredAssetsExist() {
+  const publicRootPath = fileURLToPath(publicRootUrl);
+  const entries = collectRegisteredAssetEntries({
+    routes,
+    contentByKey,
+    site,
+  }).filter((entry) => isSafeInternalPath(entry.assetPath));
+  for (const problem of findRegisteredAssetProblems(publicRootPath, entries)) {
+    add(`asset registry: ${problem} (checked under public/)`);
+  }
+}
+
+function checkSkipLinkTarget() {
+  for (const route of routes) {
+    const abs = resolveEntryPath(projectRootUrl, route.entry);
+    if (!fs.existsSync(abs)) continue; // already reported
+    const html = fs.readFileSync(abs, 'utf8');
+    if (!html.includes('<main id="main-content" tabindex="-1">')) {
+      add(
+        `route "${route.key}" (${route.entry}): expected the skeleton's <main> to be ` +
+          `<main id="main-content" tabindex="-1"> so the skip link can reliably focus it`,
+      );
+    }
+  }
+}
+
+checkDuplicates();
+checkRegistries();
+checkContentShape();
+checkSiteConfig();
+checkNavigation();
+checkWorkProjectLinks();
+checkSingletons();
+checkFormats();
+checkApprovedRoutes();
+checkPhysicalFilesExist();
+checkNoUnexpectedFiles();
+checkMarkers();
+checkRegisteredAssetsExist();
+checkSkipLinkTarget();
+
+if (problems.length > 0) {
+  console.error(`[validate-routes] ${problems.length} problem(s) found:\n`);
+  for (const p of problems) console.error(`  - ${p}`);
+  process.exit(1);
+} else {
+  console.log(`[validate-routes] all ${routes.length} routes valid.`);
+}

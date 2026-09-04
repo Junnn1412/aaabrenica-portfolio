@@ -1,0 +1,103 @@
+// PF-021 — native form-control foundations. `.field--error` is a visual
+// hook only: it changes the control's border color but never sets
+// aria-invalid or aria-describedby itself — the calling markup is always
+// responsible for those attributes (see docs/DESIGN_SYSTEM.md). Checkbox
+// and radio keep native semantics/keyboard behavior; only accent-color is
+// themed, no custom replacement markup.
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: var(--width-reading);
+  margin: 0 0 var(--space-5);
+}
+
+.field__label {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-small);
+  font-weight: 600;
+}
+
+.field__control {
+  min-height: var(--touch-target-min);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: var(--border-width) solid var(--color-border-interactive);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-1);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+.field__control::placeholder {
+  color: var(--color-text-muted);
+}
+
+textarea.field__control {
+  min-height: calc(var(--touch-target-min) * 2);
+  resize: vertical;
+}
+
+.field__control:disabled {
+  border-color: var(--color-border);
+  background-color: var(--color-surface-1);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.field__help {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.field--error .field__control {
+  border-color: var(--status-danger);
+}
+
+// Persistent, visible text — the icon is supplemental decoration only,
+// never the sole signal.
+.field__error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--status-danger);
+  font-size: var(--font-size-small);
+}
+
+.field__error svg {
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+}
+
+// The <label> IS the row, so padding on it genuinely enlarges the clickable
+// area — not just visual spacing — without any custom JS toggle behavior.
+.field__choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  cursor: pointer;
+}
+
+.field__choice-control {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--color-accent);
+}
+
+.field__choice-control:disabled + .field__choice-label {
+  color: var(--color-text-muted);
+}
+
+.field__choice-label {
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+}

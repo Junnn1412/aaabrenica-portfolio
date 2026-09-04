@@ -1,0 +1,184 @@
+// PF-041 — thin layout wrapper only. No new tokens, colors, or patterns:
+// built entirely from already-approved base elements (.text-display,
+// .text-lead, .btn) and existing spacing/breakpoint tokens.
+
+// Flush against the header on the home route only — #main-content's
+// shell-level top padding (objects/_page-shell.scss) is removed locally
+// here, per docs/DECISION_LOG.md's PF-040 revisit note ("if PF-041 needs a
+// section flush against the header, override #main-content's padding-block
+// locally for that page rather than removing the shell-level default").
+// padding-block-end is left at its shell default, so the final CTA section
+// still gets its normal breathing room before the footer.
+body[data-page='home'] #main-content {
+  padding-block-start: 0;
+}
+
+.hero {
+  padding-block: var(--space-8) var(--space-9);
+}
+
+.hero__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.hero__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.hero__visual {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  height: auto;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero__connection {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.hero__connection--base {
+  stroke: var(--color-border-interactive);
+}
+
+.hero__connection--reveal {
+  stroke: var(--color-accent);
+  opacity: 0.35;
+}
+
+.hero__connection--signal {
+  stroke: var(--color-accent);
+  stroke-dasharray: 2 98;
+  stroke-width: 4;
+}
+
+.hero__node {
+  fill: none;
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.hero__node--primary {
+  stroke: var(--color-border-interactive);
+}
+
+.hero__node--destination {
+  stroke: var(--color-accent);
+}
+
+.hero__point {
+  fill: var(--color-accent);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.hero__visual.is-enhanced.is-introducing .hero__connection--reveal {
+  animation: hero-connection-reveal 800ms ease-out both;
+}
+
+.hero__visual.is-enhanced.is-introduced .hero__connection--signal {
+  animation: hero-signal-travel 6s linear infinite;
+}
+
+.hero__visual.is-enhanced.is-introduced .hero__node--primary {
+  animation: hero-node-breathe 6s ease-in-out infinite;
+}
+
+.hero__visual.is-enhanced.is-introduced .hero__node--destination {
+  animation: hero-destination-pulse 6s ease-in-out infinite;
+}
+
+.hero__visual.is-enhanced.is-paused * {
+  animation-play-state: paused !important;
+}
+
+@keyframes hero-connection-reveal {
+  from {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes hero-signal-travel {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes hero-node-breathe {
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes hero-destination-pulse {
+  68%,
+  76% {
+    transform: scale(1);
+  }
+
+  72% {
+    transform: scale(1.035);
+  }
+}
+
+@media (width < 48em) {
+  .hero__visual.is-enhanced.is-introduced .hero__node--primary {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__visual *,
+  .hero__visual.is-enhanced * {
+    animation: none !important;
+  }
+
+  .hero__connection--reveal {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (width >= 64em) {
+  .hero__inner {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-9);
+  }
+
+  .hero__content {
+    flex: 1 1 55%;
+  }
+
+  .hero__media {
+    flex: 1 1 45%;
+  }
+}

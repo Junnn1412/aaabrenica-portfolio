@@ -1,0 +1,93 @@
+@use '../settings/spacing';
+
+footer {
+  padding-block: var(--space-3);
+  border-top: var(--border-width) solid var(--color-border);
+  background-color: var(--color-surface-1);
+  color: var(--color-text-secondary);
+}
+
+.site-footer__inner {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+// Scoped list resets prevent the generic prose-list cap, indentation, and item
+// margins from distorting the centered icon row.
+.site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: none;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-footer__links li {
+  min-width: 0;
+  margin: 0;
+}
+
+.site-footer__connect-link {
+  display: inline-flex;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  align-items: center;
+  justify-content: center;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition:
+    background-color var(--motion-duration-fast) var(--motion-easing-standard),
+    color var(--motion-duration-fast) var(--motion-easing-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .site-footer__connect-link:hover {
+    background-color: var(--color-surface-2);
+    color: var(--color-text-primary);
+  }
+}
+
+.site-footer__connect-icon {
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+}
+
+// Reset the generic paragraph measure/margin so the responsive footer row,
+// not prose defaults, controls the copyright placement.
+.site-footer__meta {
+  max-width: none;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: spacing.$bp-md) {
+  .site-footer__inner {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+
+  .site-footer__links {
+    justify-content: flex-end;
+  }
+}
+
+@media (forced-colors: active) {
+  .site-footer__connect-link {
+    border-color: ButtonText;
+    color: LinkText;
+  }
+}

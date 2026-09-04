@@ -1,0 +1,11 @@
+dist/
+node_modules/
+package-lock.json
+.claude/
+
+# Prettier's HTML printer always re-adds self-closing slashes to void
+# elements, which conflicts with html-validate's "omit" style (the only
+# style achievable project-wide, since Vite's own injected <link> tag is
+# never self-closing and isn't configurable). html-validate is the style
+# authority for HTML instead — see docs/DECISION_LOG.md.
+*.html

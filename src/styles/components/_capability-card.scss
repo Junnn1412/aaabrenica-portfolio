@@ -1,0 +1,238 @@
+// PF-032 — reusable capability-card component. SCSS + a documented markup
+// contract only, no JS render function and no content data module: there is
+// no real production call site yet (solutions.js/home.js are still
+// placeholders), so — same precedent as .btn/.tag/.media-frame in PF-021 —
+// this ships CSS-first and is proven in the dev-only showcase with literal
+// hand-authored markup, not a live render call. See docs/DECISION_LOG.md.
+// Every accent is used as a full solid card background (not a neutral
+// surface with an accent border), per the requirements doc's "bold solid...
+// colors." Dark ink (--color-canvas) is the one text/icon/ring color used
+// across all six variants — contrast-verified against both the flat accent
+// and the darkest composited pattern stripe in
+// tests/capability-card-contrast.test.mjs. See docs/DESIGN_SYSTEM.md for
+// the full matrix.
+
+// Column count is derived from actual available width, not a viewport
+// breakpoint — a breakpoint only knows the viewport, not how wide the
+// grid's own container actually is (it's capped by .preview-section--wide's
+// max-width, dev/design-system/index.html), so a fixed `repeat(3, 1fr)`
+// gated on viewport width forced 3 uncomfortably narrow columns right
+// around the old $bp-lg (1024px) transition — verified: ~231px of actual
+// text area there, enough to break "Workflow & Process Solutions" onto 4
+// lines (docs/DECISION_LOG.md). `auto-fit` + `minmax(20rem, 1fr)` fits as
+// many 20rem-minimum columns as truly fit the real available width,
+// dropping to 2 or 1 column exactly when 3 (or 2) wouldn't be comfortable,
+// rather than guessing from viewport width alone.
+// Deliberately NOT `minmax(min(20rem, 100%), 1fr)`: nesting a CSS math
+// function inside minmax()'s minimum argument is real, valid CSS, but it's
+// one more moving part than this needs, and it's the kind of construct
+// worth avoiding when a plain, decades-old-supported alternative does the
+// same job. A bare 20rem minimum only risks overflow below ~36em, where
+// the grid's own available width can be narrower than 20rem — so instead,
+// below that point, a simple media query forces a single column
+// unconditionally (no minmax involved at all, trivially overflow-safe).
+// Above it, every required review width's content area is comfortably
+// wider than 20rem, so the bare minimum never approaches overflow there.
+// `max-width: none` is load-bearing, not decorative. `elements/_body-copy.scss`
+// has a project-wide `ul, ol { max-width: var(--width-reading); }` rule
+// (68ch — a prose reading-length limit, correct for a list of text but
+// wrong for a card grid) that applies to every <ul>/<ol> in the document,
+// this one included. That element-selector rule (specificity 0,0,1) loses
+// to this class rule (0,1,0) for any property BOTH declare — but cascade
+// resolves per property, not per rule, so a property this rule never
+// mentions is not "beaten," it simply has no competing declaration here at
+// all, and the lower-specificity rule applies unopposed. Widening the
+// outer .preview-section--wide container (dev/design-system/index.html)
+// did nothing on its own, because this inner element's own ~68ch
+// (~500-550px, depending on the rendered font) constraint was still
+// capping the grid one level further in — the actual root cause of the
+// reported "narrow section, single column" result, confirmed against the
+// real compiled CSS, not assumed.
+.capability-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: none;
+  gap: var(--gap-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (width >= 36em) {
+  .capability-cards {
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  }
+}
+
+.capability-card {
+  position: relative; // stretched-link containment
+  overflow: hidden; // clips the pattern layer to the card's own rounded corners
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  // elements/_body-copy.scss's generic `li { margin-bottom: var(--space-2); }`
+  // would otherwise leak through unopposed (it's the only rule declaring
+  // `margin` here — see .capability-cards' own max-width comment above for
+  // why a higher-specificity class doesn't automatically "beat" a property
+  // it never mentions) and stack on top of the grid's own `gap`.
+  margin: 0;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-canvas);
+
+  // Abstract technical background pattern — dark ink over the accent fill
+  // at 5% opacity (not 8%: 8% left the weakest accent's text-contrast
+  // margin too thin — docs/DECISION_LOG.md). One rule serves all six
+  // variants since the ink color and opacity are the same everywhere; only
+  // the accent fill underneath differs.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-canvas) 5%, transparent) 0,
+      color-mix(in srgb, var(--color-canvas) 5%, transparent) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  }
+}
+
+.capability-card__icon,
+.capability-card__arrow {
+  position: relative;
+  z-index: 1; // above the pattern, but pointer-events:none so it never blocks the stretched link
+  display: block;
+  pointer-events: none;
+}
+
+.capability-card__icon svg,
+.capability-card__arrow svg {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+}
+
+.capability-card__arrow {
+  align-self: flex-end;
+  margin-top: auto;
+
+  // Hidden by default; only ever shown when a real link exists (belt-and-
+  // suspenders alongside omitting the arrow markup entirely on
+  // non-interactive specimens).
+  display: none;
+}
+
+.capability-card__heading {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h3);
+  line-height: var(--line-height-heading);
+}
+
+.capability-card__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.capability-card__description {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-family-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+// Interactivity is driven entirely by the real presence of
+// .capability-card__link in the markup — never by a modifier class. A card
+// with no link gets none of the rules in this block, by construction.
+.capability-card:has(.capability-card__link) {
+  cursor: pointer; // whole-card affordance; the actual click target is the ::after below
+
+  .capability-card__arrow {
+    display: block;
+  }
+
+  .capability-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2; // explicit — always the topmost layer, always the real click target
+    pointer-events: auto;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(calc(-1 * var(--motion-distance-sm)));
+      box-shadow: var(--shadow-lg);
+    }
+  }
+
+  // Declared after the hover block so it wins by source order whenever
+  // both apply at once (mouse held down while hovering) — the card is
+  // explicitly pulled back to rest rather than staying lifted while
+  // pressed. Not nested in the hover media query, so touch gets its own
+  // pressed feedback (the shadow step-down) without depending on hover at
+  // all. No filter/color-changing property — that would alter the actual
+  // rendered text/background colors while pressed, outside what the
+  // contrast tests cover.
+  &:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.capability-card__link:focus-visible {
+  // Suppressed — replaced by the card-level two-tone ring below so there
+  // is exactly one visible ring, not two competing ones.
+  outline: none;
+}
+
+// Two-tone full-card focus ring: an inner dark ring (contrasts against
+// every accent fill) and an outer light ring (contrasts against the
+// surrounding canvas/surface page) — a single-tone ring can't clear both
+// adjacent regions (docs/DECISION_LOG.md).
+.capability-card:has(.capability-card__link:focus-visible) {
+  box-shadow:
+    0 0 0 2px var(--color-canvas),
+    0 0 0 4px var(--color-text-primary);
+}
+
+@media (forced-colors: active) {
+  .capability-card {
+    border: 1px solid CanvasText; // explicit boundary — nothing else supplies one once the fill is gone
+    background-image: none; // the pattern layer would be inert anyway; explicit for clarity
+  }
+
+  // Local outline stays suppressed here too — exactly one full-card focus
+  // system in every mode, never a small link-sized box competing with a
+  // card-sized one.
+  .capability-card__link:focus-visible {
+    outline: none;
+  }
+
+  .capability-card:has(.capability-card__link:focus-visible) {
+    // Card-level, not link-level — outlines the whole card, matching the
+    // two-tone ring's footprint in normal mode. Outline (unlike
+    // box-shadow) is preserved and system-recolored under forced-colors.
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+}
+
+$capability-card-accents: 'lime', 'amber', 'coral', 'violet', 'cyan', 'magenta';
+
+@each $accent in $capability-card-accents {
+  .capability-card--#{$accent} {
+    background-color: var(--accent-#{$accent});
+  }
+}

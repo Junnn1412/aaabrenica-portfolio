@@ -1,0 +1,77 @@
+// PF-034 — homepage trust summary (§9.3: three concise assurances, no
+// fabricated stats/counters — the requirements doc is explicit about this).
+// CSS-only, no JS renderer or content module, same precedent as
+// .process-steps/.capability-card/.project-card. See docs/DECISION_LOG.md.
+
+// Static content: the three <li> items carry no cursor/hover/active/focus
+// treatment — only the single section-level link (to About or Process) is
+// interactive. Each assurance phrase is displayed as-is; no supporting
+// sentence is invented per item (none is approved — see
+// docs/DESIGN_SYSTEM.md's "Trust indicators (PF-034)" section).
+
+// max-width: none / margin: 0 / list-style: none reset elements/_body-copy.scss's
+// generic ul/li rules — same defect class documented in .capability-card/
+// .project-card, verified here via the shared cascade resolver in
+// tests/trust-list-layout.test.mjs.
+.trust-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: none;
+  gap: var(--gap-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (width >= 40em) {
+  .trust-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.trust-list__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+
+// Decorative only — the icon adds no information beyond the heading text
+// beside it, so it stays out of the accessibility tree entirely (aria-hidden
+// on the <svg> in markup, not here).
+.trust-list__icon {
+  display: block;
+  color: var(--color-accent-text);
+}
+
+.trust-list__icon svg {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+}
+
+.trust-list__heading {
+  margin: 0;
+  font-family: var(--font-family-display);
+  font-size: var(--font-size-h4);
+  line-height: var(--line-height-heading);
+}
+
+// Same fix, same reasoning as .process-steps__action (docs/DECISION_LOG.md):
+// browser review found the plain <p><a> reading as though it belonged to
+// the first grid item. A top border + generous top margin makes it
+// unmistakably a group-level action at every required width.
+
+// max-width: none is load-bearing, not decorative — same generic
+// `p { max-width: var(--width-reading); }` leak as .process-steps__action;
+// see that class's comment for the full explanation. The <a> itself stays
+// naturally sized (inline by default) — only the <p> is stretched
+// full-width.
+.trust-list__action {
+  max-width: none;
+  margin: var(--space-7) 0 0;
+  padding-top: var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+}

@@ -1,0 +1,67 @@
+// PF-055 visual correction — .not-found__links previously rendered under
+// the generic ul/li prose rules (bulleted, indented, ~68ch max-width) and
+// read as unfinished relative to the rest of the design system. This file
+// is presentation only — src/pages/templates/not-found.js's content is
+// unchanged; the only markup change was adding explicit .not-found__link
+// (anchor) / .not-found__link-item (li) classes as BEM styling hooks (same
+// convention as .contact-methods__item/.project-card__link — an explicit
+// class on every styled node, never a bare descendant selector like
+// `.not-found__links li`, which tests/helpers/cascade-resolver.mjs cannot
+// resolve correctly), not a new component. .not-found__link reuses
+// .btn--secondary's already contrast-verified border/text token pairing
+// (PF-021, src/styles/components/_button.scss) rather than inventing a new
+// color combination.
+
+// Resets the generic `ul, ol { max-width: var(--width-reading); margin: 0
+// 0 var(--space-4); padding-left: var(--space-5); }` and
+// `li { margin-bottom: var(--space-2); }` prose rules
+// (elements/_body-copy.scss) — same fix, same reasoning as
+// .process-steps/.trust-list/.engagement-options/.contact-methods.
+.not-found__links {
+  list-style: none;
+  max-width: none;
+  margin: var(--space-6) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.not-found__link-item {
+  margin: 0;
+}
+
+// The anchor is the only interactive element — .not-found__links and its
+// <li> items carry no click handling or hover/focus styling of their own.
+// min-height matches --touch-target-min (WCAG 2.5.5), same as .btn.
+// :focus-visible is intentionally not redeclared here —
+// generic/_document.scss already applies a global ring to every focusable
+// element (same precedent as elements/_links.scss's plain <a>).
+.not-found__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  padding-block: var(--space-3);
+  padding-inline: var(--space-5);
+  border: var(--border-width) solid var(--color-border-interactive);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--color-accent-text);
+  font-family: var(--font-family-body);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--motion-duration-fast)
+    var(--motion-easing-standard);
+}
+
+// Hover lift/fill only where hover is a genuine pointer capability — never
+// on touch, and never attached to :focus-visible, same gating as .btn.
+@media (hover: hover) and (pointer: fine) {
+  .not-found__link:hover {
+    background-color: var(--color-surface-1);
+  }
+}
+
+.not-found__link:active {
+  background-color: var(--color-surface-2);
+}

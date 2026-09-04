@@ -1,0 +1,32 @@
+@use '../settings/spacing';
+
+.home-projects__body {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.home-projects__action {
+  margin: 0;
+}
+
+.home-about {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+@media (width >= spacing.$bp-lg) {
+  .home-about {
+    flex-direction: row;
+    align-items: start;
+    gap: var(--space-9);
+  }
+
+  .home-about__copy {
+    flex: 1 1 58%;
+  }
+
+  .home-about .profile-card {
+    flex: 1 1 42%;
+  }
+}

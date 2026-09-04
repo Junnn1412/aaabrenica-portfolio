@@ -1,0 +1,15 @@
+// PF-050 — extracted from components/_hero.scss (.home-section) for its
+// second real caller (the Solutions page's six anchored sections), per
+// CLAUDE.md's "extract reusable patterns only after a real second use
+// demonstrates the need." Rename only — declarations unchanged from the
+// original .home-section rules. Shared vertical rhythm for every section
+// after a page's own hero/intro. A divider between sections gives the
+// "generous section spacing" editorial rhythm the design direction calls
+// for without any new color/token.
+.page-section {
+  padding-block: var(--space-8);
+}
+
+.page-section + .page-section {
+  border-top: var(--border-width) solid var(--color-border);
+}

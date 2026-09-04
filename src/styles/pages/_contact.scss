@@ -1,0 +1,21 @@
+// PF-054: a genuinely new structural hook — no existing component fits "N
+// independent clickable destinations" (.trust-list always pairs an
+// icon+heading+one trailing action link, a different shape). Overrides only
+// what elements/_body-copy.scss's generic ul/li rules would otherwise leak
+// in (a max-width reading measure and li bottom margin meant for prose).
+.contact-methods {
+  list-style: none;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.contact-methods__item {
+  margin-bottom: 0;
+}
+
+.contact-methods__heading {
+  margin-top: var(--space-8);
+}

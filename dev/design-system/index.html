@@ -1,0 +1,1329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design System &amp; Component Showcase (dev only)</title>
+    <script type="module" src="/src/scripts/main.js"></script>
+    <style>
+      /* Preview-specific demo layout only — not a component system.
+         Real tokens come from the compiled main.scss loaded above; this
+         block only arranges swatches/samples on the page. One utility
+         class per token being demonstrated (no inline styles, so this
+         file passes html-validate:recommended's no-inline-style rule
+         unmodified). */
+      .preview-notice {
+        background: var(--status-warning);
+        color: var(--color-canvas);
+        font-weight: 600;
+        padding: var(--space-3) var(--space-4);
+        text-align: center;
+      }
+      .preview-section {
+        max-width: var(--container-max);
+        margin: 0 auto;
+        padding: var(--space-8) var(--gutter);
+      }
+      /* Capability cards need more room per column than this page's other
+         sections do (large titles, full paragraphs) — --container-wide is
+         an existing token, not a new one; every other section keeps the
+         narrower default. */
+      .preview-section--wide {
+        max-width: var(--container-wide);
+      }
+      .preview-section h2 {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h2);
+        margin: 0 0 var(--space-5);
+      }
+      .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+        gap: var(--gap-md);
+      }
+      .swatch {
+        border-radius: var(--radius-md);
+        border: var(--border-width) solid var(--color-border);
+        overflow: hidden;
+      }
+      .swatch__fill {
+        height: 4.5rem;
+      }
+      .swatch__label {
+        display: block;
+        padding: var(--space-2) var(--space-3);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        background: var(--color-surface-1);
+      }
+      .swatch__ratio {
+        display: block;
+        padding: 0 var(--space-3) var(--space-2);
+        font-size: var(--font-size-label);
+        color: var(--color-text-secondary);
+        background: var(--color-surface-1);
+      }
+
+      /* Color fills */
+      .bg-canvas {
+        background: var(--color-canvas);
+      }
+      .bg-surface-1 {
+        background: var(--color-surface-1);
+      }
+      .bg-surface-2 {
+        background: var(--color-surface-2);
+      }
+      .bg-border {
+        background: var(--color-border);
+      }
+      .bg-status-success {
+        background: var(--status-success);
+      }
+      .bg-status-warning {
+        background: var(--status-warning);
+      }
+      .bg-status-danger {
+        background: var(--status-danger);
+      }
+      .bg-status-info {
+        background: var(--status-info);
+      }
+      .bg-accent-lime {
+        background: var(--accent-lime);
+      }
+      .bg-accent-amber {
+        background: var(--accent-amber);
+      }
+      .bg-accent-coral {
+        background: var(--accent-coral);
+      }
+      .bg-accent-violet {
+        background: var(--accent-violet);
+      }
+      .bg-accent-cyan {
+        background: var(--accent-cyan);
+      }
+      .bg-accent-magenta {
+        background: var(--accent-magenta);
+      }
+
+      /* Text-on-canvas contrast samples */
+      .text-demo {
+        background: var(--color-canvas);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-family-body);
+      }
+      .text-demo--primary {
+        color: var(--color-text-primary);
+      }
+      .text-demo--secondary {
+        color: var(--color-text-secondary);
+      }
+      .text-demo--muted {
+        color: var(--color-text-muted);
+      }
+      .text-demo--accent-text {
+        color: var(--color-accent-text);
+      }
+      .text-demo--accent {
+        color: var(--color-accent);
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h4);
+      }
+
+      .status-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-4);
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .status-list li {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        font-family: var(--font-family-body);
+      }
+      .status-list__dot {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: var(--radius-full);
+        display: inline-block;
+      }
+
+      /* Typography samples */
+      .type-sample {
+        margin: 0 0 var(--space-6);
+      }
+      .type-sample__meta {
+        display: block;
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-label);
+        color: var(--color-text-muted);
+        margin-bottom: var(--space-1);
+      }
+      .type-sample p {
+        margin: 0;
+        font-family: var(--font-family-body);
+      }
+      .type-display {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-display);
+        font-weight: 700;
+        line-height: var(--line-height-display);
+        letter-spacing: var(--letter-spacing-heading);
+      }
+      .type-h1 {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h1);
+        font-weight: 500;
+        line-height: var(--line-height-heading);
+        letter-spacing: var(--letter-spacing-heading);
+      }
+      .type-h2 {
+        font-family: var(--font-family-display);
+        font-size: var(--font-size-h2);
+        font-weight: 500;
+        line-height: var(--line-height-heading);
+        letter-spacing: var(--letter-spacing-heading);
+      }
+      .type-body-lg {
+        font-size: var(--font-size-body-lg);
+        line-height: var(--line-height-body);
+        max-width: var(--width-reading);
+      }
+      .type-body {
+        font-size: var(--font-size-body);
+        line-height: var(--line-height-body);
+        max-width: var(--width-reading);
+      }
+      .type-small {
+        font-size: var(--font-size-small);
+        font-weight: 500;
+      }
+      .type-label {
+        font-size: var(--font-size-label);
+        letter-spacing: var(--letter-spacing-label);
+        text-transform: uppercase;
+      }
+
+      /* Spacing ruler */
+      .spacing-ruler {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+      }
+      .spacing-ruler__row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-family: var(--font-family-body);
+      }
+      .spacing-ruler__bar {
+        background: var(--color-accent);
+        height: 0.75rem;
+        border-radius: var(--radius-sm);
+      }
+      .w-space-1 {
+        width: var(--space-1);
+      }
+      .w-space-2 {
+        width: var(--space-2);
+      }
+      .w-space-3 {
+        width: var(--space-3);
+      }
+      .w-space-4 {
+        width: var(--space-4);
+      }
+      .w-space-5 {
+        width: var(--space-5);
+      }
+      .w-space-6 {
+        width: var(--space-6);
+      }
+      .w-space-7 {
+        width: var(--space-7);
+      }
+      .w-space-8 {
+        width: var(--space-8);
+      }
+
+      /* Shape & depth */
+      .shape-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+        gap: var(--gap-md);
+      }
+      .shape-sample {
+        background: var(--color-surface-1);
+        height: 6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        color: var(--color-text-secondary);
+        border-radius: var(--radius-md);
+      }
+      .radius-sm {
+        border-radius: var(--radius-sm);
+      }
+      .radius-lg {
+        border-radius: var(--radius-lg);
+      }
+      .shadow-sm {
+        box-shadow: var(--shadow-sm);
+      }
+      .shadow-md {
+        box-shadow: var(--shadow-md);
+      }
+      .shadow-lg {
+        box-shadow: var(--shadow-lg);
+      }
+
+      /* Motion & focus */
+      .motion-demo {
+        display: inline-block;
+        background: var(--color-accent);
+        color: var(--color-canvas);
+        font-family: var(--font-family-body);
+        font-weight: 600;
+        padding: var(--space-3) var(--space-5);
+        border-radius: var(--radius-md);
+        border: none;
+        cursor: pointer;
+        transition: transform var(--motion-duration-fast) var(--motion-easing-standard);
+      }
+      .motion-demo:hover,
+      .motion-demo:focus-visible {
+        transform: translateY(calc(-1 * var(--motion-distance-sm)));
+      }
+      .motion-note {
+        font-family: var(--font-family-body);
+        color: var(--color-text-secondary);
+        max-width: var(--width-reading);
+      }
+
+      /* PF-021 — arrangement-only. Every visual property below belongs to
+         the real classes from src/styles/{elements,objects,components,utilities}/
+         loaded via main.js -> main.scss; nothing here defines component
+         styling. */
+      .demo-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-4);
+        margin-bottom: var(--space-5);
+      }
+      .demo-stack {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+      }
+      .demo-caption {
+        display: block;
+        margin-top: var(--space-2);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-label);
+        color: var(--color-text-muted);
+      }
+      .demo-media-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+        gap: var(--gap-md);
+        max-width: 40rem;
+      }
+      .demo-container-marker {
+        margin-bottom: var(--space-3);
+        padding-block: var(--space-2);
+        background: var(--color-surface-1);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        color: var(--color-text-secondary);
+        text-align: center;
+      }
+      .demo-narrow {
+        max-width: 20rem;
+        padding: var(--space-4);
+        border: var(--border-width) dashed var(--color-border);
+        border-radius: var(--radius-md);
+      }
+
+      /* PF-030 — showcase intro / table of contents / review checklist.
+         Arrangement-only, same rule as everything above: real classes
+         (h1, p, a, ul/li) supply the actual visual styling. */
+      .toc {
+        max-width: var(--container-max);
+        margin: 0 auto var(--space-8);
+        padding: var(--space-5) var(--gutter);
+        background: var(--color-surface-1);
+        border-radius: var(--radius-md);
+      }
+      .toc__title {
+        margin: 0 0 var(--space-3);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-label);
+        letter-spacing: var(--letter-spacing-label);
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+      }
+      .toc__group {
+        margin-top: var(--space-4);
+      }
+      .toc__group-label {
+        margin: 0 0 var(--space-2);
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        font-weight: 600;
+        color: var(--color-text-secondary);
+      }
+      .toc__list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-5);
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="preview-notice">
+      Design system &amp; component showcase — development only, not part of the production build or site navigation.
+    </p>
+
+    <main>
+      <div class="preview-section">
+        <h1 id="page-title">Design System &amp; Component Showcase</h1>
+        <p>
+          This single dev-only page serves two purposes: it demonstrates the compiled design-system tokens (PF-020)
+          and the base-element components built on top of them (PF-021), and it is the environment later milestones
+          (PF-032–PF-034: capability cards, project cards, and process/trust/engagement/CTA components) will extend
+          with their own specimens before AAA's component-system approval (PF-035).
+        </p>
+        <p>
+          Header, navigation, and footer (PF-031) are real, shared production chrome, composed at build time from
+          <code>src/components/partials/</code> — not shown here, since this page is a static file the composer
+          never touches and cannot render them. Review the real thing on any actual route
+          (<code>npm run dev</code>, e.g. <a href="/">the homepage</a>) rather than a specimen that could drift
+          from what production actually ships.
+        </p>
+
+        <nav aria-label="On this page" class="toc">
+          <p class="toc__title">On this page</p>
+          <ul class="toc__list">
+            <li><a href="#review-checklist">How to review this page</a></li>
+          </ul>
+
+          <div class="toc__group">
+            <p class="toc__group-label">Design tokens (PF-020)</p>
+            <ul class="toc__list">
+              <li><a href="#color-canvas-surfaces">Color — canvas &amp; surfaces</a></li>
+              <li><a href="#color-text-on-canvas">Color — text on canvas</a></li>
+              <li><a href="#status-colors">Status colors</a></li>
+              <li><a href="#capability-accents">Capability accents</a></li>
+              <li><a href="#typography">Typography</a></li>
+              <li><a href="#spacing-scale">Spacing scale</a></li>
+              <li><a href="#shape-depth">Shape &amp; depth</a></li>
+              <li><a href="#motion-focus">Motion &amp; focus</a></li>
+            </ul>
+          </div>
+
+          <div class="toc__group">
+            <p class="toc__group-label">Base elements (PF-021)</p>
+            <ul class="toc__list">
+              <li><a href="#headings-body-copy">Headings &amp; body copy</a></li>
+              <li><a href="#links">Links</a></li>
+              <li><a href="#buttons">Buttons</a></li>
+              <li><a href="#tags">Tags</a></li>
+              <li><a href="#media-frames">Media frames</a></li>
+              <li><a href="#section-header-object">Section header object</a></li>
+              <li><a href="#container-widths">Container widths</a></li>
+              <li><a href="#form-control-foundations">Form-control foundations</a></li>
+              <li><a href="#narrow-width-wrap-check">Narrow-width wrap check</a></li>
+            </ul>
+          </div>
+
+          <div class="toc__group">
+            <p class="toc__group-label">Capability cards (PF-032)</p>
+            <ul class="toc__list">
+              <li><a href="#capability-cards">Capability cards</a></li>
+            </ul>
+          </div>
+
+          <div class="toc__group">
+            <p class="toc__group-label">Project cards (PF-033)</p>
+            <ul class="toc__list">
+              <li><a href="#project-cards">Project cards</a></li>
+            </ul>
+          </div>
+
+          <div class="toc__group">
+            <p class="toc__group-label">Process, trust, engagement, CTA (PF-034)</p>
+            <ul class="toc__list">
+              <li><a href="#process-steps">Process steps</a></li>
+              <li><a href="#trust-indicators">Trust indicators</a></li>
+              <li><a href="#engagement-options">Engagement options</a></li>
+              <li><a href="#cta-section">CTA section</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <section class="preview-section" id="review-checklist">
+        <h2>How to review this page</h2>
+        <ul>
+          <li>Check the page at 320, 375, 768, 1024, 1440, and 1920px.</li>
+          <li>
+            Tab through interactive specimens — links, buttons, form controls — confirming visible focus and that
+            <code>.btn</code> never moves when it receives focus (the hover lift only ever applies on genuine
+            pointer hover).
+          </li>
+          <li>Toggle your OS's reduced-motion setting and confirm every transition/transform stops.</li>
+          <li>Toggle forced-colors/high-contrast mode and confirm every control, especially native checkboxes and radios, stays usable.</li>
+          <li>Zoom to 200% and confirm no horizontal scrolling appears.</li>
+          <li>
+            For process steps, trust indicators, and engagement options (PF-034): confirm the list items themselves
+            show no cursor change, hover, active, or focus outline — only the process link, trust link, and CTA
+            button should ever respond to hover/focus/press.
+          </li>
+        </ul>
+      </section>
+
+      <section class="preview-section" id="color-canvas-surfaces">
+        <h2>Color — canvas &amp; surfaces</h2>
+        <div class="swatch-grid">
+          <div class="swatch">
+            <div class="swatch__fill bg-canvas"></div>
+            <span class="swatch__label">--color-canvas</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch__fill bg-surface-1"></div>
+            <span class="swatch__label">--color-surface-1</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch__fill bg-surface-2"></div>
+            <span class="swatch__label">--color-surface-2</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch__fill bg-border"></div>
+            <span class="swatch__label">--color-border</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-section" id="color-text-on-canvas">
+        <h2>Color — text on canvas (contrast verified in tests/design-tokens.test.mjs)</h2>
+        <div class="swatch-grid">
+          <div class="swatch">
+            <div class="swatch__fill text-demo text-demo--primary">Aa</div>
+            <span class="swatch__label">--color-text-primary</span>
+            <span class="swatch__ratio">16.58:1</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch__fill text-demo text-demo--secondary">Aa</div>
+            <span class="swatch__label">--color-text-secondary</span>
+            <span class="swatch__ratio">8.82:1</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch__fill text-demo text-demo--muted">Aa</div>
+            <span class="swatch__label">--color-text-muted</span>
+            <span class="swatch__ratio">5.75:1</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch__fill text-demo text-demo--accent-text">Aa</div>
+            <span class="swatch__label">--color-accent-text</span>
+            <span class="swatch__ratio">7.13:1</span>
+          </div>
+          <div class="swatch">
+            <div class="swatch__fill text-demo text-demo--accent">Aa</div>
+            <span class="swatch__label">--color-accent (large text/UI only)</span>
+            <span class="swatch__ratio">4.26:1</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-section" id="status-colors">
+        <h2>Status colors</h2>
+        <ul class="status-list">
+          <li><span class="status-list__dot bg-status-success"></span>--status-success</li>
+          <li><span class="status-list__dot bg-status-warning"></span>--status-warning</li>
+          <li><span class="status-list__dot bg-status-danger"></span>--status-danger</li>
+          <li><span class="status-list__dot bg-status-info"></span>--status-info</li>
+        </ul>
+      </section>
+
+      <section class="preview-section" id="capability-accents">
+        <h2>Capability accents (used by the capability cards below)</h2>
+        <p>
+          Six independently defined accent tokens — five reserved since PF-020, plus <code>--accent-magenta</code>
+          added in PF-032 once six cards (not five) turned out to be needed. See
+          <a href="#capability-cards">Capability cards</a> for how each is actually used.
+        </p>
+        <ul class="status-list">
+          <li><span class="status-list__dot bg-accent-lime"></span>--accent-lime</li>
+          <li><span class="status-list__dot bg-accent-amber"></span>--accent-amber</li>
+          <li><span class="status-list__dot bg-accent-coral"></span>--accent-coral</li>
+          <li><span class="status-list__dot bg-accent-violet"></span>--accent-violet</li>
+          <li><span class="status-list__dot bg-accent-cyan"></span>--accent-cyan</li>
+          <li><span class="status-list__dot bg-accent-magenta"></span>--accent-magenta</li>
+        </ul>
+      </section>
+
+      <section class="preview-section" id="typography">
+        <h2>Typography</h2>
+        <div class="type-sample">
+          <span class="type-sample__meta">--font-size-display / Space Grotesk 700</span>
+          <p class="type-display">Practical software</p>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample__meta">--font-size-h1 / Space Grotesk 500</span>
+          <p class="type-h1">From problem to working software</p>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample__meta">--font-size-h2 / Space Grotesk 500</span>
+          <p class="type-h2">Solutions built around your workflow</p>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample__meta">--font-size-body-lg / Inter 400</span>
+          <p class="type-body-lg">I help growing businesses improve their operations through websites, internal systems, and custom software.</p>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample__meta">--font-size-body / Inter 400 — max-width: --width-reading (68ch)</span>
+          <p class="type-body">This paragraph is set at the base body size and constrained to the documented reading width so long-form copy stays comfortable to read regardless of the viewport.</p>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample__meta">--font-size-small / Inter 500</span>
+          <p class="type-small">Small / caption text</p>
+        </div>
+        <div class="type-sample">
+          <span class="type-sample__meta">--font-size-label / letter-spacing-label, uppercase</span>
+          <p class="type-label">Eyebrow label</p>
+        </div>
+      </section>
+
+      <section class="preview-section" id="spacing-scale">
+        <h2>Spacing scale</h2>
+        <div class="spacing-ruler">
+          <div class="spacing-ruler__row"><code>--space-1</code><div class="spacing-ruler__bar w-space-1"></div></div>
+          <div class="spacing-ruler__row"><code>--space-2</code><div class="spacing-ruler__bar w-space-2"></div></div>
+          <div class="spacing-ruler__row"><code>--space-3</code><div class="spacing-ruler__bar w-space-3"></div></div>
+          <div class="spacing-ruler__row"><code>--space-4</code><div class="spacing-ruler__bar w-space-4"></div></div>
+          <div class="spacing-ruler__row"><code>--space-5</code><div class="spacing-ruler__bar w-space-5"></div></div>
+          <div class="spacing-ruler__row"><code>--space-6</code><div class="spacing-ruler__bar w-space-6"></div></div>
+          <div class="spacing-ruler__row"><code>--space-7</code><div class="spacing-ruler__bar w-space-7"></div></div>
+          <div class="spacing-ruler__row"><code>--space-8</code><div class="spacing-ruler__bar w-space-8"></div></div>
+        </div>
+      </section>
+
+      <section class="preview-section" id="shape-depth">
+        <h2>Shape &amp; depth</h2>
+        <div class="shape-grid">
+          <div class="shape-sample radius-sm">--radius-sm</div>
+          <div class="shape-sample">--radius-md</div>
+          <div class="shape-sample radius-lg">--radius-lg</div>
+          <div class="shape-sample shadow-sm">--shadow-sm</div>
+          <div class="shape-sample shadow-md">--shadow-md</div>
+          <div class="shape-sample shadow-lg">--shadow-lg</div>
+        </div>
+      </section>
+
+      <section class="preview-section" id="motion-focus">
+        <h2>Motion &amp; focus</h2>
+        <p class="motion-note">
+          Hover or tab to the button below — it lifts by <code>--motion-distance-sm</code> using
+          <code>--motion-duration-fast</code>/<code>--motion-easing-standard</code>, and shows the
+          <code>:focus-visible</code> ring on keyboard focus. Enable "reduce motion" at the OS level to confirm the transition is removed.
+        </p>
+        <button class="motion-demo" type="button">Hover or Tab to me</button>
+      </section>
+
+      <section class="preview-section" id="headings-body-copy">
+        <h2>PF-021 — Headings &amp; body copy</h2>
+        <p class="motion-note">Real elements/_headings.scss and elements/_body-copy.scss — no demo-only styling below.</p>
+        <div class="demo-stack">
+          <h1>Heading level one</h1>
+          <h2>Heading level two</h2>
+          <h3>Heading level three</h3>
+          <h4>Heading level four</h4>
+          <h2 class="text-display">.text-display on an h2 (hero scale, section-level heading)</h2>
+          <p class="text-lead">Lead paragraph using .text-lead — I help growing businesses improve their operations through websites, internal systems, and custom software.</p>
+          <p>Body paragraph with <strong>strong emphasis</strong>, <em>italic emphasis</em>, and inline <code>code</code>. <small>Small/caption text sits alongside it.</small></p>
+          <ul>
+            <li>Unmarked list item one</li>
+            <li>Unmarked list item two</li>
+          </ul>
+          <ul class="list--marked">
+            <li>Accent-marked list item one</li>
+            <li>Accent-marked list item two</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="preview-section" id="links">
+        <h2>PF-021 — Links</h2>
+        <p>
+          Inline link inside a paragraph: <a href="/work/">view our work</a>. Standalone: <a href="/contact/">Contact us</a>.
+          Plain modifier (no underline): <a class="link--plain" href="/about/">About, no underline</a>.
+          A focusable example — Tab to it to check <code>:focus-visible</code>: <a href="/process/">Our process</a>.
+        </p>
+        <p>
+          Default external link — no <code>target</code>, no <code>rel</code>, same tab:
+          <a href="https://github.com">github.com</a>.
+        </p>
+        <p>
+          Explicit new-tab opt-in — <code>target="_blank" rel="noopener"</code> plus a visually-hidden accessible indication:
+          <a href="https://github.com" target="_blank" rel="noopener">github.com <span class="visually-hidden">(opens in a new tab)</span></a>.
+        </p>
+      </section>
+
+      <section class="preview-section" id="buttons">
+        <h2>PF-021 — Buttons</h2>
+        <p class="motion-note">
+          Hover lift only applies under <code>(hover: hover) and (pointer: fine)</code> and never on
+          <code>:focus-visible</code> — Tab to any button below and confirm it does not move.
+        </p>
+        <div class="demo-row">
+          <button class="btn btn--primary btn--sm" type="button">Primary sm</button>
+          <button class="btn btn--primary" type="button">Primary default</button>
+          <button class="btn btn--primary btn--lg" type="button">Primary lg</button>
+        </div>
+        <div class="demo-row">
+          <button class="btn btn--secondary btn--sm" type="button">Secondary sm</button>
+          <button class="btn btn--secondary" type="button">Secondary default</button>
+          <button class="btn btn--secondary btn--lg" type="button">Secondary lg</button>
+        </div>
+        <div class="demo-row">
+          <button class="btn btn--ghost btn--sm" type="button">Ghost sm</button>
+          <button class="btn btn--ghost" type="button">Ghost default</button>
+          <button class="btn btn--ghost btn--lg" type="button">Ghost lg</button>
+        </div>
+        <div class="demo-row">
+          <button class="btn btn--primary" type="button">
+            Continue
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+          <span>
+            <button class="btn btn--secondary btn--icon" type="button" aria-label="Next">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </button>
+            <span class="demo-caption">icon-only, aria-label="Next"</span>
+          </span>
+        </div>
+        <div class="demo-row">
+          <button class="btn btn--primary" type="button" disabled>Primary disabled</button>
+          <button class="btn btn--secondary" type="button" disabled>Secondary disabled</button>
+          <button class="btn btn--ghost" type="button" disabled>Ghost disabled</button>
+        </div>
+        <div class="demo-row">
+          <button class="btn btn--primary" type="button">A deliberately long button label to check wrapping behavior</button>
+        </div>
+      </section>
+
+      <section class="preview-section" id="tags">
+        <h2>PF-021 — Tags</h2>
+        <p class="motion-note">Static — no hover/active state, no transition, no transform (not interactive).</p>
+        <div class="demo-row">
+          <span class="tag">Node.js</span>
+          <span class="tag">A deliberately long tag label to check wrapping</span>
+        </div>
+      </section>
+
+      <section class="preview-section" id="media-frames">
+        <h2>PF-021 — Media frames</h2>
+        <div class="demo-media-grid">
+          <div class="media-frame">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225'%3E%3Crect width='400' height='225' fill='%231d2540'/%3E%3C/svg%3E" alt="" width="400" height="225">
+            <span class="demo-caption">default (16:9)</span>
+          </div>
+          <div class="media-frame media-frame--square">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%231d2540'/%3E%3C/svg%3E" alt="" width="400" height="400">
+            <span class="demo-caption">--square (1:1)</span>
+          </div>
+          <div class="media-frame media-frame--wide">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='171'%3E%3Crect width='400' height='171' fill='%231d2540'/%3E%3C/svg%3E" alt="" width="400" height="171">
+            <span class="demo-caption">--wide (21:9)</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-section" id="section-header-object">
+        <h2>PF-021 — Section header object</h2>
+        <header class="section-header">
+          <span class="section-header__eyebrow">Eyebrow label</span>
+          <h2 class="section-header__heading">Section header heading</h2>
+          <p class="section-header__lede">An optional lede sentence expanding on the section heading, set at the body-lg size.</p>
+        </header>
+      </section>
+
+      <section class="preview-section" id="container-widths">
+        <h2>PF-021 — Container widths</h2>
+        <div class="container demo-container-marker">.container — max-width: var(--container-max)</div>
+        <div class="container--wide demo-container-marker">.container--wide — max-width: var(--container-wide)</div>
+        <div class="container--reading demo-container-marker">.container--reading — max-width: var(--width-reading)</div>
+      </section>
+
+      <section class="preview-section" id="form-control-foundations">
+        <h2>PF-021 — Form-control foundations</h2>
+        <form novalidate>
+          <div class="field">
+            <label class="field__label" for="demo-name">Name</label>
+            <input class="field__control" type="text" id="demo-name" name="name" autocomplete="name">
+          </div>
+          <div class="field">
+            <label class="field__label" for="demo-email">Email</label>
+            <input class="field__control" type="email" id="demo-email" name="email" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <label class="field__label" for="demo-message">Message</label>
+            <textarea class="field__control" id="demo-message" name="message"></textarea>
+          </div>
+          <div class="field">
+            <label class="field__label" for="demo-topic">Topic</label>
+            <select class="field__control" id="demo-topic" name="topic">
+              <option value="general">General inquiry</option>
+              <option value="project">New project</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__choice">
+              <input class="field__choice-control" type="checkbox" name="terms">
+              <span class="field__choice-label">I agree to the terms</span>
+            </label>
+          </div>
+          <div class="field">
+            <label class="field__choice">
+              <input class="field__choice-control" type="radio" name="contact-method" value="email" checked>
+              <span class="field__choice-label">Contact me by email</span>
+            </label>
+            <label class="field__choice">
+              <input class="field__choice-control" type="radio" name="contact-method" value="phone">
+              <span class="field__choice-label">Contact me by phone</span>
+            </label>
+          </div>
+          <div class="field">
+            <label class="field__choice">
+              <input class="field__choice-control" type="checkbox" name="disabled-choice" disabled>
+              <span class="field__choice-label">Disabled choice, for contrast reference</span>
+            </label>
+          </div>
+          <div class="field field--error">
+            <label class="field__label" for="demo-email-error">Email (error state)</label>
+            <input
+              class="field__control"
+              type="email"
+              id="demo-email-error"
+              name="email-error"
+              autocomplete="email"
+              required
+              value="not-an-email"
+              aria-invalid="true"
+              aria-describedby="demo-email-error-message"
+            >
+            <p class="field__error" id="demo-email-error-message">
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+              Enter a valid email address.
+            </p>
+          </div>
+          <button class="btn btn--primary" type="submit">Submit</button>
+        </form>
+        <p class="motion-note">
+          The error field sets <code>aria-invalid="true"</code> and <code>aria-describedby</code> pointing at the visible,
+          persistent error text; the icon is decoration only (<code>aria-hidden</code>) and never the only signal.
+          <code>.field--error</code> itself only changes the border color — it does not set either ARIA attribute.
+        </p>
+      </section>
+
+      <section class="preview-section" id="narrow-width-wrap-check">
+        <h2>PF-021 — Narrow-width wrap check</h2>
+        <div class="demo-narrow demo-stack">
+          <button class="btn btn--primary" type="button">A long button label in a narrow column</button>
+          <div class="field">
+            <label class="field__label" for="demo-narrow-field">Narrow field</label>
+            <input class="field__control" type="text" id="demo-narrow-field" name="narrow-field">
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-section preview-section--wide" id="capability-cards">
+        <h2>Capability cards (PF-032)</h2>
+        <p>
+          <code>.capability-card</code> is CSS-only — there is no JS render function or content-data module yet.
+          <code>solutions.js</code>/<code>home.js</code> are still placeholders, so there is no real production
+          template to call a renderer from; the same precedent as <code>.btn</code>/<code>.tag</code>/
+          <code>.media-frame</code>. The six cards below are literal, hand-authored markup using the real
+          compiled component classes — not a live render call — and only exist on this dev-only page.
+        </p>
+        <p>
+          The six descriptions are representative/provisional component copy, not final production marketing
+          content — final category copy is decided when a real page composes these cards (PF-041/050+). All six
+          link to <a href="/solutions/"><code>/solutions/</code></a> (the one existing, approved route) purely
+          to demonstrate the stretched-link pattern navigating somewhere real; it is not a hint at final
+          information architecture, and no route content changes as part of PF-032.
+        </p>
+
+        <h3>The six approved capabilities</h3>
+        <ul class="capability-cards">
+          <li class="capability-card capability-card--lime">
+            <span class="capability-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"></path>
+                <path d="m7 16.5-4.74-2.85"></path>
+                <path d="m7 16.5 5-3"></path>
+                <path d="M7 16.5v5.17"></path>
+                <path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"></path>
+                <path d="m17 16.5-5-3"></path>
+                <path d="m17 16.5 4.74-2.85"></path>
+                <path d="M17 16.5v5.17"></path>
+                <path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z"></path>
+                <path d="M12 8 7.26 5.15"></path>
+                <path d="m12 8 4.74-2.85"></path>
+                <path d="M12 13.5V8"></path>
+              </svg>
+            </span>
+            <h4 class="capability-card__heading">
+              <a class="capability-card__link" href="/solutions/">Custom Business Systems</a>
+            </h4>
+            <p class="capability-card__description">Purpose-built internal tools designed around how your team actually works.</p>
+            <span class="capability-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </span>
+          </li>
+          <li class="capability-card capability-card--amber">
+            <span class="capability-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect width="8" height="8" x="3" y="3" rx="2"></rect>
+                <path d="M7 11v4a2 2 0 0 0 2 2h4"></path>
+                <rect width="8" height="8" x="13" y="13" rx="2"></rect>
+              </svg>
+            </span>
+            <h4 class="capability-card__heading">
+              <a class="capability-card__link" href="/solutions/">Workflow &amp; Process Solutions</a>
+            </h4>
+            <p class="capability-card__description">Turning manual, error-prone approval and reporting processes into reliable, trackable systems.</p>
+            <span class="capability-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </span>
+          </li>
+          <li class="capability-card capability-card--cyan">
+            <span class="capability-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                <path d="M2 12h20"></path>
+              </svg>
+            </span>
+            <h4 class="capability-card__heading">
+              <a class="capability-card__link" href="/solutions/">Corporate Websites</a>
+            </h4>
+            <p class="capability-card__description">Professional, fast, and easy-to-maintain websites that represent your business well.</p>
+            <span class="capability-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </span>
+          </li>
+          <li class="capability-card capability-card--violet">
+            <span class="capability-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="m16 18 6-6-6-6"></path>
+                <path d="m8 6-6 6 6 6"></path>
+              </svg>
+            </span>
+            <h4 class="capability-card__heading">
+              <a class="capability-card__link" href="/solutions/">WordPress Development</a>
+            </h4>
+            <p class="capability-card__description">Custom WordPress builds and improvements for teams that need a familiar, editable platform.</p>
+            <span class="capability-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </span>
+          </li>
+          <li class="capability-card capability-card--coral">
+            <span class="capability-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                <path d="M21 3v5h-5"></path>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                <path d="M8 16H3v5"></path>
+              </svg>
+            </span>
+            <h4 class="capability-card__heading">
+              <a class="capability-card__link" href="/solutions/">Existing-System Improvements</a>
+            </h4>
+            <p class="capability-card__description">Modernizing or extending systems that no longer match how the business runs today.</p>
+            <span class="capability-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </span>
+          </li>
+          <li class="capability-card capability-card--magenta">
+            <span class="capability-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m4.93 4.93 4.24 4.24"></path>
+                <path d="m14.83 9.17 4.24-4.24"></path>
+                <path d="m14.83 14.83 4.24 4.24"></path>
+                <path d="m9.17 14.83-4.24 4.24"></path>
+                <circle cx="12" cy="12" r="4"></circle>
+              </svg>
+            </span>
+            <h4 class="capability-card__heading">
+              <a class="capability-card__link" href="/solutions/">Support &amp; Maintenance</a>
+            </h4>
+            <p class="capability-card__description">Ongoing support so systems stay reliable long after launch.</p>
+            <span class="capability-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </span>
+          </li>
+        </ul>
+
+        <h3>Additional specimens</h3>
+        <p>
+          Two demo-only cards, not counted among the six approved capabilities above — they exist purely to
+          prove two markup paths the real content doesn't happen to exercise.
+        </p>
+        <ul class="capability-cards">
+          <li class="capability-card capability-card--cyan">
+            <h4 class="capability-card__heading">
+              <a class="capability-card__link" href="/solutions/">Demo: long title and description, no icon</a>
+            </h4>
+            <p class="capability-card__description">
+              Demo: a deliberately long description to prove the card grows to fit its content instead of
+              truncating it, and that a card with no icon renders correctly with the icon slot simply absent
+              rather than leaving a blank space where one would otherwise sit — this sentence keeps going for a
+              while specifically to stress-test the wrapping behavior at every one of the six required review
+              widths, from 320px up to 1920px.
+            </p>
+            <span class="capability-card__arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M7 7h10v10"></path>
+                <path d="M7 17 17 7"></path>
+              </svg>
+            </span>
+          </li>
+          <li class="capability-card capability-card--violet">
+            <span class="capability-card__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="m16 18 6-6-6-6"></path>
+                <path d="m8 6-6 6 6 6"></path>
+              </svg>
+            </span>
+            <h4 class="capability-card__heading">Demo: non-interactive (no destination)</h4>
+            <p class="capability-card__description">
+              Demo: no <code>.capability-card__link</code> element is present in this specimen's markup at
+              all, so — driven purely by that absence, not a modifier class — it renders with no stretched
+              link, no arrow, no hover lift, no active feedback, and no focus ring. A static card must never
+              look clickable.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="preview-section preview-section--wide" id="project-cards">
+        <h2>Project cards (PF-033)</h2>
+        <p>
+          Historical PF-033 note: <code>.project-card</code> began as CSS-only before its production renderer and content contract were added.
+          <code>work/index.js</code> and all three case-study content files are still placeholders, so there is
+          no real production template to call a renderer from; the same precedent as
+          <code>.btn</code>/<code>.tag</code>/<code>.media-frame</code>/<code>.capability-card</code>. The cards
+          below are literal, hand-authored markup using the real compiled component classes — not a live render
+          call — and only exist on this dev-only page.
+        </p>
+        <p>
+          Historical PF-033 note (superseded): the three real projects originally carried no summary, technology tags, or images because none had
+          been approved yet (<code>docs/DECISION_LOG.md</code>). This is the genuine current state, not a
+          contrived gap: the category label appears only where the requirements doc gives an exact phrase that
+          fits the tag slot (Business Workflow System only — eBarangay's own approved phrase, "Personal
+          full-stack case study," doesn't fit the slot without paraphrasing it, so it is omitted rather than
+          reworded). Business Workflow System is shown as the featured specimen arbitrarily, for demonstration
+          only — this is not a production or editorial decision.
+        </p>
+        <p>
+          This specimen also carries <code>.project-cards--featured-pair</code>: with exactly one featured card
+          and two secondary cards, the default <code>auto-fit</code>/<code>minmax()</code> grid resolves to 3
+          columns at wide viewports (it only knows the container's width, not that the featured card spans every
+          column), leaving the third column empty once the two secondary cards are placed. This modifier forces a
+          fixed 2-column grid instead, so the pair always balances — see <code>docs/DECISION_LOG.md</code>.
+        </p>
+
+        <h3>The currently published project</h3>
+        <p>
+          FES Challenger is currently the only project published on Home and Work. Business Workflow System and
+          eBarangay remain registered and validated but are filtered before rendering. The FES browser chrome is
+          an accessible three-slide carousel; empty media frames remain invalid.
+        </p>
+        <ul class="project-cards project-cards--single">
+          <li class="project-card project-card--featured">
+            <section class="project-card__frame project-carousel" data-project-carousel aria-roledescription="carousel" aria-label="FES Challenger project images">
+              <div class="project-carousel__controls">
+                <button class="project-carousel__arrow project-carousel__arrow--previous" type="button" data-project-carousel-previous aria-label="Previous project image" hidden><span aria-hidden="true">&#8592;</span></button>
+                <div class="project-carousel__indicators" role="group" aria-label="Choose project image" hidden>
+                  <button class="project-carousel__indicator" type="button" data-project-carousel-indicator="0" aria-label="Show project image 1 of 3" aria-pressed="true"></button>
+                  <button class="project-carousel__indicator" type="button" data-project-carousel-indicator="1" aria-label="Show project image 2 of 3" aria-pressed="false"></button>
+                  <button class="project-carousel__indicator" type="button" data-project-carousel-indicator="2" aria-label="Show project image 3 of 3" aria-pressed="false"></button>
+                </div>
+                <button class="project-carousel__arrow project-carousel__arrow--next" type="button" data-project-carousel-next aria-label="Next project image" hidden><span aria-hidden="true">&#8594;</span></button>
+              </div>
+              <div class="media-frame project-card__media">
+                <div class="project-carousel__slide is-active" data-project-carousel-slide role="group" aria-roledescription="slide" aria-label="1 of 3" aria-hidden="false"><img src="/images/case-studies/fes-challenger/gallery/homepage-hero-desktop.png" alt="Screenshot of the FES Challenger homepage with navigation above an underwater diving hero image" width="2880" height="1388" loading="lazy"></div>
+                <div class="project-carousel__slide" data-project-carousel-slide role="group" aria-roledescription="slide" aria-label="2 of 3" aria-hidden="true" hidden><img src="/images/case-studies/fes-challenger/gallery/services-page-desktop.png" alt="FES Challenger Services page showing marine salvage and underwater service categories" width="716" height="448" loading="lazy"></div>
+                <div class="project-carousel__slide" data-project-carousel-slide role="group" aria-roledescription="slide" aria-label="3 of 3" aria-hidden="true" hidden><img src="/images/case-studies/fes-challenger/gallery/projects-page-desktop.png" alt="FES Challenger Projects page showing completed marine salvage project cards" width="718" height="447" loading="lazy"></div>
+              </div>
+              <p class="visually-hidden" data-project-carousel-status role="status" aria-live="polite" aria-atomic="true"></p>
+            </section>
+            <div class="project-card__content">
+              <span class="project-card__category tag">Marine Services Corporate Website</span>
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/fes-challenger/">FES Challenger</a>
+              </h4>
+              <p class="project-card__summary">A responsive custom WordPress website for a marine salvage and underwater recovery company, supported by a controlled staging-to-production deployment workflow.</p>
+              <div class="project-card__tags"><span class="tag">WordPress</span><span class="tag">Custom Theme</span></div>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+        </ul>
+
+        <h3>Additional specimens</h3>
+        <p>
+          Three demo-only cards, not counted among the published project above — they exist purely to prove
+          markup paths the real content doesn't happen to exercise yet.
+        </p>
+        <ul class="project-cards">
+          <li class="project-card">
+            <div class="project-card__content">
+              <span class="project-card__category tag">Demo Category</span>
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/">Demo: Populated Project</a>
+              </h4>
+              <p class="project-card__summary">Demo: a short outcome-style summary line, for layout purposes only — not a real project claim.</p>
+              <div class="project-card__tags">
+                <span class="tag">Demo Tech A</span>
+                <span class="tag">Demo Tech B</span>
+                <span class="tag">Demo Tech C</span>
+              </div>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+          <li class="project-card">
+            <div class="project-card__content">
+              <h4 class="project-card__heading">
+                <a class="project-card__link" href="/work/">Demo: A deliberately long project title to stress-test heading wrap</a>
+              </h4>
+              <p class="project-card__summary">
+                Demo: a deliberately long summary sentence to prove the card grows to fit its content instead of
+                truncating it, stress-testing wrapping behavior at every one of the six required review widths,
+                from 320px up to 1920px, without a fixed height ever clipping the text.
+              </p>
+              <span class="project-card__action" aria-hidden="true">View Case Study →</span>
+            </div>
+          </li>
+          <li class="project-card">
+            <div class="project-card__content">
+              <h4 class="project-card__heading">Demo: non-interactive (no destination)</h4>
+              <p class="project-card__summary">
+                Demo: no <code>.project-card__link</code> element is present in this specimen's markup at all,
+                so — driven purely by that absence, not a modifier class — it renders with no stretched link, no
+                action label, no hover lift, no active feedback, and no focus ring. A static card must never
+                look clickable.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <section class="preview-section" id="process-steps">
+        <h2>Process steps (PF-034)</h2>
+        <p>
+          <code>.process-steps</code> is CSS-only — there is no JS render function or content-data module yet.
+          <code>process.js</code>/<code>home.js</code> are still placeholders, so there is no real production
+          template to call a renderer from; the same precedent as
+          <code>.capability-card</code>/<code>.project-card</code>. The specimen below is literal, hand-authored
+          markup using the real compiled component classes — not a live render call — and only exists on this
+          dev-only page.
+        </p>
+        <p>
+          Stage names are quoted verbatim from the requirements doc's four-stage process preview (§9.7). No
+          per-step supporting sentence is shown — none is approved at this length, and the fuller explanation
+          belongs to the dedicated Process page (PF-051); reusing it here would duplicate page copy, which
+          PF-034 must avoid. The "See the Full Process" link label is <strong>approved as provisional showcase
+          copy</strong> — approved for use in this development showcase, but still subject to final
+          production-content review when a real page composes this section (PF-041).
+        </p>
+        <p class="motion-note">
+          Static — the four steps carry no cursor change, hover, active state, or focus/keyboard stop. Only the
+          link below the list is interactive, via the existing link pattern.
+        </p>
+
+        <ol class="process-steps">
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">1</span>
+            <h3 class="process-steps__heading">Discover and Define</h3>
+          </li>
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">2</span>
+            <h3 class="process-steps__heading">Design and Plan</h3>
+          </li>
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">3</span>
+            <h3 class="process-steps__heading">Develop and Test</h3>
+          </li>
+          <li class="process-steps__step">
+            <span class="process-steps__number" aria-hidden="true">4</span>
+            <h3 class="process-steps__heading">Deploy and Support</h3>
+          </li>
+        </ol>
+        <p class="process-steps__action"><a href="/process/">See the Full Process</a></p>
+      </section>
+
+      <section class="preview-section" id="trust-indicators">
+        <h2>Trust indicators (PF-034)</h2>
+        <p>
+          <code>.trust-list</code> is CSS-only — same no-renderer precedent as the other PF-034 components. The
+          specimen below is literal, hand-authored markup, and only exists on this dev-only page.
+        </p>
+        <p>
+          The three assurances are quoted verbatim from the requirements doc's trust summary (§9.3) — no
+          fabricated statistics or counters, and no per-item description beyond the approved phrase itself, since
+          none is approved. Icons are decorative, hand-authored static SVG copied directly from the installed
+          Lucide package's source data — this showcase is static HTML with no access to the build-time icon
+          renderer (<code>src/components/icon.js</code>), which is not modified or invoked here. The
+          "Learn About My Approach" link label and its target (<code>/about/</code>) are <strong>approved as
+          provisional showcase copy</strong> — §9.3 only specifies "a link to About or Process," not which page
+          or exact wording, so this pairing is approved for use in this development showcase, but still subject
+          to final production-content review when a real page composes this section (PF-041).
+        </p>
+        <p class="motion-note">
+          Static — the three items carry no cursor change, hover, active state, or focus/keyboard stop. Only the
+          link below the list is interactive, via the existing link pattern.
+        </p>
+
+        <ul class="trust-list">
+          <li class="trust-list__item">
+            <span class="trust-list__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="M12 22V12"></path>
+                <path d="m16 17 2 2 4-4"></path>
+                <path d="M21 11.127V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.729l7 4a2 2 0 0 0 2 .001l1.32-.753"></path>
+                <path d="M3.29 7 12 12l8.71-5"></path>
+                <path d="m7.5 4.27 8.997 5.148"></path>
+              </svg>
+            </span>
+            <h3 class="trust-list__heading">End-to-end delivery</h3>
+          </li>
+          <li class="trust-list__item">
+            <span class="trust-list__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <path d="m11 17 2 2a1 1 0 1 0 3-3"></path>
+                <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"></path>
+                <path d="m21 3 1 11h-2"></path>
+                <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"></path>
+                <path d="M3 4h8"></path>
+              </svg>
+            </span>
+            <h3 class="trust-list__heading">Direct collaboration</h3>
+          </li>
+          <li class="trust-list__item">
+            <span class="trust-list__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <rect width="8" height="8" x="3" y="3" rx="2"></rect>
+                <path d="M7 11v4a2 2 0 0 0 2 2h4"></path>
+                <rect width="8" height="8" x="13" y="13" rx="2"></rect>
+              </svg>
+            </span>
+            <h3 class="trust-list__heading">Solutions built around real workflows</h3>
+          </li>
+        </ul>
+        <p class="trust-list__action"><a href="/about/">Learn About My Approach</a></p>
+      </section>
+
+      <section class="preview-section" id="engagement-options">
+        <h2>Engagement options (PF-034)</h2>
+        <p>
+          <code>.engagement-options</code> is CSS-only — same no-renderer precedent as the other PF-034
+          components. Deliberately not composed from <code>.tag</code>: these four labels are meaningful ways of
+          working, not filterable category/technology metadata, so pill-shaped tags would misrepresent them. The
+          specimen below is literal, hand-authored markup, and only exists on this dev-only page.
+        </p>
+        <p>
+          The intro sentence "Start with what creates the most value." is quoted verbatim from the requirements
+          doc's flexible-engagement section (§9.8). The sentence beneath it is <strong>approved as provisional
+          showcase copy</strong> — a paraphrase of that section's own explanation instruction ("explain briefly
+          that the first release can focus on essential features and expand as priorities and budget grow"),
+          approved for use in this development showcase, but still subject to final production-content review
+          when a real page composes this section (PF-041). The four engagement labels are quoted verbatim; no
+          per-label description is added.
+        </p>
+        <p class="motion-note">
+          Static — the four items carry no cursor change, hover, active state, or focus/keyboard stop, and no
+          arrow/chevron implying more detail is available.
+        </p>
+
+        <p class="text-lead">Start with what creates the most value.</p>
+        <p>The first release can focus on essential features, then expand as priorities and budget grow.</p>
+
+        <ul class="engagement-options">
+          <li class="engagement-options__item">Fixed scope</li>
+          <li class="engagement-options__item">Minimum viable solution</li>
+          <li class="engagement-options__item">Phased development</li>
+          <li class="engagement-options__item">Existing-system improvement</li>
+        </ul>
+      </section>
+
+      <section class="preview-section" id="cta-section">
+        <h2>CTA section (PF-034)</h2>
+        <p>
+          <code>.cta</code> is CSS-only — same no-renderer precedent as the other PF-034 components. It is a
+          reusable panel pattern, not hardcoded to the homepage, so later tasks (PF-050/PF-060-062) can reuse it
+          for their own inquiry-CTA copy. The two specimens below are literal, hand-authored markup, and only
+          exist on this dev-only page.
+        </p>
+        <p>
+          The Final CTA copy is quoted verbatim from the requirements doc (§9.10) — already fully approved, no
+          invented text. The second specimen omits the supporting paragraph entirely (not an empty element) to
+          prove the optional-copy case renders cleanly, with no competing focus system: the button below reuses
+          the existing <code>.btn</code> focus-visible ring exactly as declared elsewhere on this page.
+        </p>
+
+        <div class="demo-row">
+          <div>
+            <div class="cta">
+              <h3 class="cta__heading">Have a process that feels too manual, slow, or difficult to manage?</h3>
+              <p class="cta__body">Tell me what you want to improve. We will identify a practical place to start.</p>
+              <a class="btn btn--primary" href="/contact/">Let's Discuss Your Project</a>
+            </div>
+            <span class="demo-caption">With supporting copy</span>
+          </div>
+        </div>
+        <div class="demo-row">
+          <div>
+            <div class="cta">
+              <h3 class="cta__heading">Have a process that feels too manual, slow, or difficult to manage?</h3>
+              <a class="btn btn--primary" href="/contact/">Let's Discuss Your Project</a>
+            </div>
+            <span class="demo-caption">Without supporting copy</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -56,7 +56,18 @@ test('renderRoute("home") emits production canonical, social, and structured-dat
     head,
     /<meta property="og:url" content="https:\/\/aaabrenica\.site\/">/,
   );
-  assert.match(head, /<meta name="twitter:card" content="summary">/);
+  assert.equal(
+    site.socialImageUrl,
+    'https://aaabrenica.site/images/brand/aaabrenica-og-image.png',
+  );
+  assert.match(
+    head,
+    /<meta property="og:image" content="https:\/\/aaabrenica\.site\/images\/brand\/aaabrenica-og-image\.png">/,
+  );
+  assert.match(
+    head,
+    /<meta name="twitter:card" content="summary_large_image">/,
+  );
   assert.match(
     head,
     /<meta name="twitter:title" content="Practical Software Solutions for Growing Businesses — Antonio Abrenica">/,
@@ -64,6 +75,10 @@ test('renderRoute("home") emits production canonical, social, and structured-dat
   assert.match(
     head,
     /<meta name="twitter:description" content="Antonio Abrenica helps organizations identify inefficient, repetitive, or difficult processes and turn them into practical websites, workflow solutions, internal systems, and custom software\.">/,
+  );
+  assert.match(
+    head,
+    /<meta name="twitter:image" content="https:\/\/aaabrenica\.site\/images\/brand\/aaabrenica-og-image\.png">/,
   );
   assert.match(head, /<script type="application\/ld\+json">/);
   const script = head.match(

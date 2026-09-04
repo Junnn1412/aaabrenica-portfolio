@@ -13,7 +13,9 @@ function buildHead(route, content) {
       ? new URL(route.path, site.baseUrl).toString()
       : null;
 
-  let head = `<title>${title}</title><meta name="description" content="${escapeHtml(description)}">`;
+  let head =
+    `<title>${title}</title><meta name="description" content="${escapeHtml(description)}">` +
+    '<link rel="icon" href="/images/brand/aaa-placeholder-logo.ico" type="image/x-icon">';
 
   if (canonicalUrl) {
     head += `<link rel="canonical" href="${escapeHtml(canonicalUrl)}">`;
@@ -26,9 +28,11 @@ function buildHead(route, content) {
       `<meta property="og:description" content="${escapeHtml(description)}">` +
       `<meta property="og:site_name" content="${escapeHtml(site.siteName)}">` +
       `<meta property="og:url" content="${escapeHtml(canonicalUrl)}">` +
-      `<meta name="twitter:card" content="summary">` +
+      `<meta property="og:image" content="${escapeHtml(site.socialImageUrl)}">` +
+      `<meta name="twitter:card" content="summary_large_image">` +
       `<meta name="twitter:title" content="${escapeHtml(title)}">` +
-      `<meta name="twitter:description" content="${escapeHtml(description)}">`;
+      `<meta name="twitter:description" content="${escapeHtml(description)}">` +
+      `<meta name="twitter:image" content="${escapeHtml(site.socialImageUrl)}">`;
 
     if (route.key === 'home') {
       const sameAs = [

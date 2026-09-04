@@ -266,6 +266,34 @@ for (const route of routes) {
     add(`route "${route.key}": canonical links must be omitted for 404 output`);
   }
 
+  const socialImagePattern = new RegExp(
+    `<meta property="og:image" content="${escapeRegExp(site.socialImageUrl)}">`,
+  );
+  const twitterImagePattern = new RegExp(
+    `<meta name="twitter:image" content="${escapeRegExp(site.socialImageUrl)}">`,
+  );
+  const twitterCardPattern =
+    /<meta name="twitter:card" content="summary_large_image">/;
+  if (expectedCanonical) {
+    if (!socialImagePattern.test(html)) {
+      add(`route "${route.key}": expected the configured Open Graph image`);
+    }
+    if (!twitterImagePattern.test(html)) {
+      add(`route "${route.key}": expected the configured Twitter image`);
+    }
+    if (!twitterCardPattern.test(html)) {
+      add(`route "${route.key}": expected summary_large_image Twitter card`);
+    }
+  } else if (
+    socialImagePattern.test(html) ||
+    twitterImagePattern.test(html) ||
+    twitterCardPattern.test(html)
+  ) {
+    add(
+      `route "${route.key}": social image metadata must be omitted for 404 output`,
+    );
+  }
+
   // Footer redesign — the footer's own contact links now carry
   // class="site-footer__connect-link" before href and aria-label="..." after
   // it (icon-only Connect controls), unlike contact.js's plain
